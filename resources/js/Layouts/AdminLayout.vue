@@ -25,7 +25,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                 </svg>
                             </button>
-                            <h1 class="ml-4 text-xl font-semibold text-gray-900">{{ pageTitle }}</h1>
+                            <h1 class="ml-4 text-xl font-semibold text-gray-900">{{ resolvedTitle }}</h1>
                         </div>
                         <div class="flex items-center gap-4">
                             <LanguageSwitcher />
@@ -52,16 +52,18 @@ import LanguageSwitcher from '@/Components/LanguageSwitcher.vue';
 import UserDropdown from '@/Components/UserDropdown.vue';
 import { usePage } from '@inertiajs/vue3';
 
-defineProps({
+const props = defineProps({
     pageTitle: {
         type: String,
-        default: 'Dashboard'
+        default: ''
     }
 });
 
 const { direction } = useDirection();
 const { t } = useTranslation();
 const page = usePage();
+
+const resolvedTitle = computed(() => props.pageTitle || t('admin.dashboard'));
 
 const sidebarMinimized = ref(false);
 const mobileSidebarOpen = ref(false);

@@ -7,7 +7,6 @@ use Modules\Courses\Requests\StoreCourseRequest;
 use Modules\Courses\Requests\UpdateCourseRequest;
 use Modules\Courses\Services\CourseService;
 use Modules\Courses\Models\Course;
-use App\Models\Category;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -30,9 +29,7 @@ class CourseController extends Controller
 
     public function create()
     {
-        return Inertia::render('Admin/Courses/Create', [
-            'categories' => $this->getActiveCategories(),
-        ]);
+        return Inertia::render('Admin/Courses/Create');
     }
 
     public function store(StoreCourseRequest $request)
@@ -80,7 +77,6 @@ class CourseController extends Controller
 
         return Inertia::render('Admin/Courses/Edit', [
             'course' => $course,
-            'categories' => $this->getActiveCategories(),
         ]);
     }
 
@@ -122,18 +118,6 @@ class CourseController extends Controller
         return $filters;
     }
 
-    private function getActiveCategories(): array
-    {
-        return Category::where('is_active', true)
-            ->orderBy('order')
-            ->get()
-            ->map(fn($c) => [
-                'id' => $c->id,
-                'name' => $c->translated_name ?: $c->name,
-                'name_ar' => $c->name_ar,
-            ])
-            ->toArray();
-    }
 
     private function getCourseStatistics(Course $course): array
     {

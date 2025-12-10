@@ -125,7 +125,7 @@
                             {{ t('courses.details') || 'Course Details' }}
                         </h3>
                         
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <!-- Level -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -139,20 +139,6 @@
                                     <option value="intermediate">{{ t('courses.levels.intermediate') }}</option>
                                     <option value="advanced">{{ t('courses.levels.advanced') }}</option>
                                 </select>
-                            </div>
-                            
-                            <!-- Price -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    {{ t('courses.fields.price') }} ($) <span class="text-red-500">*</span>
-                                </label>
-                                <input
-                                    v-model="form.price"
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                                />
                             </div>
                             
                             <!-- Duration -->
@@ -267,10 +253,6 @@ import { Link, useForm, router } from '@inertiajs/vue3';
 
 const props = defineProps({
     course: Object,
-    categories: {
-        type: Array,
-        default: () => [],
-    },
 });
 
 const { t } = useTranslation();
@@ -282,7 +264,6 @@ const form = useForm({
     description: props.course.description || '',
     description_ar: props.course.description_ar || '',
     level: props.course.level || 'beginner',
-    price: props.course.price || 0,
     duration_hours: props.course.duration_hours || 0,
     thumbnail: null,
     is_published: props.course.is_published || false,

@@ -49,33 +49,18 @@
                                 ></textarea>
                             </div>
 
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label for="level" class="block text-sm font-medium text-gray-700">{{ t('courses.fields.level') }} *</label>
-                                    <select
-                                        id="level"
-                                        v-model="form.level"
-                                        required
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                    >
-                                        <option value="beginner">{{ t('courses.levels.beginner') }}</option>
-                                        <option value="intermediate">{{ t('courses.levels.intermediate') }}</option>
-                                        <option value="advanced">{{ t('courses.levels.advanced') }}</option>
-                                    </select>
-                                </div>
-
-                                <div>
-                                    <label for="price" class="block text-sm font-medium text-gray-700">{{ t('courses.fields.price') }} ($) *</label>
-                                    <input
-                                        id="price"
-                                        v-model="form.price"
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                        required
-                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                    />
-                                </div>
+                            <div>
+                                <label for="level" class="block text-sm font-medium text-gray-700">{{ t('courses.fields.level') }} *</label>
+                                <select
+                                    id="level"
+                                    v-model="form.level"
+                                    required
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                >
+                                    <option value="beginner">{{ t('courses.levels.beginner') }}</option>
+                                    <option value="intermediate">{{ t('courses.levels.intermediate') }}</option>
+                                    <option value="advanced">{{ t('courses.levels.advanced') }}</option>
+                                </select>
                             </div>
 
                             <div>
@@ -194,7 +179,6 @@ const form = useForm({
     description: '',
     description_ar: '',
     level: 'beginner',
-    price: 0,
     duration_hours: 0,
     thumbnail: '',
     thumbnail_url: '',

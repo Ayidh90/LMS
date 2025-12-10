@@ -192,9 +192,7 @@
               <h5 class="course-title font-semibold text-gray-900 truncate mb-1">{{ course.translated_title || course.title }}</h5>
               <p class="course-meta text-sm text-gray-500 truncate">
                 <span class="mr-2">{{ course.level ? t(`courses.levels.${course.level}`) : '' }}</span>
-                <span v-if="course.price !== null && course.price !== undefined">
-                  {{ course.price == 0 ? t('courses.free') : `${course.price} ${t('common.currency') || 'SAR'}` }}
-                </span>
+            
               </p>
             </div>
             <div class="course-actions flex items-center gap-3">

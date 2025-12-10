@@ -364,6 +364,7 @@ const translations = {
             create_description: 'Create a new role with specific permissions',
             edit: 'Edit Role',
             edit_description: 'Update role information and permissions',
+            view_description: 'View role details and permissions',
             fields: {
                 name: 'Name',
                 slug: 'Slug',
@@ -383,6 +384,11 @@ const translations = {
             confirm_delete: 'Are you sure you want to delete this role?',
             delete_title: 'Delete Role',
             delete_warning: 'This will permanently delete the role',
+            no_permissions: 'No permissions assigned',
+            users_with_role: 'Users with this Role',
+            role_info: 'Role Information',
+            total_permissions: 'Total Permissions',
+            total_users: 'Total Users',
         },
         welcome: {
             title: 'Welcome to LMS',
@@ -513,6 +519,7 @@ const translations = {
             manage_batches: 'Manage Batches',
             batches: 'Batches',
             instructor: 'Instructor',
+            quick_actions: 'Quick Actions',
             currency: 'SAR',
             hours: 'hours',
             days: {
@@ -629,6 +636,7 @@ const translations = {
             error: 'Error',
             warning: 'Warning',
             save: 'Save',
+            save_changes: 'Save Changes',
             cancel: 'Cancel',
             delete: 'Delete',
             edit: 'Edit',
@@ -646,6 +654,8 @@ const translations = {
             select: 'Select',
             continue: 'Continue',
             confirm_delete: 'Are you sure you want to delete this?',
+            hours: 'hours',
+            actions: 'Actions',
         },
     },
     ar: {

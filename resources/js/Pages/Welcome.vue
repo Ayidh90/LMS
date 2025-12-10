@@ -228,13 +228,6 @@
                                     @error="handleImageError($event)" 
                                 />
                                 
-                                <!-- Free Badge (Top Left) -->
-                                <Badge 
-                                    v-if="course.price == 0" 
-                                    :value="t('courses.free')" 
-                                    severity="info" 
-                                    class="absolute top-3 left-3 z-20 shadow-lg font-bold text-xs px-3 py-1.5 rounded-full bg-blue-600" 
-                                />
                                 
                                 <!-- Level Badge (Top Right - Oval/Gray) -->
                                 <div class="absolute top-3 right-3 z-20">

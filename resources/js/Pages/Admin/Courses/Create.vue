@@ -98,7 +98,7 @@
                             {{ t('courses.details') || 'Course Details' }}
                         </h3>
                         
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <!-- Level -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -115,23 +115,6 @@
                                     <option value="advanced">{{ t('courses.levels.advanced') }}</option>
                                 </select>
                                 <p v-if="form.errors.level" class="mt-1 text-sm text-red-500">{{ form.errors.level }}</p>
-                            </div>
-                            
-                            <!-- Price -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    {{ t('courses.fields.price') }} ($) <span class="text-red-500">*</span>
-                                </label>
-                                <input
-                                    v-model="form.price"
-                                    type="number"
-                                    min="0"
-                                    step="0.01"
-                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                                    :class="{ 'border-red-500': form.errors.price }"
-                                    placeholder="0.00"
-                                />
-                                <p v-if="form.errors.price" class="mt-1 text-sm text-red-500">{{ form.errors.price }}</p>
                             </div>
                             
                             <!-- Duration -->
@@ -237,12 +220,6 @@ import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
 import { Link, useForm } from '@inertiajs/vue3';
 
-defineProps({
-    categories: {
-        type: Array,
-        default: () => [],
-    },
-});
 
 const { t } = useTranslation();
 const { route } = useRoute();
@@ -253,7 +230,6 @@ const form = useForm({
     description: '',
     description_ar: '',
     level: '',
-    price: 0,
     duration_hours: 0,
     thumbnail: null,
     is_published: false,
