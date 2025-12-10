@@ -1,0 +1,96 @@
+<?php
+
+return [
+    'title' => 'الدروس',
+    'create' => 'إنشاء درس',
+    'edit' => 'تعديل الدرس',
+    'show' => 'تفاصيل الدرس',
+    'created_successfully' => 'تم إنشاء الدرس بنجاح!',
+    'updated_successfully' => 'تم تحديث الدرس بنجاح!',
+    'deleted_successfully' => 'تم حذف الدرس بنجاح!',
+    
+    'fields' => [
+        'title' => 'العنوان',
+        'title_ar' => 'العنوان (عربي)',
+        'description' => 'الوصف',
+        'description_ar' => 'الوصف (عربي)',
+        'content' => 'المحتوى',
+        'content_ar' => 'المحتوى (عربي)',
+        'video_url' => 'رابط الفيديو',
+        'order' => 'الترتيب',
+        'duration_minutes' => 'المدة (دقائق)',
+        'is_free' => 'درس مجاني',
+    ],
+    
+    'actions' => [
+        'view' => 'عرض',
+        'edit' => 'تعديل',
+        'delete' => 'حذف',
+        'create' => 'إنشاء',
+        'update' => 'تحديث',
+        'cancel' => 'إلغاء',
+        'back' => 'رجوع للدورة',
+        'add_first' => 'إضافة أول درس',
+    ],
+    
+    'no_lessons' => 'لا توجد دروس بعد.',
+    'total' => 'دروس',
+    'add' => 'إضافة درس',
+    
+    // Questions
+    'questions' => 'الأسئلة',
+    'question' => 'السؤال',
+    'points' => 'نقاط',
+    'explanation' => 'شرح',
+    'correct' => 'صحيح',
+    'incorrect' => 'غير صحيح',
+    'your_answer' => 'إجابتك',
+    'selected_answer' => 'الاجابه المختاره',
+    'correct_answer' => 'الاجابه الصحيحه',
+    'answer' => 'إجابة',
+    'submit_answer' => 'إرسال الإجابة',
+    'answer_submitted' => 'تم إرسال الإجابة بنجاح!',
+    'enter_your_answer' => 'أدخل إجابتك...',
+    'no_questions' => 'لا توجد أسئلة متاحة.',
+    'no_student_answers' => 'لا توجد إجابات طلاب بعد.',
+    'submitted_at' => 'تم الإرسال في',
+    'text_answer' => 'إجابة نصية مطلوبة',
+    'select_lesson' => 'اختر درساً',
+    'no_video' => 'لا يوجد فيديو متاح',
+    
+    'types' => [
+        'multiple_choice' => 'اختيار متعدد',
+        'true_false' => 'صحيح/خطأ',
+        'short_answer' => 'إجابة قصيرة',
+        'essay' => 'مقال',
+    ],
+    
+    'actions' => [
+        'view' => 'عرض',
+        'edit' => 'تعديل',
+        'delete' => 'حذف',
+        'create' => 'إنشاء',
+        'update' => 'تحديث',
+        'cancel' => 'إلغاء',
+        'back' => 'رجوع للدورة',
+        'add_first' => 'إضافة أول درس',
+        'add_question' => 'إضافة سؤال',
+    ],
+    
+    // Attendance
+    'attendance' => 'الحضور',
+    'mark_attendance' => 'تسجيل الحضور',
+    'attendance_marked_successfully' => 'تم تسجيل الحضور بنجاح!',
+    'failed_to_mark_attendance' => 'فشل تسجيل الحضور',
+    'attendance_history' => 'سجل الحضور',
+    'batch' => 'الدفعة',
+    'status' => 'الحالة',
+    'notes' => 'ملاحظات',
+    'notes_placeholder' => 'ملاحظات اختيارية...',
+    'present' => 'حاضر',
+    'absent' => 'غائب',
+    'late' => 'متأخر',
+    'excused' => 'معذور',
+    'no_students' => 'لا يوجد طلاب مسجلين',
+];
+

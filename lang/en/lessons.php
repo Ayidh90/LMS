@@ -1,0 +1,96 @@
+<?php
+
+return [
+    'title' => 'Lessons',
+    'create' => 'Create Lesson',
+    'edit' => 'Edit Lesson',
+    'show' => 'Lesson Details',
+    'created_successfully' => 'Lesson created successfully!',
+    'updated_successfully' => 'Lesson updated successfully!',
+    'deleted_successfully' => 'Lesson deleted successfully!',
+    
+    'fields' => [
+        'title' => 'Title',
+        'title_ar' => 'Title (Arabic)',
+        'description' => 'Description',
+        'description_ar' => 'Description (Arabic)',
+        'content' => 'Content',
+        'content_ar' => 'Content (Arabic)',
+        'video_url' => 'Video URL',
+        'order' => 'Order',
+        'duration_minutes' => 'Duration (Minutes)',
+        'is_free' => 'Free Lesson',
+    ],
+    
+    'actions' => [
+        'view' => 'View',
+        'edit' => 'Edit',
+        'delete' => 'Delete',
+        'create' => 'Create',
+        'update' => 'Update',
+        'cancel' => 'Cancel',
+        'back' => 'Back to Course',
+        'add_first' => 'Add first lesson',
+    ],
+    
+    'no_lessons' => 'No lessons yet.',
+    'total' => 'Lessons',
+    'add' => 'Add Lesson',
+    
+    // Questions
+    'questions' => 'Questions',
+    'question' => 'Question',
+    'points' => 'Points',
+    'explanation' => 'Explanation',
+    'correct' => 'Correct',
+    'incorrect' => 'Incorrect',
+    'your_answer' => 'Your Answer',
+    'selected_answer' => 'Selected Answer',
+    'correct_answer' => 'Correct Answer',
+    'answer' => 'Answer',
+    'submit_answer' => 'Submit Answer',
+    'answer_submitted' => 'Answer submitted successfully!',
+    'enter_your_answer' => 'Enter your answer...',
+    'no_questions' => 'No questions available.',
+    'no_student_answers' => 'No student answers yet.',
+    'submitted_at' => 'Submitted at',
+    'text_answer' => 'Text answer required',
+    'select_lesson' => 'Select a lesson',
+    'no_video' => 'No video available',
+    
+    'types' => [
+        'multiple_choice' => 'Multiple Choice',
+        'true_false' => 'True/False',
+        'short_answer' => 'Short Answer',
+        'essay' => 'Essay',
+    ],
+    
+    'actions' => [
+        'view' => 'View',
+        'edit' => 'Edit',
+        'delete' => 'Delete',
+        'create' => 'Create',
+        'update' => 'Update',
+        'cancel' => 'Cancel',
+        'back' => 'Back to Course',
+        'add_first' => 'Add first lesson',
+        'add_question' => 'Add Question',
+    ],
+    
+    // Attendance
+    'attendance' => 'Attendance',
+    'mark_attendance' => 'Mark Attendance',
+    'attendance_marked_successfully' => 'Attendance marked successfully!',
+    'failed_to_mark_attendance' => 'Failed to mark attendance',
+    'attendance_history' => 'Attendance History',
+    'batch' => 'Batch',
+    'status' => 'Status',
+    'notes' => 'Notes',
+    'notes_placeholder' => 'Optional notes...',
+    'present' => 'Present',
+    'absent' => 'Absent',
+    'late' => 'Late',
+    'excused' => 'Excused',
+    'no_students' => 'No students enrolled',
+];
+
