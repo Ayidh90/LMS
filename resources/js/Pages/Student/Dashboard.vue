@@ -30,7 +30,7 @@
                     </div>
 
                     <!-- My Courses -->
-                    <div class="bg-white shadow rounded-lg mb-6">
+                    <div v-if="can('courses.view')" class="bg-white shadow rounded-lg mb-6">
                         <div class="px-4 py-5 sm:p-6">
                             <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">{{ t('student.my_courses') || 'My Courses' }}</h3>
                             <div class="space-y-4">
@@ -64,7 +64,7 @@
                     </div>
 
                     <!-- Available Courses -->
-                    <div class="bg-white shadow rounded-lg">
+                    <div v-if="can('courses.view')" class="bg-white shadow rounded-lg">
                         <div class="px-4 py-5 sm:p-6">
                             <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">{{ t('student.available_courses') || 'Available Courses' }}</h3>
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -73,6 +73,7 @@
                                     <p class="text-sm text-gray-500 mb-2">{{ t('courses.fields.instructor') }}: {{ course.instructor?.name }}</p>
                                     <div class="flex justify-end items-center mt-4">
                                         <Link
+                                            v-if="can('courses.view')"
                                             :href="route('courses.show', course.slug || course.id)"
                                             class="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700"
                                         >
@@ -97,7 +98,9 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { useDirection } from '@/composables/useDirection';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
-import { Link } from '@inertiajs/vue3';
+import { usePermissions } from '@/composables/usePermissions';
+import { Link, router } from '@inertiajs/vue3';
+import { onMounted } from 'vue';
 
 defineProps({
     stats: Object,
@@ -108,5 +111,13 @@ defineProps({
 const { direction } = useDirection();
 const { t } = useTranslation();
 const { route } = useRoute();
+const { can, isStudent } = usePermissions();
+
+// Check permissions on mount
+onMounted(() => {
+    if (!isStudent.value && !can('dashboard.student')) {
+        router.visit(route('login'));
+    }
+});
 </script>
 

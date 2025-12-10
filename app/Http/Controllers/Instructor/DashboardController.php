@@ -12,6 +12,19 @@ use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(function ($request, $next) {
+            $user = Auth::user();
+            
+            if (!$user || (!$user->isInstructor() && !$user->hasPermission('dashboard.instructor'))) {
+                abort(403, __('messages.forbidden'));
+            }
+            
+            return $next($request);
+        });
+    }
+
     public function index()
     {
         $instructor = Auth::user();

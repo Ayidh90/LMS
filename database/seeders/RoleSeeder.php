@@ -15,8 +15,10 @@ class RoleSeeder extends Seeder
             ['slug' => 'super_admin'],
             [
                 'name' => 'super_admin',
+                'name_ar' => 'مدير النظام',
                 'slug' => 'super_admin',
                 'description' => 'Super Administrator with full system access',
+                'description_ar' => 'مدير النظام مع وصول كامل للنظام',
                 'guard_name' => 'web',
             ]
         );
@@ -27,8 +29,10 @@ class RoleSeeder extends Seeder
             ['slug' => 'admin'],
             [
                 'name' => 'admin',
+                'name_ar' => 'مدير',
                 'slug' => 'admin',
                 'description' => 'Administrator with management access',
+                'description_ar' => 'مدير مع وصول إداري',
                 'guard_name' => 'web',
             ]
         );
@@ -39,8 +43,10 @@ class RoleSeeder extends Seeder
             ['slug' => 'instructor'],
             [
                 'name' => 'instructor',
+                'name_ar' => 'مدرب',
                 'slug' => 'instructor',
                 'description' => 'Instructor who can teach courses',
+                'description_ar' => 'مدرب يمكنه تدريس الدورات',
                 'guard_name' => 'web',
             ]
         );
@@ -72,8 +78,10 @@ class RoleSeeder extends Seeder
             ['slug' => 'student'],
             [
                 'name' => 'student',
+                'name_ar' => 'طالب',
                 'slug' => 'student',
                 'description' => 'Student who can enroll in courses',
+                'description_ar' => 'طالب يمكنه التسجيل في الدورات',
                 'guard_name' => 'web',
             ]
         );

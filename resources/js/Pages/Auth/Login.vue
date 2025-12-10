@@ -19,7 +19,7 @@
                             <p class="text-xs text-yellow-700 mb-3">{{ t('auth.quick_login_hint') }}</p>
                             <div class="grid grid-cols-3 gap-2">
                                 <button
-                                    @click="fillCredentials('admin@lms.com')"
+                                    @click="fillCredentials('superadmin@lms.com')"
                                     type="button"
                                     class="px-3 py-2 text-xs font-medium text-yellow-800 bg-yellow-100 hover:bg-yellow-200 rounded-lg transition-colors border border-yellow-300"
                                 >

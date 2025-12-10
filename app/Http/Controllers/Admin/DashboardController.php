@@ -9,13 +9,24 @@ use Modules\Roles\Models\Role;
 use App\Models\User;
 use App\Models\Enrollment;
 use App\Models\Permission;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
     public function __construct(
         private DashboardService $dashboardService
-    ) {}
+    ) {
+        $this->middleware(function ($request, $next) {
+            $user = Auth::user();
+            
+            if (!$user || (!$user->isAdmin() && !$user->hasPermission('dashboard.admin'))) {
+                abort(403, __('messages.forbidden'));
+            }
+            
+            return $next($request);
+        });
+    }
 
     public function index()
     {

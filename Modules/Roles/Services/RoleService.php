@@ -34,8 +34,10 @@ class RoleService
         return DB::transaction(function () use ($data, $permissionIds) {
             $role = Role::create([
                 'name' => $data['name'],
+                'name_ar' => $data['name_ar'] ?? null,
                 'slug' => $data['slug'] ?? Str::slug($data['name']),
                 'description' => $data['description'] ?? null,
+                'description_ar' => $data['description_ar'] ?? null,
                 'guard_name' => $data['guard_name'] ?? 'web',
             ]);
 
@@ -55,8 +57,10 @@ class RoleService
         return DB::transaction(function () use ($role, $data, $permissionIds) {
             $role->update([
                 'name' => $data['name'] ?? $role->name,
+                'name_ar' => $data['name_ar'] ?? $role->name_ar,
                 'slug' => $data['slug'] ?? $role->slug,
                 'description' => $data['description'] ?? $role->description,
+                'description_ar' => $data['description_ar'] ?? $role->description_ar,
                 'guard_name' => $data['guard_name'] ?? $role->guard_name,
             ]);
 

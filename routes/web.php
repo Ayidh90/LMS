@@ -65,21 +65,32 @@ Route::middleware('auth')->group(function () {
 */
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+    // Dashboard
+    Route::middleware('permission:dashboard.admin')->group(function () {
+        Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+    });
     
     // Users Management
-    Route::resource('users', AdminUserController::class);
-    
-    // Activity Logs
-    Route::get('/activity-logs', [AdminActivityLogController::class, 'index'])->name('activity-logs.index');
+    Route::middleware('permission:users.manage')->group(function () {
+        Route::resource('users', AdminUserController::class);
+        Route::get('/activity-logs', [AdminActivityLogController::class, 'index'])->name('activity-logs.index');
+    });
     
     // Roles and Permissions
-    Route::resource('roles', RoleController::class);
-    Route::resource('permissions', PermissionController::class)->except(['create', 'edit', 'show']);
+    Route::middleware('permission:roles.manage')->group(function () {
+        Route::resource('roles', RoleController::class);
+    });
+    Route::middleware('permission:permissions.manage')->group(function () {
+        Route::resource('permissions', PermissionController::class)->except(['create', 'edit', 'show']);
+    });
     
     // Settings
-    Route::get('/settings', [AdminSettingsController::class, 'index'])->name('settings.index');
-    Route::put('/settings', [AdminSettingsController::class, 'update'])->name('settings.update');
+    Route::middleware('permission:settings.view')->group(function () {
+        Route::get('/settings', [AdminSettingsController::class, 'index'])->name('settings.index');
+    });
+    Route::middleware('permission:settings.edit')->group(function () {
+        Route::put('/settings', [AdminSettingsController::class, 'update'])->name('settings.update');
+    });
 });
 
 /*
@@ -89,7 +100,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 */
 
 Route::middleware(['auth', 'role:instructor'])->prefix('instructor')->name('instructor.')->group(function () {
-    Route::get('/dashboard', [InstructorDashboardController::class, 'index'])->name('dashboard');
+    Route::middleware('permission:dashboard.instructor')->group(function () {
+        Route::get('/dashboard', [InstructorDashboardController::class, 'index'])->name('dashboard');
+    });
 });
 
 /*
@@ -99,7 +112,9 @@ Route::middleware(['auth', 'role:instructor'])->prefix('instructor')->name('inst
 */
 
 Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')->group(function () {
-    Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
+    Route::middleware('permission:dashboard.student')->group(function () {
+        Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
+    });
 });
 
 /*

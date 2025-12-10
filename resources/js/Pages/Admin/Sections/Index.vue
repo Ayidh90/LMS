@@ -93,7 +93,7 @@
                                             {{ lesson.order }}
                                         </span>
                                         <span class="text-gray-700">{{ lesson.title }}</span>
-                                        <span class="px-2 py-0.5 bg-white rounded-full text-xs text-gray-500 capitalize">{{ lesson.type }}</span>
+                                        <span class="px-2 py-0.5 bg-white rounded-full text-xs text-gray-500 capitalize">{{ t('lessons.types.' + lesson.type) || lesson.type }}</span>
                                     </div>
                                     <div v-if="section.lessons.length > 3" class="text-xs text-gray-500 pr-9">
                                         +{{ section.lessons.length - 3 }} {{ t('common.more') || 'more' }}

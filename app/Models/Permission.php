@@ -11,8 +11,10 @@ class Permission extends SpatiePermission
 
     protected $fillable = [
         'name',
+        'name_ar',
         'slug',
         'description',
+        'description_ar',
         'guard_name',
     ];
 

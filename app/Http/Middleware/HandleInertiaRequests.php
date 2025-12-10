@@ -47,9 +47,24 @@ class HandleInertiaRequests extends Middleware
         
         $user = $request->user();
         
-        // Get instructor permissions settings
+        // Get settings service
         $settingsService = app(SettingsService::class);
         $instructorPermissions = $settingsService->getInstructorPermissions();
+        $websiteSettings = $settingsService->getWebsiteSettings();
+        
+        // Get logo and favicon URLs
+        $logoUrl = null;
+        $faviconUrl = null;
+        if ($websiteSettings['logo']) {
+            $logoUrl = filter_var($websiteSettings['logo'], FILTER_VALIDATE_URL) 
+                ? $websiteSettings['logo'] 
+                : asset('storage/' . $websiteSettings['logo']);
+        }
+        if ($websiteSettings['favicon']) {
+            $faviconUrl = filter_var($websiteSettings['favicon'], FILTER_VALIDATE_URL) 
+                ? $websiteSettings['favicon'] 
+                : asset('storage/' . $websiteSettings['favicon']);
+        }
         
         return [
             ...parent::share($request),
@@ -71,6 +86,14 @@ class HandleInertiaRequests extends Middleware
             ],
             'settings' => [
                 'instructor_permissions' => $instructorPermissions,
+                'website' => [
+                    'name' => $websiteSettings['name'],
+                    'logo' => $logoUrl,
+                    'favicon' => $faviconUrl,
+                    'info' => $websiteSettings['info'],
+                    'email' => $websiteSettings['email'],
+                    'mobile' => $websiteSettings['mobile'],
+                ],
             ],
         ];
     }

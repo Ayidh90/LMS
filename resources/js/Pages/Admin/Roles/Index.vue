@@ -35,15 +35,15 @@
                                     </svg>
                                 </div>
                                 <div>
-                                    <h3 class="text-lg font-semibold text-gray-900">{{ role.name }}</h3>
+                                    <h3 class="text-lg font-semibold text-gray-900">{{ getRoleName(role) }}</h3>
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
                                         {{ role.slug }}
                                     </span>
                                 </div>
                             </div>
                         </div>
-                        <p v-if="role.description" class="mt-3 text-sm text-gray-500 line-clamp-2">
-                            {{ role.description }}
+                        <p v-if="getRoleDescription(role)" class="mt-3 text-sm text-gray-500 line-clamp-2">
+                            {{ getRoleDescription(role) }}
                         </p>
                     </div>
 
@@ -134,7 +134,7 @@
                             </div>
                         </div>
                         <p class="text-gray-600 mb-6">
-                            {{ t('roles.delete_warning') || 'This will permanently delete the role' }} <strong>{{ roleToDelete?.name }}</strong>.
+                            {{ t('roles.delete_warning') || 'This will permanently delete the role' }} <strong>{{ roleToDelete ? getRoleName(roleToDelete) : '' }}</strong>.
                         </p>
                         <div class="flex justify-end gap-3">
                             <button
@@ -158,7 +158,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
@@ -175,11 +175,29 @@ const props = defineProps({
     },
 });
 
-const { t } = useTranslation();
+const { t, locale } = useTranslation();
 const { route } = useRoute();
 
 const showDeleteModal = ref(false);
 const roleToDelete = ref(null);
+
+// Get role name based on locale
+const getRoleName = (role) => {
+    if (!role) return '';
+    if (locale.value === 'ar' && role.name_ar) {
+        return role.name_ar;
+    }
+    return role.name || '';
+};
+
+// Get role description based on locale
+const getRoleDescription = (role) => {
+    if (!role) return '';
+    if (locale.value === 'ar' && role.description_ar) {
+        return role.description_ar;
+    }
+    return role.description || '';
+};
 
 const getRoleColor = (slug) => {
     const colors = {

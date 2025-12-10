@@ -3,25 +3,27 @@
         <Head :title="course?.translated_title || course?.title || t('admin.course_details')" />
         
         <div class="space-y-6 min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 pb-8" :dir="direction">
-            <!-- Page Header -->
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl p-6 shadow-xl">
-                <div class="text-white">
-                    <div class="flex items-center gap-2 text-sm text-blue-100 mb-2">
-                        <Link :href="route('admin.courses.index')" class="hover:text-white transition-colors">{{ t('admin.courses_management') }}</Link>
+            <!-- Page Header - Enhanced -->
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-2xl p-8 shadow-2xl relative overflow-hidden">
+                <div class="absolute inset-0 bg-black/5"></div>
+                <div class="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -mr-48 -mt-48 blur-3xl"></div>
+                <div class="relative z-10 text-white flex-1">
+                    <div class="flex items-center gap-2 text-sm text-blue-100 mb-3">
+                        <Link :href="route('admin.courses.index')" class="hover:text-white transition-colors font-medium">{{ t('admin.courses_management') || 'Courses Management' }}</Link>
                         <span>›</span>
-                        <span class="text-white">{{ course?.translated_title || course?.title }}</span>
+                        <span class="text-white font-semibold">{{ course?.translated_title || course?.title }}</span>
                     </div>
-                    <h1 class="text-3xl font-bold mb-2">{{ course?.translated_title || course?.title }}</h1>
-                    <p class="text-blue-100 text-sm">{{ t('admin.course_full_details') || 'View complete course information and statistics' }}</p>
+                    <h1 class="text-4xl font-bold mb-3">{{ course?.translated_title || course?.title }}</h1>
+                    <p class="text-blue-100 text-base">{{ t('admin.course_full_details') || 'View complete course information and statistics' }}</p>
                 </div>
-                <div class="flex items-center gap-3">
+                <div class="relative z-10 flex items-center gap-3">
                     <Link :href="route('admin.courses.edit', course?.slug || course?.id)">
                         <Button 
-                            :label="t('common.edit')" 
+                            :label="t('common.edit') || 'Edit'" 
                             icon="pi pi-pencil"
                             severity="secondary"
                             outlined
-                            class="bg-white"
+                            class="bg-white hover:bg-gray-50 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                         />
                     </Link>
                 </div>
@@ -156,11 +158,17 @@
                         </template>
                     </Card>
 
-                    <!-- Sections & Lessons -->
-                    <Card>
+                    <!-- Sections & Lessons - Enhanced -->
+                    <Card class="course-content-card">
                         <template #header>
                             <div class="flex items-center justify-between p-6 pb-0">
-                                <h2 class="text-xl font-bold text-gray-900">{{ t('admin.course_content') || 'Course Content' }}</h2>
+                                <div>
+                                    <h2 class="text-2xl font-bold text-gray-900 mb-1 flex items-center gap-2">
+                                        <i class="pi pi-book text-blue-600"></i>
+                                        {{ t('admin.course_content') || 'Course Content' }}
+                                    </h2>
+                                    <p class="text-sm text-gray-500">{{ t('admin.course_content_description') || 'Manage sections, lessons, and questions' }}</p>
+                                </div>
                                 <Link
                                     :href="route('admin.courses.sections.index', course?.slug || course?.id)"
                                 >
@@ -169,6 +177,7 @@
                                         icon="pi pi-cog"
                                         text
                                         size="small"
+                                        class="hover:bg-blue-50"
                                     />
                                 </Link>
                             </div>
@@ -189,17 +198,51 @@
                                 <p v-if="section.translated_description || section.description" class="text-sm text-gray-600 mb-4 leading-relaxed">
                                     {{ section.translated_description || section.description }}
                                 </p>
-                                <div v-if="section.lessons && section.lessons.length > 0" class="space-y-2">
-                                    <div v-for="lesson in section.lessons" :key="lesson.id" class="border border-gray-100 rounded-lg p-3 hover:bg-gray-50 transition-colors">
-                                        <div class="flex items-center gap-3 mb-2">
-                                        <i class="pi pi-play-circle text-blue-500"></i>
-                                            <span class="font-medium text-gray-900">{{ lesson.translated_title || lesson.title }}</span>
-                                            <Badge v-if="lesson.questions && lesson.questions.length > 0" :value="lesson.questions.length" severity="info" class="ml-auto" />
+                                <div v-if="section.lessons && section.lessons.length > 0" class="space-y-3">
+                                    <div v-for="lesson in section.lessons" :key="lesson.id" class="border border-gray-200 rounded-xl p-4 hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-indigo-50/30 hover:border-blue-300 transition-all duration-300 group">
+                                        <div class="flex items-center gap-3 mb-3">
+                                            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:scale-110 transition-all duration-300">
+                                                <i class="pi pi-play-circle text-white text-lg"></i>
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <span class="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">{{ lesson.translated_title || lesson.title }}</span>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <Link 
+                                                    v-if="lesson.id"
+                                                    :href="route('admin.courses.lessons.questions.create', [course?.slug || course?.id, lesson.id])"
+                                                    class="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                                                    :title="t('admin.add_question') || 'Add Question'"
+                                                >
+                                                    <Button 
+                                                        icon="pi pi-plus-circle"
+                                                        severity="success"
+                                                        text
+                                                        rounded
+                                                        size="small"
+                                                    />
+                                                </Link>
+                                                <Link 
+                                                    v-if="lesson.id && lesson.questions && lesson.questions.length > 0"
+                                                    :href="route('admin.courses.lessons.questions.index', [course?.slug || course?.id, lesson.id])"
+                                                    class="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                                                    :title="t('admin.view_questions') || 'View Questions'"
+                                                >
+                                                    <Button 
+                                                        icon="pi pi-eye"
+                                                        severity="info"
+                                                        text
+                                                        rounded
+                                                        size="small"
+                                                    />
+                                                </Link>
+                                                <Badge v-if="lesson.questions && lesson.questions.length > 0" :value="lesson.questions.length" severity="info" class="font-semibold" />
+                                            </div>
                                         </div>
-                                        <div v-if="lesson.questions && lesson.questions.length > 0" class="pl-8 mt-2 space-y-1">
-                                            <div v-for="question in lesson.questions" :key="question.id" class="text-xs text-gray-600 flex items-center gap-2">
-                                                <i class="pi pi-circle-fill text-xs text-gray-400"></i>
-                                                <span>{{ question.translated_question || question.question }}</span>
+                                        <div v-if="lesson.questions && lesson.questions.length > 0" class="pl-13 mt-3 space-y-2 border-t border-gray-100 pt-3">
+                                            <div v-for="question in lesson.questions" :key="question.id" class="text-sm text-gray-600 flex items-center gap-2 hover:text-gray-900 transition-colors">
+                                                <i class="pi pi-circle-fill text-xs text-blue-400"></i>
+                                                <span class="flex-1">{{ question.translated_question || question.question }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -216,47 +259,78 @@
 
                 <!-- Sidebar -->
                 <div class="space-y-6">
-                    <!-- Quick Actions -->
-                    <Card>
+                    <!-- Quick Actions - Enhanced -->
+                    <Card class="quick-actions-card">
                         <template #header>
-                            <h3 class="text-lg font-bold text-gray-900 p-6 pb-0">{{ t('admin.quick_actions') || 'Quick Actions' }}</h3>
+                            <div class="p-6 pb-0">
+                                <h3 class="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                                    <i class="pi pi-bolt text-blue-600"></i>
+                                    {{ t('admin.quick_actions') || 'Quick Actions' }}
+                                </h3>
+                                <p class="text-sm text-gray-500">{{ t('admin.manage_course_content') || 'Manage course content and structure' }}</p>
+                            </div>
                         </template>
                         <template #content>
-                            <div class="space-y-2">
+                            <div class="space-y-3 p-2">
                                 <Link
                                     :href="route('admin.courses.sections.create', course?.slug || course?.id)"
-                                    class="block w-full"
+                                    class="block w-full group"
                                 >
                                     <Button 
                                         :label="t('admin.add_section') || 'Add Section'" 
                                         icon="pi pi-plus"
-                                        class="w-full justify-start"
+                                        class="w-full justify-start hover:scale-105 transition-transform duration-200"
                                         outlined
                                         severity="info"
                                     />
                                 </Link>
                                 <Link
                                     :href="route('admin.courses.lessons.create', course?.slug || course?.id)"
-                                    class="block w-full"
+                                    class="block w-full group"
                                 >
                                     <Button 
                                         :label="t('admin.add_lesson') || 'Add Lesson'" 
                                         icon="pi pi-book"
-                                        class="w-full justify-start"
+                                        class="w-full justify-start hover:scale-105 transition-transform duration-200"
                                         outlined
                                         severity="secondary"
                                     />
                                 </Link>
                                 <Link
+                                    v-if="course?.sections && course.sections.length > 0 && course.sections.some(s => s.lessons && s.lessons.length > 0)"
+                                    :href="route('admin.courses.lessons.index', course?.slug || course?.id)"
+                                    class="block w-full group"
+                                >
+                                    <Button 
+                                        :label="t('admin.manage_lessons') || 'Manage Lessons'" 
+                                        icon="pi pi-list"
+                                        class="w-full justify-start hover:scale-105 transition-transform duration-200"
+                                        outlined
+                                        severity="warning"
+                                    />
+                                </Link>
+                                <Link
+                                    :href="route('admin.courses.sections.index', course?.slug || course?.id)"
+                                    class="block w-full group"
+                                >
+                                    <Button 
+                                        :label="t('admin.manage_sections') || 'Manage Sections'" 
+                                        icon="pi pi-cog"
+                                        class="w-full justify-start hover:scale-105 transition-transform duration-200"
+                                        outlined
+                                        severity="success"
+                                    />
+                                </Link>
+                                <Link
                                     :href="route('admin.courses.batches.index', course?.slug || course?.id)"
-                                    class="block w-full"
+                                    class="block w-full group"
                                 >
                                     <Button 
                                         :label="t('admin.manage_batches') || 'Manage Batches'" 
-                                        icon="pi pi-cog"
-                                        class="w-full justify-start"
+                                        icon="pi pi-users"
+                                        class="w-full justify-start hover:scale-105 transition-transform duration-200"
                                         outlined
-                                        severity="success"
+                                        severity="help"
                                     />
                                 </Link>
                             </div>
@@ -318,6 +392,20 @@ const handleImageError = (event) => {
 .stat-card-hover:hover {
     transform: translateY(-4px);
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15), 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.quick-actions-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.quick-actions-card:hover {
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08);
+}
+
+.course-content-card {
+    background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
+    border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 :deep(.p-panel) {

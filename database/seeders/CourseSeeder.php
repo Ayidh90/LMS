@@ -78,13 +78,23 @@ class CourseSeeder extends Seeder
                 'price' => 99.99,
                 'duration_hours' => 60,
                 'thumbnail' => 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800',
-                'category' => 'Web Development',
                 'lessons' => [
-                    ['title' => 'Introduction to HTML', 'title_ar' => 'مقدمة في HTML', 'order' => 1, 'duration_minutes' => 30],
-                    ['title' => 'CSS Fundamentals', 'title_ar' => 'أساسيات CSS', 'order' => 2, 'duration_minutes' => 45],
-                    ['title' => 'JavaScript Basics', 'title_ar' => 'أساسيات JavaScript', 'order' => 3, 'duration_minutes' => 60],
-                    ['title' => 'React Introduction', 'title_ar' => 'مقدمة في React', 'order' => 4, 'duration_minutes' => 90],
-                    ['title' => 'Node.js Backend', 'title_ar' => 'Node.js للخادم', 'order' => 5, 'duration_minutes' => 120],
+                    ['title' => 'Introduction to HTML', 'title_ar' => 'مقدمة في HTML', 'order' => 1, 'duration_minutes' => 30, 'type' => 'youtube_video', 'video_url' => 'https://youtu.be/IPo6Ub_ks7s?si=uYkpp6TcIbhX1zlW'],
+                    ['title' => 'HTML Structure and Elements', 'title_ar' => 'هيكل HTML والعناصر', 'order' => 2, 'duration_minutes' => 45, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=kUMe1FH4CHE'],
+                    ['title' => 'CSS Fundamentals', 'title_ar' => 'أساسيات CSS', 'order' => 3, 'duration_minutes' => 45, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=1Rs2ND1ryYc'],
+                    ['title' => 'CSS Layouts and Flexbox', 'title_ar' => 'تخطيطات CSS و Flexbox', 'order' => 4, 'duration_minutes' => 60, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=JJSoEo8JSnc'],
+                    ['title' => 'JavaScript Basics', 'title_ar' => 'أساسيات JavaScript', 'order' => 5, 'duration_minutes' => 60, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=W6NZfCO5SIk'],
+                    ['title' => 'JavaScript DOM Manipulation', 'title_ar' => 'التلاعب بـ DOM في JavaScript', 'order' => 6, 'duration_minutes' => 75, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=5fb2aPlgoys'],
+                    ['title' => 'JavaScript Assignment', 'title_ar' => 'مهمة JavaScript', 'order' => 7, 'duration_minutes' => 90, 'type' => 'assignment'],
+                    ['title' => 'React Introduction', 'title_ar' => 'مقدمة في React', 'order' => 8, 'duration_minutes' => 90, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=SqcY0GlETPk'],
+                    ['title' => 'React Components and Props', 'title_ar' => 'مكونات React والخصائص', 'order' => 9, 'duration_minutes' => 105, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=DLX62G4lc44'],
+                    ['title' => 'React Hooks and State', 'title_ar' => 'React Hooks والحالة', 'order' => 10, 'duration_minutes' => 120, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=O6P86uwfdR0'],
+                    ['title' => 'React Quiz', 'title_ar' => 'اختبار React', 'order' => 11, 'duration_minutes' => 30, 'type' => 'test'],
+                    ['title' => 'Node.js Backend', 'title_ar' => 'Node.js للخادم', 'order' => 12, 'duration_minutes' => 120, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=TlB_eWDSMt4'],
+                    ['title' => 'Express.js Framework', 'title_ar' => 'إطار Express.js', 'order' => 13, 'duration_minutes' => 90, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=L72fhGm1tfE'],
+                    ['title' => 'Building REST APIs', 'title_ar' => 'بناء REST APIs', 'order' => 14, 'duration_minutes' => 105, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=pKd0Rpw7O48'],
+                    ['title' => 'Full Stack Project Assignment', 'title_ar' => 'مشروع Full Stack', 'order' => 15, 'duration_minutes' => 180, 'type' => 'assignment'],
+                    ['title' => 'Course Final Test', 'title_ar' => 'الاختبار النهائي للدورة', 'order' => 16, 'duration_minutes' => 60, 'type' => 'test'],
                 ],
             ],
             [
@@ -96,12 +106,16 @@ class CourseSeeder extends Seeder
                 'price' => 149.99,
                 'duration_hours' => 80,
                 'thumbnail' => 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=800',
-                'category' => 'Mobile Development',
                 'lessons' => [
-                    ['title' => 'Flutter Setup', 'title_ar' => 'إعداد Flutter', 'order' => 1, 'duration_minutes' => 20],
-                    ['title' => 'Dart Programming', 'title_ar' => 'برمجة Dart', 'order' => 2, 'duration_minutes' => 90],
-                    ['title' => 'Widgets and Layouts', 'title_ar' => 'Widgets والتخطيطات', 'order' => 3, 'duration_minutes' => 120],
-                    ['title' => 'State Management', 'title_ar' => 'إدارة الحالة', 'order' => 4, 'duration_minutes' => 150],
+                    ['title' => 'Flutter Setup', 'title_ar' => 'إعداد Flutter', 'order' => 1, 'duration_minutes' => 20, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=1gDhl4jeEzM'],
+                    ['title' => 'Flutter Installation Guide', 'title_ar' => 'دليل تثبيت Flutter', 'order' => 2, 'duration_minutes' => 30, 'type' => 'document_file'],
+                    ['title' => 'Dart Programming', 'title_ar' => 'برمجة Dart', 'order' => 3, 'duration_minutes' => 90, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=Ej_Pcr4uC2Q'],
+                    ['title' => 'Dart Syntax and Concepts', 'title_ar' => 'صيغة Dart والمفاهيم', 'order' => 4, 'duration_minutes' => 75, 'type' => 'text'],
+                    ['title' => 'Dart Practice Assignment', 'title_ar' => 'مهمة تدريبية في Dart', 'order' => 5, 'duration_minutes' => 60, 'type' => 'assignment'],
+                    ['title' => 'Widgets and Layouts', 'title_ar' => 'Widgets والتخطيطات', 'order' => 6, 'duration_minutes' => 120, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=1ukSR1GRtMU'],
+                    ['title' => 'Flutter UI Components', 'title_ar' => 'مكونات واجهة Flutter', 'order' => 7, 'duration_minutes' => 90, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=Gp2m8ZuXoPg'],
+                    ['title' => 'State Management', 'title_ar' => 'إدارة الحالة', 'order' => 8, 'duration_minutes' => 150, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=shHnzK0s0qs'],
+                    ['title' => 'Flutter Quiz', 'title_ar' => 'اختبار Flutter', 'order' => 9, 'duration_minutes' => 45, 'type' => 'test'],
                 ],
             ],
             [
@@ -113,12 +127,20 @@ class CourseSeeder extends Seeder
                 'price' => 129.99,
                 'duration_hours' => 70,
                 'thumbnail' => 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800',
-                'category' => 'Data Science',
                 'lessons' => [
-                    ['title' => 'Python Basics', 'title_ar' => 'أساسيات Python', 'order' => 1, 'duration_minutes' => 60],
-                    ['title' => 'Pandas Data Analysis', 'title_ar' => 'تحليل البيانات بـ Pandas', 'order' => 2, 'duration_minutes' => 120],
-                    ['title' => 'Data Visualization', 'title_ar' => 'تصور البيانات', 'order' => 3, 'duration_minutes' => 90],
-                    ['title' => 'Machine Learning Basics', 'title_ar' => 'أساسيات التعلم الآلي', 'order' => 4, 'duration_minutes' => 150],
+                    ['title' => 'Python Basics', 'title_ar' => 'أساسيات Python', 'order' => 1, 'duration_minutes' => 60, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=kqtD5dpn9C8'],
+                    ['title' => 'Python Data Types', 'title_ar' => 'أنواع البيانات في Python', 'order' => 2, 'duration_minutes' => 45, 'type' => 'text'],
+                    ['title' => 'Python Control Structures', 'title_ar' => 'هياكل التحكم في Python', 'order' => 3, 'duration_minutes' => 50, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=H2E1GQ2_0xQ'],
+                    ['title' => 'Python Assignment', 'title_ar' => 'مهمة Python', 'order' => 4, 'duration_minutes' => 90, 'type' => 'assignment'],
+                    ['title' => 'Pandas Data Analysis', 'title_ar' => 'تحليل البيانات بـ Pandas', 'order' => 5, 'duration_minutes' => 120, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=vmEHCJofslg'],
+                    ['title' => 'Pandas DataFrames', 'title_ar' => 'DataFrames في Pandas', 'order' => 6, 'duration_minutes' => 90, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=zmdjNSmRXF4'],
+                    ['title' => 'Data Visualization', 'title_ar' => 'تصور البيانات', 'order' => 7, 'duration_minutes' => 90, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=3m5qxZm_JqM'],
+                    ['title' => 'Matplotlib and Seaborn', 'title_ar' => 'Matplotlib و Seaborn', 'order' => 8, 'duration_minutes' => 75, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=nZ76x13Nm8Q'],
+                    ['title' => 'Visualization Assignment', 'title_ar' => 'مهمة التصور', 'order' => 9, 'duration_minutes' => 120, 'type' => 'assignment'],
+                    ['title' => 'Machine Learning Basics', 'title_ar' => 'أساسيات التعلم الآلي', 'order' => 10, 'duration_minutes' => 150, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=aircAruvnKk'],
+                    ['title' => 'Scikit-learn Tutorial', 'title_ar' => 'دليل Scikit-learn', 'order' => 11, 'duration_minutes' => 105, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=pqNCD_5J0Xg'],
+                    ['title' => 'ML Project Assignment', 'title_ar' => 'مشروع التعلم الآلي', 'order' => 12, 'duration_minutes' => 180, 'type' => 'assignment'],
+                    ['title' => 'Data Science Quiz', 'title_ar' => 'اختبار علوم البيانات', 'order' => 13, 'duration_minutes' => 60, 'type' => 'test'],
                 ],
             ],
             [
@@ -130,12 +152,17 @@ class CourseSeeder extends Seeder
                 'price' => 89.99,
                 'duration_hours' => 50,
                 'thumbnail' => 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800',
-                'category' => 'Design',
                 'lessons' => [
-                    ['title' => 'Design Principles', 'title_ar' => 'مبادئ التصميم', 'order' => 1, 'duration_minutes' => 45],
-                    ['title' => 'User Research', 'title_ar' => 'بحث المستخدم', 'order' => 2, 'duration_minutes' => 60],
-                    ['title' => 'Wireframing', 'title_ar' => 'Wireframing', 'order' => 3, 'duration_minutes' => 90],
-                    ['title' => 'Figma Basics', 'title_ar' => 'أساسيات Figma', 'order' => 4, 'duration_minutes' => 120],
+                    ['title' => 'Design Principles', 'title_ar' => 'مبادئ التصميم', 'order' => 1, 'duration_minutes' => 45, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=ZbrzdMaumNk'],
+                    ['title' => 'Color Theory and Typography', 'title_ar' => 'نظرية الألوان والطباعة', 'order' => 2, 'duration_minutes' => 60, 'type' => 'text'],
+                    ['title' => 'User Research', 'title_ar' => 'بحث المستخدم', 'order' => 3, 'duration_minutes' => 60, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=QU9TdbbRxlU'],
+                    ['title' => 'User Personas and Journey Maps', 'title_ar' => 'شخصيات المستخدم وخريطة الرحلة', 'order' => 4, 'duration_minutes' => 75, 'type' => 'document_file'],
+                    ['title' => 'Wireframing', 'title_ar' => 'Wireframing', 'order' => 5, 'duration_minutes' => 90, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=qpH7-KFWZRI'],
+                    ['title' => 'Prototyping Basics', 'title_ar' => 'أساسيات النماذج الأولية', 'order' => 6, 'duration_minutes' => 60, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=FTFaQWZBqQ8'],
+                    ['title' => 'Design Assignment', 'title_ar' => 'مهمة التصميم', 'order' => 7, 'duration_minutes' => 120, 'type' => 'assignment'],
+                    ['title' => 'Figma Basics', 'title_ar' => 'أساسيات Figma', 'order' => 8, 'duration_minutes' => 120, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=FTFaQWZBqQ8'],
+                    ['title' => 'Advanced Figma Techniques', 'title_ar' => 'تقنيات Figma المتقدمة', 'order' => 9, 'duration_minutes' => 90, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=FTFaQWZBqQ8'],
+                    ['title' => 'UI/UX Quiz', 'title_ar' => 'اختبار UI/UX', 'order' => 10, 'duration_minutes' => 45, 'type' => 'test'],
                 ],
             ],
             [
@@ -147,12 +174,20 @@ class CourseSeeder extends Seeder
                 'price' => 79.99,
                 'duration_hours' => 40,
                 'thumbnail' => 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800',
-                'category' => 'Marketing',
                 'lessons' => [
-                    ['title' => 'SEO Fundamentals', 'title_ar' => 'أساسيات SEO', 'order' => 1, 'duration_minutes' => 60],
-                    ['title' => 'Social Media Marketing', 'title_ar' => 'التسويق عبر وسائل التواصل', 'order' => 2, 'duration_minutes' => 90],
-                    ['title' => 'Content Marketing', 'title_ar' => 'تسويق المحتوى', 'order' => 3, 'duration_minutes' => 75],
-                    ['title' => 'Analytics and Tracking', 'title_ar' => 'التحليلات والتتبع', 'order' => 4, 'duration_minutes' => 60],
+                    ['title' => 'SEO Fundamentals', 'title_ar' => 'أساسيات SEO', 'order' => 1, 'duration_minutes' => 60, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=xsVTqzratPs'],
+                    ['title' => 'Keyword Research', 'title_ar' => 'بحث الكلمات المفتاحية', 'order' => 2, 'duration_minutes' => 45, 'type' => 'text'],
+                    ['title' => 'On-Page SEO', 'title_ar' => 'SEO على الصفحة', 'order' => 3, 'duration_minutes' => 50, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=GGR90iE6lqA'],
+                    ['title' => 'SEO Assignment', 'title_ar' => 'مهمة SEO', 'order' => 4, 'duration_minutes' => 90, 'type' => 'assignment'],
+                    ['title' => 'Social Media Marketing', 'title_ar' => 'التسويق عبر وسائل التواصل', 'order' => 5, 'duration_minutes' => 90, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=u9NE0jInb_c'],
+                    ['title' => 'Facebook and Instagram Ads', 'title_ar' => 'إعلانات Facebook و Instagram', 'order' => 6, 'duration_minutes' => 75, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=GGR90iE6lqA'],
+                    ['title' => 'Content Marketing', 'title_ar' => 'تسويق المحتوى', 'order' => 7, 'duration_minutes' => 75, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=GGR90iE6lqA'],
+                    ['title' => 'Content Strategy Guide', 'title_ar' => 'دليل استراتيجية المحتوى', 'order' => 8, 'duration_minutes' => 60, 'type' => 'document_file'],
+                    ['title' => 'Email Marketing', 'title_ar' => 'التسويق عبر البريد الإلكتروني', 'order' => 9, 'duration_minutes' => 60, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=GGR90iE6lqA'],
+                    ['title' => 'Analytics and Tracking', 'title_ar' => 'التحليلات والتتبع', 'order' => 10, 'duration_minutes' => 60, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=GGR90iE6lqA'],
+                    ['title' => 'Google Analytics Setup', 'title_ar' => 'إعداد Google Analytics', 'order' => 11, 'duration_minutes' => 45, 'type' => 'text'],
+                    ['title' => 'Marketing Campaign Assignment', 'title_ar' => 'مهمة حملة تسويقية', 'order' => 12, 'duration_minutes' => 120, 'type' => 'assignment'],
+                    ['title' => 'Digital Marketing Quiz', 'title_ar' => 'اختبار التسويق الرقمي', 'order' => 13, 'duration_minutes' => 45, 'type' => 'test'],
                 ],
             ],
             [
@@ -164,27 +199,29 @@ class CourseSeeder extends Seeder
                 'price' => 69.99,
                 'duration_hours' => 35,
                 'thumbnail' => 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800',
-                'category' => 'Business',
                 'lessons' => [
-                    ['title' => 'Leadership Skills', 'title_ar' => 'مهارات القيادة', 'order' => 1, 'duration_minutes' => 45],
-                    ['title' => 'Project Management', 'title_ar' => 'إدارة المشاريع', 'order' => 2, 'duration_minutes' => 90],
-                    ['title' => 'Financial Planning', 'title_ar' => 'التخطيط المالي', 'order' => 3, 'duration_minutes' => 75],
-                    ['title' => 'Business Strategy', 'title_ar' => 'استراتيجية الأعمال', 'order' => 4, 'duration_minutes' => 60],
+                    ['title' => 'Leadership Skills', 'title_ar' => 'مهارات القيادة', 'order' => 1, 'duration_minutes' => 45, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=UfEi0-G47pE'],
+                    ['title' => 'Effective Communication', 'title_ar' => 'التواصل الفعال', 'order' => 2, 'duration_minutes' => 40, 'type' => 'text'],
+                    ['title' => 'Team Building', 'title_ar' => 'بناء الفريق', 'order' => 3, 'duration_minutes' => 50, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=UfEi0-G47pE'],
+                    ['title' => 'Leadership Assignment', 'title_ar' => 'مهمة القيادة', 'order' => 4, 'duration_minutes' => 90, 'type' => 'assignment'],
+                    ['title' => 'Project Management', 'title_ar' => 'إدارة المشاريع', 'order' => 5, 'duration_minutes' => 90, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=UfEi0-G47pE'],
+                    ['title' => 'Agile Methodology', 'title_ar' => 'منهجية Agile', 'order' => 6, 'duration_minutes' => 75, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=UfEi0-G47pE'],
+                    ['title' => 'Project Management Tools', 'title_ar' => 'أدوات إدارة المشاريع', 'order' => 7, 'duration_minutes' => 60, 'type' => 'document_file'],
+                    ['title' => 'PM Assignment', 'title_ar' => 'مهمة إدارة المشاريع', 'order' => 8, 'duration_minutes' => 120, 'type' => 'assignment'],
+                    ['title' => 'Financial Planning', 'title_ar' => 'التخطيط المالي', 'order' => 9, 'duration_minutes' => 75, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=UfEi0-G47pE'],
+                    ['title' => 'Budgeting and Forecasting', 'title_ar' => 'الميزانية والتنبؤ', 'order' => 10, 'duration_minutes' => 60, 'type' => 'text'],
+                    ['title' => 'Business Strategy', 'title_ar' => 'استراتيجية الأعمال', 'order' => 11, 'duration_minutes' => 60, 'type' => 'youtube_video', 'video_url' => 'https://www.youtube.com/watch?v=UfEi0-G47pE'],
+                    ['title' => 'SWOT Analysis', 'title_ar' => 'تحليل SWOT', 'order' => 12, 'duration_minutes' => 45, 'type' => 'document_file'],
+                    ['title' => 'Business Plan Assignment', 'title_ar' => 'مهمة خطة الأعمال', 'order' => 13, 'duration_minutes' => 150, 'type' => 'assignment'],
+                    ['title' => 'Business Management Quiz', 'title_ar' => 'اختبار إدارة الأعمال', 'order' => 14, 'duration_minutes' => 50, 'type' => 'test'],
                 ],
             ],
         ];
 
         foreach ($courses as $courseData) {
-            // Find category by name
-            // Categories removed from system
-            // $category = $categories->firstWhere('name', $courseData['category']);
-            // if (!$category) {
-            //     $category = $categories->first(); // Fallback to first category
-            // }
-
             $lessons = $courseData['lessons'];
             $thumbnailUrl = $courseData['thumbnail'] ?? null;
-            unset($courseData['lessons'], $courseData['category'], $courseData['thumbnail']);
+            unset($courseData['lessons'], $courseData['thumbnail']);
 
             // Check if course already exists
             $slug = Str::slug($courseData['title']);
@@ -279,13 +316,26 @@ class CourseSeeder extends Seeder
                 }
                 $course = $existingCourse;
                 
-                // Check if course has sections, if not create them
+                // Delete existing sections and lessons to recreate with updated data
                 $existingSectionsCount = $course->sections()->count();
-                if ($existingSectionsCount === 0 && !empty($lessons)) {
-                    $this->command->info("Course '{$courseData['title']}' has no sections. Creating sections and lessons...");
+                if ($existingSectionsCount > 0) {
+                    $this->command->info("Course '{$courseData['title']}' has {$existingSectionsCount} existing section(s). Deleting to recreate with updated lessons...");
+                    // Delete lessons first (due to foreign key constraint)
+                    $course->lessons()->delete();
+                    // Then delete sections
+                    $course->sections()->delete();
+                }
+                
+                // Create sections and lessons (always recreate if lessons are provided)
+                if (!empty($lessons)) {
+                    $this->command->info("Creating sections and lessons for course: {$courseData['title']}...");
                     $this->createSectionsAndLessons($course, $lessons, $courseData);
-                } elseif ($existingSectionsCount > 0) {
-                    $this->command->info("Course '{$courseData['title']}' already has {$existingSectionsCount} section(s). Skipping section/lesson creation.");
+                }
+                
+                // For existing courses, ensure they have a batch
+                $existingBatch = Batch::where('course_id', $course->id)->first();
+                if (!$existingBatch) {
+                    $this->createBatchForCourse($course, $instructor, $student);
                 }
             } else {
                 // Create new course with all translations
@@ -297,7 +347,7 @@ class CourseSeeder extends Seeder
                     'description_ar' => $courseData['description_ar'] ?? null,
                     'slug' => $slug,
                     // 'instructor_id' => $instructor->id, // Removed - instructors are assigned to batches now
-                    // 'category_id' => $category->id, // Removed - categories removed from system
+                    // 'category_id' => removed - categories removed from system
                     'thumbnail' => $thumbnail,
                     'level' => $courseData['level'],
                     'price' => $courseData['price'],
@@ -313,12 +363,6 @@ class CourseSeeder extends Seeder
                 $this->createBatchForCourse($course, $instructor, $student);
 
                 $this->command->info("Created course: {$course->title} (EN) / {$course->title_ar} (AR)");
-            } else {
-                // For existing courses, ensure they have a batch
-                $existingBatch = Batch::where('course_id', $course->id)->first();
-                if (!$existingBatch) {
-                    $this->createBatchForCourse($course, $instructor, $student);
-                }
             }
         }
 
@@ -426,7 +470,7 @@ class CourseSeeder extends Seeder
 
             if (!$existingLesson) {
                 // Create lesson and assign to current section
-                Lesson::create([
+                $lessonAttributes = [
                     'course_id' => $course->id,
                     'section_id' => $currentSection->id,
                     'title' => $lessonData['title'],
@@ -438,8 +482,17 @@ class CourseSeeder extends Seeder
                     'order' => $lessonOrderInSection,
                     'duration_minutes' => $lessonData['duration_minutes'],
                     'is_free' => $lessonData['order'] === 1, // First lesson is free
-                ]);
-                $this->command->info("    Created lesson: {$lessonData['title']}");
+                    'type' => $lessonData['type'] ?? 'text', // Default to 'text' if not specified
+                ];
+                
+                // Add video_url if provided
+                if (isset($lessonData['video_url']) && !empty($lessonData['video_url'])) {
+                    $lessonAttributes['video_url'] = $lessonData['video_url'];
+                }
+                
+                Lesson::create($lessonAttributes);
+                $lessonType = $lessonData['type'] ?? 'text';
+                $this->command->info("    Created lesson: {$lessonData['title']} (Type: {$lessonType})");
             } else {
                 // Update existing lesson to assign to section if not already assigned
                 if (!$existingLesson->section_id && $currentSection) {

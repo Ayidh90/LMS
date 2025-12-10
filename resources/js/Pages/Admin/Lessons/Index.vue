@@ -227,18 +227,8 @@ const getLessonTypeIcon = (type) => {
 };
 
 const formatLessonType = (type) => {
-    const types = {
-        text: t('lessons.types.text') || 'Text',
-        youtube_video: t('lessons.types.youtube') || 'YouTube',
-        google_drive_video: t('lessons.types.drive') || 'Google Drive',
-        video_file: t('lessons.types.video') || 'Video',
-        image: t('lessons.types.image') || 'Image',
-        document_file: t('lessons.types.document') || 'Document',
-        embed_frame: t('lessons.types.embed') || 'Embed',
-        assignment: t('lessons.types.assignment') || 'Assignment',
-        test: t('lessons.types.test') || 'Test',
-    };
-    return types[type] || type;
+    // Use direct translation key lookup for proper localization
+    return t(`lessons.types.${type}`) || type;
 };
 
 const confirmDelete = (lesson) => {

@@ -16,7 +16,7 @@
                             <h1 class="text-3xl font-bold text-gray-900">{{ t('sections.title') || 'Course Sections' }}</h1>
                         </div>
                         <button
-                            v-if="canCreateSections"
+                            v-if="canCreateSections && can('sections.create')"
                             @click="showSectionModal = true"
                             class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors flex items-center gap-2"
                         >
@@ -56,12 +56,14 @@
                                     </div>
                                     <div class="flex gap-2">
                                         <button
+                                            v-if="can('sections.edit')"
                                             @click="editSection(section)"
                                             class="px-3 py-1 text-blue-600 hover:bg-blue-50 rounded text-sm font-medium transition-colors"
                                         >
                                             {{ t('common.edit') }}
                                         </button>
                                         <button
+                                            v-if="can('sections.delete')"
                                             @click="deleteSection(section.id)"
                                             class="px-3 py-1 text-red-600 hover:bg-red-50 rounded text-sm font-medium transition-colors"
                                         >
@@ -77,7 +79,7 @@
                                             {{ t('lessons.title') }} ({{ section.lessons.length }})
                                         </h4>
                                         <Link
-                                            v-if="canCreateLessons"
+                                            v-if="canCreateLessons && can('lessons.create')"
                                             :href="route('instructor.lessons.create', course.slug || course.id)"
                                             class="text-sm text-blue-600 hover:text-blue-700 font-medium"
                                         >
@@ -113,7 +115,7 @@
                                 <div v-else class="mt-4 pt-4 border-t border-gray-200 text-center py-4">
                                     <p class="text-sm text-gray-500 mb-3">{{ t('sections.no_lessons') || 'No lessons in this section' }}</p>
                                     <Link
-                                        v-if="canCreateLessons"
+                                        v-if="canCreateLessons && can('lessons.create')"
                                         :href="route('instructor.lessons.create', course.slug || course.id)"
                                         class="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors"
                                     >
@@ -129,7 +131,7 @@
                         </svg>
                         <p class="text-gray-500 text-lg mb-4">{{ t('sections.no_sections') || 'No sections yet' }}</p>
                         <button
-                            v-if="canCreateSections"
+                            v-if="canCreateSections && can('sections.create')"
                             @click="showSectionModal = true"
                             class="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
                         >
@@ -228,6 +230,7 @@ import { useDirection } from '@/composables/useDirection';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
 import { useAlert } from '@/composables/useAlert';
+import { usePermissions } from '@/composables/usePermissions';
 import { Link, usePage, router } from '@inertiajs/vue3';
 
 const props = defineProps({
@@ -239,6 +242,7 @@ const { direction } = useDirection();
 const { t } = useTranslation();
 const { route } = useRoute();
 const { showSuccess, showError, showConfirm } = useAlert();
+const { can } = usePermissions();
 const page = usePage();
 
 const canCreateSections = computed(() => {

@@ -265,11 +265,13 @@
 import { computed, ref, inject, watch, onMounted, onUnmounted } from 'vue';
 import { Link, usePage, router } from '@inertiajs/vue3';
 import { useTranslation } from '@/composables/useTranslation';
+import { usePermissions } from '@/composables/usePermissions';
 import { Ziggy } from '../ziggy';
 import { route as ziggyRoute } from '../../../vendor/tightenco/ziggy/dist/index.esm.js';
 
 const { t } = useTranslation();
 const page = usePage();
+const { can: canPermission } = usePermissions();
 
 // Route function - use window.route (set globally in app.js) or Ziggy directly
 const route = (name, params = {}, absolute = false) => {
@@ -483,15 +485,12 @@ const menuItems = computed(() => {
                 permission: 'role-list',
             },
             {
-                title: t('admin.permissions'),
-                icon: 'key-square',
-                route: 'admin.permissions.index',
-                permission: 'role-list',
-            },
-            {
                 title: t('admin.settings') || 'Settings',
                 icon: 'setting-4',
                 route: 'admin.settings.index',
+                permission: 'settings.view',
+                // Allow admins to access settings even without explicit permission
+                allowAdmin: true,
             },
             {
                 title: t('admin.activity_logs'),
@@ -508,54 +507,8 @@ const menuItems = computed(() => {
     }
 });
 
-const can = (permissionOrPermissions) => {
-    const user = page.props?.auth?.user;
-    
-    // Super admin always has all permissions
-    if (user?.role === 'super_admin') {
-        return true;
-    }
-    
-    // Admin with is_admin flag also has all permissions
-    if (user?.is_admin && (user?.role === 'admin' || user?.role === 'super_admin')) {
-        return true;
-    }
-    
-    // Get auth.can from page props
-    const authCan = page.props?.auth?.can;
-    
-    if (!authCan || typeof authCan !== 'object') {
-        return false;
-    }
-    
-    // Check if user has the wildcard permission (super admin)
-    if (authCan['*'] === true) {
-        return true;
-    }
-    
-    try {
-        if (permissionOrPermissions === null || permissionOrPermissions === undefined || permissionOrPermissions === '') {
-            return false;
-        }
-        
-        // Handle array of permissions or single permission
-        const permissions = Array.isArray(permissionOrPermissions) 
-            ? permissionOrPermissions 
-            : [permissionOrPermissions];
-        
-        // Check if user has at least one of the required permissions
-        return permissions.some((permission) => {
-            if (!permission || typeof permission !== 'string') {
-                return false;
-            }
-            // Check if permission exists in auth.can and is truthy
-            return authCan[permission] === true;
-        });
-    } catch (error) {
-        console.error('Error in can method:', error);
-        return false;
-    }
-};
+// Use the composable's can function
+const can = canPermission;
 
 const hasChildren = (item) => {
     if (!item || typeof item !== 'object') {
@@ -621,11 +574,19 @@ const safeRoute = (routeName, routeParams = {}) => {
             if (process.env.NODE_ENV === 'development') {
                 console.warn(`Route [${routeName}] generated empty URL or returned '#'.`);
             }
+            // Fallback: try to construct URL manually for known routes
+            if (routeName === 'admin.settings.index') {
+                return '/admin/settings';
+            }
             return '#';
         }
         return routeUrl;
     } catch (error) {
         console.error(`Error in safeRoute for [${routeName}]:`, error);
+        // Fallback: try to construct URL manually for known routes
+        if (routeName === 'admin.settings.index') {
+            return '/admin/settings';
+        }
         return '#';
     }
 };
@@ -672,6 +633,11 @@ const hasPermission = (item) => {
         }
     }
     
+    // If item has allowAdmin flag and user is admin, allow access (check this before permission check)
+    if (item.allowAdmin && user && (user.role === 'admin' || user.role === 'super_admin' || user.is_admin)) {
+        return true;
+    }
+    
     // If item has no permission requirement, show it
     if (!item.permission) {
         // For label items (title only), check if any items below have permissions
@@ -696,6 +662,11 @@ const hasPermission = (item) => {
                 return !child.permission || can(child.permission);
             });
             return hasItemPermission || hasChildPermission;
+        }
+        
+        // If user is admin and doesn't have permission but item has allowAdmin, allow it
+        if (!hasItemPermission && item.allowAdmin && user && (user.role === 'admin' || user.role === 'super_admin' || user.is_admin)) {
+            return true;
         }
         
         return hasItemPermission;

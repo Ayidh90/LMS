@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Register alias middleware
         $middleware->alias([
             'role' => \App\Http\Middleware\EnsureRole::class,
+            'permission' => \App\Http\Middleware\CheckPermission::class,
         ]);
     })
     ->withProviders([

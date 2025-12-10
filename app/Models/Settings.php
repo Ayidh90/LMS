@@ -40,11 +40,20 @@ class Settings extends Model
      */
     public static function set(string $key, $value, string $type = 'boolean'): void
     {
+        $setting = self::where('key', $key)->first();
+        $finalType = $setting?->type ?? $type;
+        
+        $stringValue = match (true) {
+            is_bool($value) => $value ? '1' : '0',
+            is_null($value) => '',
+            default => (string) $value,
+        };
+        
         self::updateOrCreate(
             ['key' => $key],
             [
-                'value' => is_bool($value) ? ($value ? '1' : '0') : (string) $value,
-                'type' => $type,
+                'value' => $stringValue,
+                'type' => $finalType,
             ]
         );
     }
@@ -88,5 +97,53 @@ class Settings extends Model
     public static function instructorCanCreateQuestions(): bool
     {
         return self::get('instructor_can_create_questions', true);
+    }
+
+    /**
+     * Get website name
+     */
+    public static function websiteName(): string
+    {
+        return self::get('website_name', config('app.name', 'LMS'));
+    }
+
+    /**
+     * Get website logo path
+     */
+    public static function websiteLogo(): ?string
+    {
+        return self::get('website_logo', null);
+    }
+
+    /**
+     * Get website favicon path
+     */
+    public static function websiteFavicon(): ?string
+    {
+        return self::get('website_favicon', null);
+    }
+
+    /**
+     * Get website info/description
+     */
+    public static function websiteInfo(): ?string
+    {
+        return self::get('website_info', null);
+    }
+
+    /**
+     * Get website email
+     */
+    public static function websiteEmail(): ?string
+    {
+        return self::get('website_email', null);
+    }
+
+    /**
+     * Get website mobile/phone
+     */
+    public static function websiteMobile(): ?string
+    {
+        return self::get('website_mobile', null);
     }
 }

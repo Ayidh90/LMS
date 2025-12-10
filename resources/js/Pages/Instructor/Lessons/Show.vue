@@ -67,7 +67,7 @@
                             {{ t('lessons.questions') }} ({{ lesson.questions?.length || 0 }})
                         </h2>
                         <Link
-                            v-if="canCreateQuestions"
+                            v-if="canCreateQuestions && can('questions.create')"
                             :href="route('instructor.lessons.questions.create', [course.slug || course.id, lesson.id])"
                             class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors flex items-center gap-2"
                         >
@@ -104,6 +104,7 @@
                                 </div>
                                 <div class="flex gap-2">
                                     <button
+                                        v-if="can('questions.delete')"
                                         @click="deleteQuestion(question.id)"
                                         class="px-3 py-1 text-red-600 hover:bg-red-50 rounded text-sm font-medium transition-colors"
                                     >
@@ -255,7 +256,7 @@
                         </svg>
                         <p class="text-lg mb-4">{{ t('lessons.no_questions') }}</p>
                         <Link
-                            v-if="canCreateQuestions"
+                            v-if="canCreateQuestions && can('questions.create')"
                             :href="route('instructor.lessons.questions.create', [course.slug || course.id, lesson.id])"
                             class="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
                         >
@@ -265,7 +266,7 @@
                 </div>
 
                 <!-- Attendance Section -->
-                <div class="bg-white rounded-xl shadow-sm p-8 mt-6">
+                <div v-if="can('attendance.mark')" class="bg-white rounded-xl shadow-sm p-8 mt-6">
                     <div class="flex items-center justify-between mb-6">
                         <h2 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
                             <span class="w-1 h-6 bg-blue-600 rounded-full"></span>
@@ -474,6 +475,7 @@ import { useDirection } from '@/composables/useDirection';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
 import { useAlert } from '@/composables/useAlert';
+import { usePermissions } from '@/composables/usePermissions';
 import { Link, usePage, router } from '@inertiajs/vue3';
 
 const props = defineProps({
@@ -490,6 +492,7 @@ const { direction } = useDirection();
 const { t } = useTranslation();
 const { route } = useRoute();
 const { showSuccess, showError, showConfirm } = useAlert();
+const { can } = usePermissions();
 const page = usePage();
 
 const canCreateQuestions = computed(() => {

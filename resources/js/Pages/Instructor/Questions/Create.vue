@@ -313,6 +313,7 @@ import { useDirection } from '@/composables/useDirection';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
 import { useAlert } from '@/composables/useAlert';
+import { usePermissions } from '@/composables/usePermissions';
 import { useForm, usePage, router } from '@inertiajs/vue3';
 import { Link } from '@inertiajs/vue3';
 
@@ -326,6 +327,7 @@ const { direction } = useDirection();
 const { t } = useTranslation();
 const { route } = useRoute();
 const { showSuccess, showError } = useAlert();
+const { can } = usePermissions();
 const page = usePage();
 
 // Get question type from route data if passed from modal

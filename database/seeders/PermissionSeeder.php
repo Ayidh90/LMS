@@ -11,86 +11,86 @@ class PermissionSeeder extends Seeder
     {
         $permissions = [
             // Course Permissions
-            ['name' => 'view courses', 'slug' => 'courses.view', 'description' => 'Can view courses'],
-            ['name' => 'view all courses', 'slug' => 'courses.view-all', 'description' => 'Can view all courses including unpublished'],
-            ['name' => 'create courses', 'slug' => 'courses.create', 'description' => 'Can create new courses'],
-            ['name' => 'edit courses', 'slug' => 'courses.edit', 'description' => 'Can edit courses'],
-            ['name' => 'delete courses', 'slug' => 'courses.delete', 'description' => 'Can delete courses'],
-            ['name' => 'publish courses', 'slug' => 'courses.publish', 'description' => 'Can publish/unpublish courses'],
+            ['name' => 'view courses', 'name_ar' => 'عرض الدورات', 'slug' => 'courses.view', 'description' => 'Can view courses', 'description_ar' => 'يمكن عرض الدورات'],
+            ['name' => 'view all courses', 'name_ar' => 'عرض جميع الدورات', 'slug' => 'courses.view-all', 'description' => 'Can view all courses including unpublished', 'description_ar' => 'يمكن عرض جميع الدورات بما في ذلك غير المنشورة'],
+            ['name' => 'create courses', 'name_ar' => 'إنشاء الدورات', 'slug' => 'courses.create', 'description' => 'Can create new courses', 'description_ar' => 'يمكن إنشاء دورات جديدة'],
+            ['name' => 'edit courses', 'name_ar' => 'تعديل الدورات', 'slug' => 'courses.edit', 'description' => 'Can edit courses', 'description_ar' => 'يمكن تعديل الدورات'],
+            ['name' => 'delete courses', 'name_ar' => 'حذف الدورات', 'slug' => 'courses.delete', 'description' => 'Can delete courses', 'description_ar' => 'يمكن حذف الدورات'],
+            ['name' => 'publish courses', 'name_ar' => 'نشر الدورات', 'slug' => 'courses.publish', 'description' => 'Can publish/unpublish courses', 'description_ar' => 'يمكن نشر/إلغاء نشر الدورات'],
             
             // Lesson Permissions
-            ['name' => 'view lessons', 'slug' => 'lessons.view', 'description' => 'Can view lessons'],
-            ['name' => 'create lessons', 'slug' => 'lessons.create', 'description' => 'Can create lessons'],
-            ['name' => 'edit lessons', 'slug' => 'lessons.edit', 'description' => 'Can edit lessons'],
-            ['name' => 'delete lessons', 'slug' => 'lessons.delete', 'description' => 'Can delete lessons'],
+            ['name' => 'view lessons', 'name_ar' => 'عرض الدروس', 'slug' => 'lessons.view', 'description' => 'Can view lessons', 'description_ar' => 'يمكن عرض الدروس'],
+            ['name' => 'create lessons', 'name_ar' => 'إنشاء الدروس', 'slug' => 'lessons.create', 'description' => 'Can create lessons', 'description_ar' => 'يمكن إنشاء الدروس'],
+            ['name' => 'edit lessons', 'name_ar' => 'تعديل الدروس', 'slug' => 'lessons.edit', 'description' => 'Can edit lessons', 'description_ar' => 'يمكن تعديل الدروس'],
+            ['name' => 'delete lessons', 'name_ar' => 'حذف الدروس', 'slug' => 'lessons.delete', 'description' => 'Can delete lessons', 'description_ar' => 'يمكن حذف الدروس'],
             
             // Section Permissions
-            ['name' => 'view sections', 'slug' => 'sections.view', 'description' => 'Can view sections'],
-            ['name' => 'create sections', 'slug' => 'sections.create', 'description' => 'Can create sections'],
-            ['name' => 'edit sections', 'slug' => 'sections.edit', 'description' => 'Can edit sections'],
-            ['name' => 'delete sections', 'slug' => 'sections.delete', 'description' => 'Can delete sections'],
+            ['name' => 'view sections', 'name_ar' => 'عرض الأقسام', 'slug' => 'sections.view', 'description' => 'Can view sections', 'description_ar' => 'يمكن عرض الأقسام'],
+            ['name' => 'create sections', 'name_ar' => 'إنشاء الأقسام', 'slug' => 'sections.create', 'description' => 'Can create sections', 'description_ar' => 'يمكن إنشاء الأقسام'],
+            ['name' => 'edit sections', 'name_ar' => 'تعديل الأقسام', 'slug' => 'sections.edit', 'description' => 'Can edit sections', 'description_ar' => 'يمكن تعديل الأقسام'],
+            ['name' => 'delete sections', 'name_ar' => 'حذف الأقسام', 'slug' => 'sections.delete', 'description' => 'Can delete sections', 'description_ar' => 'يمكن حذف الأقسام'],
             
             // Question Permissions
-            ['name' => 'view questions', 'slug' => 'questions.view', 'description' => 'Can view questions'],
-            ['name' => 'create questions', 'slug' => 'questions.create', 'description' => 'Can create questions'],
-            ['name' => 'edit questions', 'slug' => 'questions.edit', 'description' => 'Can edit questions'],
-            ['name' => 'delete questions', 'slug' => 'questions.delete', 'description' => 'Can delete questions'],
+            ['name' => 'view questions', 'name_ar' => 'عرض الأسئلة', 'slug' => 'questions.view', 'description' => 'Can view questions', 'description_ar' => 'يمكن عرض الأسئلة'],
+            ['name' => 'create questions', 'name_ar' => 'إنشاء الأسئلة', 'slug' => 'questions.create', 'description' => 'Can create questions', 'description_ar' => 'يمكن إنشاء الأسئلة'],
+            ['name' => 'edit questions', 'name_ar' => 'تعديل الأسئلة', 'slug' => 'questions.edit', 'description' => 'Can edit questions', 'description_ar' => 'يمكن تعديل الأسئلة'],
+            ['name' => 'delete questions', 'name_ar' => 'حذف الأسئلة', 'slug' => 'questions.delete', 'description' => 'Can delete questions', 'description_ar' => 'يمكن حذف الأسئلة'],
             
             // Batch Permissions
-            ['name' => 'view batches', 'slug' => 'batches.view', 'description' => 'Can view batches'],
-            ['name' => 'create batches', 'slug' => 'batches.create', 'description' => 'Can create batches'],
-            ['name' => 'edit batches', 'slug' => 'batches.edit', 'description' => 'Can edit batches'],
-            ['name' => 'delete batches', 'slug' => 'batches.delete', 'description' => 'Can delete batches'],
-            ['name' => 'manage batches', 'slug' => 'batches.manage', 'description' => 'Can manage batches'],
+            ['name' => 'view batches', 'name_ar' => 'عرض الدفعات', 'slug' => 'batches.view', 'description' => 'Can view batches', 'description_ar' => 'يمكن عرض الدفعات'],
+            ['name' => 'create batches', 'name_ar' => 'إنشاء الدفعات', 'slug' => 'batches.create', 'description' => 'Can create batches', 'description_ar' => 'يمكن إنشاء الدفعات'],
+            ['name' => 'edit batches', 'name_ar' => 'تعديل الدفعات', 'slug' => 'batches.edit', 'description' => 'Can edit batches', 'description_ar' => 'يمكن تعديل الدفعات'],
+            ['name' => 'delete batches', 'name_ar' => 'حذف الدفعات', 'slug' => 'batches.delete', 'description' => 'Can delete batches', 'description_ar' => 'يمكن حذف الدفعات'],
+            ['name' => 'manage batches', 'name_ar' => 'إدارة الدفعات', 'slug' => 'batches.manage', 'description' => 'Can manage batches', 'description_ar' => 'يمكن إدارة الدفعات'],
             
             // Enrollment Permissions
-            ['name' => 'view enrollments', 'slug' => 'enrollments.view', 'description' => 'Can view enrollments'],
-            ['name' => 'create enrollments', 'slug' => 'enrollments.create', 'description' => 'Can create enrollments'],
-            ['name' => 'edit enrollments', 'slug' => 'enrollments.edit', 'description' => 'Can edit enrollments'],
-            ['name' => 'delete enrollments', 'slug' => 'enrollments.delete', 'description' => 'Can delete enrollments'],
+            ['name' => 'view enrollments', 'name_ar' => 'عرض التسجيلات', 'slug' => 'enrollments.view', 'description' => 'Can view enrollments', 'description_ar' => 'يمكن عرض التسجيلات'],
+            ['name' => 'create enrollments', 'name_ar' => 'إنشاء التسجيلات', 'slug' => 'enrollments.create', 'description' => 'Can create enrollments', 'description_ar' => 'يمكن إنشاء التسجيلات'],
+            ['name' => 'edit enrollments', 'name_ar' => 'تعديل التسجيلات', 'slug' => 'enrollments.edit', 'description' => 'Can edit enrollments', 'description_ar' => 'يمكن تعديل التسجيلات'],
+            ['name' => 'delete enrollments', 'name_ar' => 'حذف التسجيلات', 'slug' => 'enrollments.delete', 'description' => 'Can delete enrollments', 'description_ar' => 'يمكن حذف التسجيلات'],
             
             // User Permissions
-            ['name' => 'view users', 'slug' => 'users.view', 'description' => 'Can view users'],
-            ['name' => 'create users', 'slug' => 'users.create', 'description' => 'Can create users'],
-            ['name' => 'edit users', 'slug' => 'users.edit', 'description' => 'Can edit users'],
-            ['name' => 'delete users', 'slug' => 'users.delete', 'description' => 'Can delete users'],
-            ['name' => 'manage users', 'slug' => 'users.manage', 'description' => 'Can manage all users'],
+            ['name' => 'view users', 'name_ar' => 'عرض المستخدمين', 'slug' => 'users.view', 'description' => 'Can view users', 'description_ar' => 'يمكن عرض المستخدمين'],
+            ['name' => 'create users', 'name_ar' => 'إنشاء المستخدمين', 'slug' => 'users.create', 'description' => 'Can create users', 'description_ar' => 'يمكن إنشاء المستخدمين'],
+            ['name' => 'edit users', 'name_ar' => 'تعديل المستخدمين', 'slug' => 'users.edit', 'description' => 'Can edit users', 'description_ar' => 'يمكن تعديل المستخدمين'],
+            ['name' => 'delete users', 'name_ar' => 'حذف المستخدمين', 'slug' => 'users.delete', 'description' => 'Can delete users', 'description_ar' => 'يمكن حذف المستخدمين'],
+            ['name' => 'manage users', 'name_ar' => 'إدارة المستخدمين', 'slug' => 'users.manage', 'description' => 'Can manage all users', 'description_ar' => 'يمكن إدارة جميع المستخدمين'],
             
             // Role & Permission Permissions
-            ['name' => 'view roles', 'slug' => 'roles.view', 'description' => 'Can view roles'],
-            ['name' => 'create roles', 'slug' => 'roles.create', 'description' => 'Can create roles'],
-            ['name' => 'edit roles', 'slug' => 'roles.edit', 'description' => 'Can edit roles'],
-            ['name' => 'delete roles', 'slug' => 'roles.delete', 'description' => 'Can delete roles'],
-            ['name' => 'manage roles', 'slug' => 'roles.manage', 'description' => 'Can manage roles'],
-            ['name' => 'view permissions', 'slug' => 'permissions.view', 'description' => 'Can view permissions'],
-            ['name' => 'manage permissions', 'slug' => 'permissions.manage', 'description' => 'Can manage permissions'],
+            ['name' => 'view roles', 'name_ar' => 'عرض الأدوار', 'slug' => 'roles.view', 'description' => 'Can view roles', 'description_ar' => 'يمكن عرض الأدوار'],
+            ['name' => 'create roles', 'name_ar' => 'إنشاء الأدوار', 'slug' => 'roles.create', 'description' => 'Can create roles', 'description_ar' => 'يمكن إنشاء الأدوار'],
+            ['name' => 'edit roles', 'name_ar' => 'تعديل الأدوار', 'slug' => 'roles.edit', 'description' => 'Can edit roles', 'description_ar' => 'يمكن تعديل الأدوار'],
+            ['name' => 'delete roles', 'name_ar' => 'حذف الأدوار', 'slug' => 'roles.delete', 'description' => 'Can delete roles', 'description_ar' => 'يمكن حذف الأدوار'],
+            ['name' => 'manage roles', 'name_ar' => 'إدارة الأدوار', 'slug' => 'roles.manage', 'description' => 'Can manage roles', 'description_ar' => 'يمكن إدارة الأدوار'],
+            ['name' => 'view permissions', 'name_ar' => 'عرض الصلاحيات', 'slug' => 'permissions.view', 'description' => 'Can view permissions', 'description_ar' => 'يمكن عرض الصلاحيات'],
+            ['name' => 'manage permissions', 'name_ar' => 'إدارة الصلاحيات', 'slug' => 'permissions.manage', 'description' => 'Can manage permissions', 'description_ar' => 'يمكن إدارة الصلاحيات'],
             
             // Category Permissions
-            ['name' => 'view categories', 'slug' => 'categories.view', 'description' => 'Can view categories'],
-            ['name' => 'create categories', 'slug' => 'categories.create', 'description' => 'Can create categories'],
-            ['name' => 'edit categories', 'slug' => 'categories.edit', 'description' => 'Can edit categories'],
-            ['name' => 'delete categories', 'slug' => 'categories.delete', 'description' => 'Can delete categories'],
+            ['name' => 'view categories', 'name_ar' => 'عرض الفئات', 'slug' => 'categories.view', 'description' => 'Can view categories', 'description_ar' => 'يمكن عرض الفئات'],
+            ['name' => 'create categories', 'name_ar' => 'إنشاء الفئات', 'slug' => 'categories.create', 'description' => 'Can create categories', 'description_ar' => 'يمكن إنشاء الفئات'],
+            ['name' => 'edit categories', 'name_ar' => 'تعديل الفئات', 'slug' => 'categories.edit', 'description' => 'Can edit categories', 'description_ar' => 'يمكن تعديل الفئات'],
+            ['name' => 'delete categories', 'name_ar' => 'حذف الفئات', 'slug' => 'categories.delete', 'description' => 'Can delete categories', 'description_ar' => 'يمكن حذف الفئات'],
             
             // Settings Permissions
-            ['name' => 'view settings', 'slug' => 'settings.view', 'description' => 'Can view settings'],
-            ['name' => 'edit settings', 'slug' => 'settings.edit', 'description' => 'Can edit settings'],
-            ['name' => 'manage settings', 'slug' => 'settings.manage', 'description' => 'Can manage settings'],
+            ['name' => 'view settings', 'name_ar' => 'عرض الإعدادات', 'slug' => 'settings.view', 'description' => 'Can view settings', 'description_ar' => 'يمكن عرض الإعدادات'],
+            ['name' => 'edit settings', 'name_ar' => 'تعديل الإعدادات', 'slug' => 'settings.edit', 'description' => 'Can edit settings', 'description_ar' => 'يمكن تعديل الإعدادات'],
+            ['name' => 'manage settings', 'name_ar' => 'إدارة الإعدادات', 'slug' => 'settings.manage', 'description' => 'Can manage settings', 'description_ar' => 'يمكن إدارة الإعدادات'],
             
             // Dashboard Permissions
-            ['name' => 'view admin dashboard', 'slug' => 'dashboard.admin', 'description' => 'Can view admin dashboard'],
-            ['name' => 'view instructor dashboard', 'slug' => 'dashboard.instructor', 'description' => 'Can view instructor dashboard'],
-            ['name' => 'view student dashboard', 'slug' => 'dashboard.student', 'description' => 'Can view student dashboard'],
+            ['name' => 'view admin dashboard', 'name_ar' => 'عرض لوحة تحكم المدير', 'slug' => 'dashboard.admin', 'description' => 'Can view admin dashboard', 'description_ar' => 'يمكن عرض لوحة تحكم المدير'],
+            ['name' => 'view instructor dashboard', 'name_ar' => 'عرض لوحة تحكم المدرب', 'slug' => 'dashboard.instructor', 'description' => 'Can view instructor dashboard', 'description_ar' => 'يمكن عرض لوحة تحكم المدرب'],
+            ['name' => 'view student dashboard', 'name_ar' => 'عرض لوحة تحكم الطالب', 'slug' => 'dashboard.student', 'description' => 'Can view student dashboard', 'description_ar' => 'يمكن عرض لوحة تحكم الطالب'],
             
             // Attendance Permissions
-            ['name' => 'view attendance', 'slug' => 'attendance.view', 'description' => 'Can view attendance'],
-            ['name' => 'mark attendance', 'slug' => 'attendance.mark', 'description' => 'Can mark attendance'],
-            ['name' => 'manage attendance', 'slug' => 'attendance.manage', 'description' => 'Can manage attendance'],
+            ['name' => 'view attendance', 'name_ar' => 'عرض الحضور', 'slug' => 'attendance.view', 'description' => 'Can view attendance', 'description_ar' => 'يمكن عرض الحضور'],
+            ['name' => 'mark attendance', 'name_ar' => 'تسجيل الحضور', 'slug' => 'attendance.mark', 'description' => 'Can mark attendance', 'description_ar' => 'يمكن تسجيل الحضور'],
+            ['name' => 'manage attendance', 'name_ar' => 'إدارة الحضور', 'slug' => 'attendance.manage', 'description' => 'Can manage attendance', 'description_ar' => 'يمكن إدارة الحضور'],
             
             // FAQ Permissions
-            ['name' => 'view faqs', 'slug' => 'faqs.view', 'description' => 'Can view FAQs'],
-            ['name' => 'create faqs', 'slug' => 'faqs.create', 'description' => 'Can create FAQs'],
-            ['name' => 'edit faqs', 'slug' => 'faqs.edit', 'description' => 'Can edit FAQs'],
-            ['name' => 'delete faqs', 'slug' => 'faqs.delete', 'description' => 'Can delete FAQs'],
+            ['name' => 'view faqs', 'name_ar' => 'عرض الأسئلة الشائعة', 'slug' => 'faqs.view', 'description' => 'Can view FAQs', 'description_ar' => 'يمكن عرض الأسئلة الشائعة'],
+            ['name' => 'create faqs', 'name_ar' => 'إنشاء الأسئلة الشائعة', 'slug' => 'faqs.create', 'description' => 'Can create FAQs', 'description_ar' => 'يمكن إنشاء الأسئلة الشائعة'],
+            ['name' => 'edit faqs', 'name_ar' => 'تعديل الأسئلة الشائعة', 'slug' => 'faqs.edit', 'description' => 'Can edit FAQs', 'description_ar' => 'يمكن تعديل الأسئلة الشائعة'],
+            ['name' => 'delete faqs', 'name_ar' => 'حذف الأسئلة الشائعة', 'slug' => 'faqs.delete', 'description' => 'Can delete FAQs', 'description_ar' => 'يمكن حذف الأسئلة الشائعة'],
         ];
 
         foreach ($permissions as $permission) {
@@ -98,8 +98,10 @@ class PermissionSeeder extends Seeder
                 ['slug' => $permission['slug']],
                 [
                     'name' => $permission['name'],
+                    'name_ar' => $permission['name_ar'] ?? null,
                     'slug' => $permission['slug'],
                     'description' => $permission['description'],
+                    'description_ar' => $permission['description_ar'] ?? null,
                     'guard_name' => 'web',
                 ]
             );

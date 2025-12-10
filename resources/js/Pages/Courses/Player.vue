@@ -193,7 +193,7 @@
                                     </span>
                                 </div>
                                 <Link
-                                    v-if="isInstructor"
+                                    v-if="isInstructor && can('questions.create')"
                                     :href="route('instructor.lessons.questions.create', [course.slug || course.id, lesson.id])"
                                     class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors flex items-center gap-2"
                                 >
@@ -229,7 +229,7 @@
                                         </div>
 
                                     <!-- Student Answer Form (if not answered yet) -->
-                                    <div v-if="isStudent && !question.user_answer" class="mb-4">
+                                    <div v-if="isStudent && !question.user_answer && can('questions.view')" class="mb-4">
                                         <!-- Multiple Choice / True False Form -->
                                         <form v-if="question.type === 'multiple_choice' || question.type === 'true_false'" 
                                             @submit.prevent="submitAnswer(question)"
@@ -394,7 +394,7 @@
                         </div>
 
                         <!-- Attendance Section for Instructor (View Only) -->
-                        <div v-if="isInstructor" class="bg-white rounded-xl shadow-sm p-6 mt-6">
+                        <div v-if="isInstructor && can('attendance.mark')" class="bg-white rounded-xl shadow-sm p-6 mt-6">
                             <div class="flex items-center justify-between mb-6">
                                 <h2 class="text-xl font-bold text-gray-900 flex items-center gap-2">
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -407,7 +407,7 @@
                                 </h2>
                                 <button
                                     type="button"
-                                    v-if="lesson && instructorStudents && instructorStudents.length > 0"
+                                    v-if="lesson && instructorStudents && instructorStudents.length > 0 && can('attendance.mark')"
                                     @click="openAttendanceModal"
                                     class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors flex items-center gap-2"
                                 >
@@ -583,7 +583,7 @@
                                                         </svg>
                                                         <!-- Add Question Button for Instructor -->
                                                         <Link
-                                                            v-if="isInstructor && lesson?.id === l.id"
+                                                            v-if="isInstructor && lesson?.id === l.id && can('questions.create')"
                                                             :href="route('instructor.lessons.questions.create', [course.slug || course.id, l.id])"
                                                             @click.stop
                                                             class="flex-shrink-0 p-1.5 text-blue-600 hover:bg-blue-100 rounded transition-colors"
@@ -651,7 +651,7 @@
                                     </svg>
                                         <!-- Add Question Button for Instructor -->
                                         <Link
-                                            v-if="isInstructor && lesson?.id === l.id"
+                                            v-if="isInstructor && lesson?.id === l.id && can('questions.create')"
                                             :href="route('instructor.lessons.questions.create', [course.slug || course.id, l.id])"
                                             @click.stop
                                             class="flex-shrink-0 p-1.5 text-blue-600 hover:bg-blue-100 rounded transition-colors"
@@ -836,6 +836,7 @@ import { useDirection } from '@/composables/useDirection';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
 import { useAlert } from '@/composables/useAlert';
+import { usePermissions } from '@/composables/usePermissions';
 import { Link, usePage, router } from '@inertiajs/vue3';
 
 const props = defineProps({
@@ -858,6 +859,7 @@ const { direction } = useDirection();
 const { t } = useTranslation();
 const { route } = useRoute();
 const { showSuccess, showError } = useAlert();
+const { can } = usePermissions();
 const page = usePage();
 
 const auth = computed(() => page.props.auth?.user);

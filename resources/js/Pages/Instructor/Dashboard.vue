@@ -6,6 +6,7 @@
                     <div class="flex justify-between items-center mb-6">
                         <h1 class="text-3xl font-bold text-gray-900">{{ t('instructor.dashboard') || 'Instructor Dashboard' }}</h1>
                         <Link
+                            v-if="can('courses.create')"
                             :href="route('courses.create')"
                             class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
                         >
@@ -63,6 +64,7 @@
                                             </div>
                                         </div>
                                         <Link
+                                            v-if="can('courses.edit')"
                                             :href="route('courses.edit', course.id)"
                                             class="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
                                         >
@@ -73,6 +75,7 @@
                                 <div v-if="courses.length === 0" class="text-center py-8 text-gray-500">
                                     {{ t('instructor.no_courses') || 'No courses yet.' }}
                                     <Link
+                                        v-if="can('courses.create')"
                                         :href="route('courses.create')"
                                         class="text-indigo-600 hover:text-indigo-800 ml-2"
                                     >
@@ -93,7 +96,9 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { useDirection } from '@/composables/useDirection';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
-import { Link } from '@inertiajs/vue3';
+import { usePermissions } from '@/composables/usePermissions';
+import { Link, router } from '@inertiajs/vue3';
+import { onMounted } from 'vue';
 
 defineProps({
     stats: Object,
@@ -103,5 +108,13 @@ defineProps({
 const { direction } = useDirection();
 const { t } = useTranslation();
 const { route } = useRoute();
+const { can, isInstructor } = usePermissions();
+
+// Check permissions on mount
+onMounted(() => {
+    if (!isInstructor.value && !can('dashboard.instructor')) {
+        router.visit(route('login'));
+    }
+});
 </script>
 

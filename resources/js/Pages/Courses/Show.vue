@@ -140,7 +140,7 @@
                                 </div>
                                 <div class="flex items-center gap-3">
                                     <Link
-                                        v-if="showEditButtons"
+                                        v-if="showEditButtons && can('sections.view')"
                                         @click.stop
                                         :href="route('instructor.sections.index', course.slug || course.id)"
                                         class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors flex items-center gap-2"
@@ -243,14 +243,14 @@
                                                         </div>
                                                         <div class="flex-shrink-0 flex items-center gap-2">
                                                             <Link
-                                                                v-if="showEditButtons"
+                                                                v-if="showEditButtons && can('lessons.edit')"
                                                                 :href="route('instructor.lessons.edit', [course.slug || course.id, lesson.id])"
                                                                 class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors"
                                                             >
                                                                 {{ t('lessons.actions.edit') }}
                                                             </Link>
                                                             <Link
-                                                                v-else
+                                                                v-else-if="can('lessons.view')"
                                                                 :href="route('lessons.show', [course.slug || course.id, lesson.id])"
                                                                 class="px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg text-sm font-medium transition-colors flex items-center"
                                                             >
@@ -296,14 +296,14 @@
                                         </div>
                                         <div class="flex-shrink-0 flex items-center gap-2">
                                             <Link
-                                                v-if="showEditButtons"
+                                                v-if="showEditButtons && can('lessons.edit')"
                                                 :href="route('lessons.edit', [course.slug || course.id, lesson.id])"
                                                 class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors"
                                             >
                                                 {{ t('lessons.actions.edit') }}
                                             </Link>
                                             <Link
-                                                v-else
+                                                v-else-if="can('lessons.view')"
                                                 :href="route('lessons.show', [course.slug || course.id, lesson.id])"
                                                 class="px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg text-sm font-medium transition-colors flex items-center"
                                             >
@@ -322,7 +322,7 @@
                                 </svg>
                                 <p class="text-gray-500 text-lg mb-4">{{ t('lessons.no_lessons') }}</p>
                                 <Link
-                                    v-if="showEditButtons"
+                                    v-if="showEditButtons && can('lessons.create')"
                                     :href="route('lessons.create', course.slug || course.id)"
                                     class="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
                                 >
@@ -340,12 +340,14 @@
                             <!-- Admin Edit Buttons -->
                             <div v-if="showEditButtons" class="space-y-3 mb-6">
                                 <Link
+                                    v-if="can('courses.edit')"
                                     :href="route('courses.edit', { course: course.slug || course.id })"
                                     class="w-full block text-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
                                 >
                                     {{ t('courses.actions.edit') }}
                                 </Link>
                                 <Link
+                                    v-if="can('lessons.create')"
                                     :href="route('lessons.create', course.slug || course.id)"
                                     class="w-full block text-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
                                 >
@@ -354,7 +356,7 @@
                             </div>
                             
                             <!-- Instructor: Show course content access -->
-                            <div v-if="isInstructor && course.lessons?.length > 0" class="space-y-3">
+                            <div v-if="isInstructor && course.lessons?.length > 0 && can('lessons.view')" class="space-y-3">
                                 <Link
                                     :href="route('courses.play', course.slug || course.id)"
                                     class="w-full block text-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
@@ -364,7 +366,7 @@
                             </div>
                             
                             <!-- Student: Show course content if enrolled -->
-                            <div v-else-if="auth && isEnrolled && course.lessons?.length > 0" class="space-y-3">
+                            <div v-else-if="auth && isEnrolled && course.lessons?.length > 0 && can('lessons.view')" class="space-y-3">
                                 <Link
                                     :href="route('courses.play', course.slug || course.id)"
                                     class="w-full block text-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
@@ -776,6 +778,7 @@ import { useDirection } from '@/composables/useDirection';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
 import { useAlert } from '@/composables/useAlert';
+import { usePermissions } from '@/composables/usePermissions';
 import { Link, usePage, router } from '@inertiajs/vue3';
 import { computed, ref, onMounted } from 'vue';
 
@@ -793,6 +796,7 @@ const { direction } = useDirection();
 const { t } = useTranslation();
 const { route } = useRoute();
 const { showSuccess, showError, showWarning } = useAlert();
+const { can } = usePermissions();
 const page = usePage();
 
 const auth = computed(() => page.props.auth?.user);

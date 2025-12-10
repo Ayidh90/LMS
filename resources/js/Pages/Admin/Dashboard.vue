@@ -2,29 +2,36 @@
   <AdminLayout :page-title="t('admin.dashboard')">
     <Head :title="t('admin.dashboard')" />
 
-    <!-- Welcome Card -->
-    <div class="welcome-card bg-white rounded-xl shadow-sm mb-6 border border-gray-200 overflow-hidden">
-      <div class="p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div class="flex items-center gap-4 flex-1">
+    <!-- Welcome Card - Enhanced -->
+    <div class="welcome-card-enhanced bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-2xl shadow-2xl mb-8 border-0 overflow-hidden relative">
+      <div class="absolute inset-0 bg-black/5"></div>
+      <div class="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -mr-48 -mt-48 blur-3xl"></div>
+      <div class="absolute bottom-0 left-0 w-96 h-96 bg-white/5 rounded-full -ml-48 -mb-48 blur-3xl"></div>
+      <div class="relative p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+        <div class="flex items-center gap-5 flex-1">
           <div class="relative">
-            <div class="bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-bold rounded-full flex items-center justify-center shadow-md" style="width: 56px; height: 56px">
-              <i class="pi pi-user text-xl"></i>
+            <div class="bg-white/20 backdrop-blur-lg text-white font-bold rounded-2xl flex items-center justify-center shadow-xl border-2 border-white/30" style="width: 72px; height: 72px">
+              <i class="pi pi-user text-2xl"></i>
             </div>
-            <span class="absolute bottom-0 right-0 translate-x-1/2 translate-y-1/2 p-1 border-2 border-white bg-emerald-500 rounded-full shadow-sm" style="width: 14px; height: 14px"></span>
+            <span class="absolute bottom-0 right-0 translate-x-1/2 translate-y-1/2 p-1.5 border-3 border-white bg-emerald-400 rounded-full shadow-lg animate-pulse" style="width: 18px; height: 18px"></span>
           </div>
           <div>
-            <div class="text-gray-500 text-sm mb-1">{{ t('admin.welcome_back') }}</div>
-            <div class="text-lg font-semibold text-gray-900">{{ userName }}</div>
+            <div class="text-blue-100 text-sm mb-2 font-medium">{{ t('admin.welcome_back') || 'Welcome Back' }}</div>
+            <div class="text-2xl font-bold text-white mb-1">{{ userName }}</div>
+            <div class="text-blue-100 text-sm">{{ t('admin.dashboard_overview') || 'Here\'s what\'s happening with your platform today' }}</div>
           </div>
         </div>
         <div class="flex items-center gap-3">
-          <Link :href="safeRoute('welcome')" class="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-lg text-sm font-medium border border-gray-200 transition-all duration-200 hover:shadow-sm">
+          <Link :href="safeRoute('welcome')" class="flex items-center gap-2 px-5 py-3 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white rounded-xl text-sm font-semibold border border-white/20 transition-all duration-300 hover:shadow-xl hover:scale-105">
             <i class="pi pi-home text-base"></i>
-            <span>{{ t('admin.main_website') }}</span>
+            <span>{{ t('admin.main_website') || 'Main Website' }}</span>
           </Link>
-          <span class="flex items-center justify-center gap-2 px-3 py-2 bg-emerald-50 text-emerald-700 rounded-lg text-sm font-medium border border-emerald-200">
-            <i class="pi pi-circle-fill text-xs text-emerald-500"></i>
-            <span>{{ t('admin.online_now') }}</span>
+          <span class="flex items-center justify-center gap-2 px-4 py-3 bg-emerald-500/20 backdrop-blur-md text-white rounded-xl text-sm font-semibold border border-emerald-300/30 shadow-lg">
+            <span class="relative flex h-3 w-3">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+            </span>
+            <span>{{ t('admin.online_now') || 'Online Now' }}</span>
           </span>
         </div>
       </div>
@@ -222,8 +229,10 @@ import { Head, usePage, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useRoute } from '@/composables/useRoute';
 import { useTranslation } from '@/composables/useTranslation';
+import { usePermissions } from '@/composables/usePermissions';
 
 const { t } = useTranslation();
+const { can } = usePermissions();
 
 const props = defineProps({
   statistics: {
@@ -277,28 +286,7 @@ const weeklyEnrollments = computed(() => {
   return 0;
 });
 
-const can = (permission) => {
-  const user = page.props?.auth?.user;
-  
-  if (user?.role === 'super_admin') {
-    return true;
-  }
-  
-  if (user?.is_admin && (user?.role === 'admin' || user?.role === 'super_admin')) {
-    return true;
-  }
-  
-  const authCan = page.props?.auth?.can;
-  if (!authCan || typeof authCan !== 'object') {
-    return false;
-  }
-  
-  if (authCan['*'] === true) {
-    return true;
-  }
-  
-  return authCan[permission] === true;
-};
+// Using can from usePermissions composable
 
 // Safe translation helper with fallback
 const safeTranslate = (key, fallback = '') => {
@@ -390,8 +378,15 @@ const handleImageError = (event) => {
 }
 
 /* ============================================
-   Welcome Card Styles
+   Welcome Card Styles - Enhanced
    ============================================ */
+.welcome-card-enhanced {
+  position: relative;
+  transition: all var(--transition-base);
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+}
+
 .welcome-card {
   position: relative;
   transition: all var(--transition-base);

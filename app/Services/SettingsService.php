@@ -34,6 +34,21 @@ class SettingsService
     }
 
     /**
+     * Get website settings
+     */
+    public function getWebsiteSettings(): array
+    {
+        return [
+            'name' => Settings::websiteName(),
+            'logo' => Settings::websiteLogo(),
+            'favicon' => Settings::websiteFavicon(),
+            'info' => Settings::websiteInfo(),
+            'email' => Settings::websiteEmail(),
+            'mobile' => Settings::websiteMobile(),
+        ];
+    }
+
+    /**
      * Update settings
      */
     public function update(array $settings): void
@@ -71,6 +86,48 @@ class SettingsService
                 'type' => 'boolean',
                 'description' => 'Allow instructors to create questions',
                 'description_ar' => 'السماح للمدربين بإنشاء الأسئلة',
+            ],
+            [
+                'key' => 'website_name',
+                'value' => config('app.name', 'LMS'),
+                'type' => 'string',
+                'description' => 'Website name',
+                'description_ar' => 'اسم الموقع',
+            ],
+            [
+                'key' => 'website_logo',
+                'value' => null,
+                'type' => 'string',
+                'description' => 'Website logo',
+                'description_ar' => 'شعار الموقع',
+            ],
+            [
+                'key' => 'website_favicon',
+                'value' => null,
+                'type' => 'string',
+                'description' => 'Website favicon',
+                'description_ar' => 'أيقونة الموقع',
+            ],
+            [
+                'key' => 'website_info',
+                'value' => null,
+                'type' => 'string',
+                'description' => 'Website information/description',
+                'description_ar' => 'معلومات الموقع',
+            ],
+            [
+                'key' => 'website_email',
+                'value' => null,
+                'type' => 'string',
+                'description' => 'Website contact email',
+                'description_ar' => 'البريد الإلكتروني',
+            ],
+            [
+                'key' => 'website_mobile',
+                'value' => null,
+                'type' => 'string',
+                'description' => 'Website contact mobile/phone',
+                'description_ar' => 'رقم الجوال',
             ],
         ];
 

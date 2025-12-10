@@ -1,21 +1,25 @@
 <template>
     <AdminLayout :page-title="t('admin.courses_management')">
         <div class="space-y-6 min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 pb-8">
-            <!-- Page Header -->
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl p-6 shadow-xl">
-                <div class="text-white">
-                    <h1 class="text-3xl font-bold mb-2">{{ t('admin.courses_management') }}</h1>
-                    <p class="text-blue-100 text-sm">{{ t('admin.courses_description') || 'Manage all courses in the system' }}</p>
+            <!-- Page Header - Enhanced -->
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-2xl p-8 shadow-2xl relative overflow-hidden">
+                <div class="absolute inset-0 bg-black/5"></div>
+                <div class="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -mr-48 -mt-48 blur-3xl"></div>
+                <div class="relative z-10 text-white flex-1">
+                    <h1 class="text-4xl font-bold mb-3">{{ t('admin.courses_management') || 'Courses Management' }}</h1>
+                    <p class="text-blue-100 text-base">{{ t('admin.courses_description') || 'Manage all courses in the system' }}</p>
                 </div>
-                <Link :href="route('admin.courses.create')">
-                    <Button 
-                        :label="t('admin.create_course')" 
-                        icon="pi pi-plus"
-                        severity="secondary"
-                        outlined
-                        class="bg-white"
-                    />
-                </Link>
+                <div class="relative z-10">
+                    <Link :href="route('admin.courses.create')">
+                        <Button 
+                            :label="t('admin.create_course') || 'Create Course'" 
+                            icon="pi pi-plus"
+                            severity="secondary"
+                            outlined
+                            class="bg-white hover:bg-gray-50 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                        />
+                    </Link>
+                </div>
             </div>
 
             <!-- Search and Filters -->
@@ -27,18 +31,18 @@
                                 <i class="pi pi-search" />
                                 <InputText
                                     v-model="search"
-                                    :placeholder="t('common.search_placeholder')"
+                                    :placeholder="t('common.search_placeholder') || 'Search courses...'"
                                     class="w-full"
                                     @input="debouncedSearch"
                                 />
                             </span>
                         </div>
-                        <Dropdown
+                            <Dropdown
                             v-model="statusFilter"
                             :options="[
                                 { label: t('courses.all_status') || 'All Status', value: '' },
-                                { label: t('courses.status.published'), value: 'published' },
-                                { label: t('courses.status.draft'), value: 'draft' }
+                                { label: t('courses.status.published') || 'Published', value: 'published' },
+                                { label: t('courses.status.draft') || 'Draft', value: 'draft' }
                             ]"
                             optionLabel="label"
                             optionValue="value"
@@ -55,63 +59,66 @@
                 <template #content>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gradient-to-r from-gray-50 to-blue-50/30">
+                        <thead class="bg-gradient-to-r from-gray-50 via-blue-50/50 to-indigo-50/30">
                             <tr>
-                                <th class="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                    {{ t('courses.fields.title') }}
+                                <th class="px-6 py-5 text-right text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-200">
+                                    {{ t('courses.fields.title') || 'Title' }}
                                 </th>
-                                <th class="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                    {{ t('courses.fields.level') }}
+                                <th class="px-6 py-5 text-right text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-200">
+                                    {{ t('courses.fields.level') || 'Level' }}
                                 </th>
-                                <th class="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
+                                <th class="px-6 py-5 text-right text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-200">
                                     {{ t('courses.status.title') || 'Status' }}
                                 </th>
-                                <th class="px-6 py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">
-                                    {{ t('common.actions') }}
+                                <th class="px-6 py-5 text-right text-xs font-bold text-gray-700 uppercase tracking-wider border-b-2 border-blue-200">
+                                    {{ t('common.actions') || 'Actions' }}
                                 </th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-100">
-                            <tr v-for="course in courses.data" :key="course.id" class="hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-indigo-50/30 transition-all duration-300 group">
-                                <td class="px-6 py-4">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 flex items-center justify-center text-white font-bold text-base flex-shrink-0 shadow-lg group-hover:shadow-xl group-hover:scale-110 transition-all duration-300">
+                            <tr v-for="course in courses.data" :key="course.id" class="hover:bg-gradient-to-r hover:from-blue-50/60 hover:to-indigo-50/40 transition-all duration-300 group border-b border-gray-100">
+                                <td class="px-6 py-5">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0 shadow-lg group-hover:shadow-2xl group-hover:scale-110 transition-all duration-300 ring-2 ring-transparent group-hover:ring-blue-300">
                                             <img v-if="course.thumbnail_url || course.thumbnail" :src="course.thumbnail_url || course.thumbnail" :alt="course.translated_title || course.title" class="w-full h-full object-cover rounded-xl" />
                                             <span v-else>{{ (course.translated_title?.[0] || course.title?.[0] || 'C')?.toUpperCase() }}</span>
                                         </div>
-                                        <div>
-                                            <div class="text-sm font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{{ course.translated_title || course.title }}</div>
-                                            <div class="text-xs text-gray-500 mt-1">{{ course.level ? t(`courses.levels.${course.level}`) : '' }}</div>
+                                        <div class="flex-1 min-w-0">
+                                            <div class="text-base font-bold text-gray-900 group-hover:text-blue-600 transition-colors mb-1">{{ course.translated_title || course.title }}</div>
+                                            <div class="text-xs text-gray-500">{{ course.level ? (t(`courses.levels.${course.level}`) || course.level) : '' }}</div>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <Tag :value="t('courses.levels.' + course.level) || course.level" severity="info" class="capitalize" />
+                                <td class="px-6 py-5 whitespace-nowrap">
+                                    <Tag :value="course.level ? (t(`courses.levels.${course.level}`) || course.level) : '-'" severity="info" class="capitalize font-semibold" />
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="px-6 py-5 whitespace-nowrap">
                                     <Tag 
-                                        :value="course.is_published ? t('courses.status.published') : t('courses.status.draft')" 
+                                        :value="course.is_published ? (t('courses.status.published') || 'Published') : (t('courses.status.draft') || 'Draft')" 
                                         :severity="course.is_published ? 'success' : 'warning'"
+                                        class="font-semibold"
                                     />
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="px-6 py-5 whitespace-nowrap">
                                     <div class="flex items-center gap-2">
-                                        <Link :href="route('admin.courses.show', course.slug || course.id)">
+                                        <Link :href="route('admin.courses.show', course.slug || course.id)" class="hover:scale-110 transition-transform duration-200">
                                             <Button 
                                                 icon="pi pi-eye"
                                                 severity="secondary"
                                                 text
                                                 rounded
-                                                :aria-label="t('common.view')"
+                                                :aria-label="t('common.view') || 'View'"
+                                                class="hover:bg-blue-50"
                                             />
                                         </Link>
-                                        <Link :href="route('admin.courses.edit', course.slug || course.id)">
+                                        <Link :href="route('admin.courses.edit', course.slug || course.id)" class="hover:scale-110 transition-transform duration-200">
                                             <Button 
                                                 icon="pi pi-pencil"
                                                 severity="info"
                                                 text
                                                 rounded
-                                                :aria-label="t('common.edit')"
+                                                :aria-label="t('common.edit') || 'Edit'"
+                                                class="hover:bg-indigo-50"
                                             />
                                         </Link>
                                     </div>
