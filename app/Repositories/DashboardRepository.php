@@ -175,9 +175,33 @@ class DashboardRepository
     /**
      * Get recent courses
      */
-    public function getRecentCourses(int $limit = 5): array
+    public function getRecentCourses(int $limit = 10): array
     {
-        return Course::latest()->take($limit)->get()->toArray(); // Removed instructor loading
+        return Course::latest()
+            ->take($limit)
+            ->get()
+            ->map(function ($course) {
+                return [
+                    'id' => $course->id,
+                    'title' => $course->title,
+                    'title_ar' => $course->title_ar,
+                    'translated_title' => $course->translated_title,
+                    'description' => $course->description,
+                    'description_ar' => $course->description_ar,
+                    'translated_description' => $course->translated_description,
+                    'slug' => $course->slug,
+                    'thumbnail' => $course->thumbnail,
+                    'thumbnail_url' => $course->thumbnail_url,
+                    'level' => $course->level,
+                    'price' => $course->price,
+                    'is_published' => $course->is_published,
+                    'duration_hours' => $course->duration_hours,
+                    'students_count' => $course->students_count,
+                    'created_at' => $course->created_at,
+                    'updated_at' => $course->updated_at,
+                ];
+            })
+            ->toArray();
     }
 }
 

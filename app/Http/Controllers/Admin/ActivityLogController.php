@@ -23,7 +23,7 @@ class ActivityLogController extends Controller
 
         // Recent course creations
         $courseActivities = DB::table('courses')
-            ->select('id', 'title as name', 'instructor_id', 'created_at', DB::raw("'course_created' as type"))
+            ->select('id', 'title as name', 'created_at', DB::raw("'course_created' as type"))
             ->latest('created_at')
             ->take(10)
             ->get();

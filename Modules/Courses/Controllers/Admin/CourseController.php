@@ -46,6 +46,34 @@ class CourseController extends Controller
             ->with('success', __('messages.courses.created_successfully'));
     }
 
+    public function show(Course $course)
+    {
+        $course->load([
+            'sections' => function($query) {
+                $query->orderBy('order');
+            },
+            'sections.lessons' => function($query) {
+                $query->orderBy('order');
+            },
+            'lessons' => function($query) {
+                $query->orderBy('order');
+            },
+            'batches' => function($query) {
+                $query->with('instructor:id,name,email');
+            },
+        ]);
+
+        $course->makeVisible(['thumbnail_url', 'translated_title', 'translated_description']);
+
+        // Get course statistics
+        $statistics = $this->getCourseStatistics($course);
+
+        return Inertia::render('Admin/Courses/Show', [
+            'course' => $course,
+            'statistics' => $statistics,
+        ]);
+    }
+
     public function edit(Course $course)
     {
         $course->makeVisible(['thumbnail_url', 'translated_title', 'translated_description']);
@@ -105,5 +133,25 @@ class CourseController extends Controller
                 'name_ar' => $c->name_ar,
             ])
             ->toArray();
+    }
+
+    private function getCourseStatistics(Course $course): array
+    {
+        $batches = $course->batches;
+        $totalEnrollments = \App\Models\Enrollment::whereIn('batch_id', $batches->pluck('id'))->count();
+        $totalStudents = \App\Models\Enrollment::whereIn('batch_id', $batches->pluck('id'))->distinct('student_id')->count();
+        $totalLessons = $course->lessons()->count();
+        $totalSections = $course->sections()->count();
+        $completedLessons = \App\Models\LessonCompletion::whereIn('lesson_id', $course->lessons()->pluck('id'))->distinct('student_id')->count();
+
+        return [
+            'total_batches' => $batches->count(),
+            'total_enrollments' => $totalEnrollments,
+            'total_students' => $totalStudents,
+            'total_lessons' => $totalLessons,
+            'total_sections' => $totalSections,
+            'completed_lessons' => $completedLessons,
+            'completion_rate' => $totalLessons > 0 ? round(($completedLessons / ($totalStudents * $totalLessons)) * 100, 2) : 0,
+        ];
     }
 }

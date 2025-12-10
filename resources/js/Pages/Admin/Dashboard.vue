@@ -184,13 +184,18 @@
             :key="course.id" 
             class="course-item flex items-center gap-4 p-4 border border-gray-100 rounded-xl transition-all duration-300 hover:shadow-md"
           >
-            <div class="course-thumbnail w-16 h-16 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-md">
-              <span v-if="!course.thumbnail">{{ (course.translated_title || course.title || 'C')?.[0]?.toUpperCase() || 'C' }}</span>
-              <img v-else :src="course.thumbnail" :alt="course.translated_title || course.title" class="w-full h-full object-cover rounded-lg" />
+            <div class="course-thumbnail w-16 h-16 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-md overflow-hidden">
+              <span v-if="!course.thumbnail_url && !course.thumbnail">{{ (course.translated_title || course.title || 'C')?.[0]?.toUpperCase() || 'C' }}</span>
+              <img v-else :src="course.thumbnail_url || course.thumbnail" :alt="course.translated_title || course.title" class="w-full h-full object-cover rounded-lg" @error="handleImageError($event)" />
             </div>
             <div class="course-info flex-1 min-w-0">
               <h5 class="course-title font-semibold text-gray-900 truncate mb-1">{{ course.translated_title || course.title }}</h5>
-              <p class="course-instructor text-sm text-gray-500 truncate">{{ course.instructor?.name || t('courses.unknown_instructor') }}</p>
+              <p class="course-meta text-sm text-gray-500 truncate">
+                <span class="mr-2">{{ course.level ? t(`courses.levels.${course.level}`) : '' }}</span>
+                <span v-if="course.price !== null && course.price !== undefined">
+                  {{ course.price == 0 ? t('courses.free') : `${course.price} ${t('common.currency') || 'SAR'}` }}
+                </span>
+              </p>
             </div>
             <div class="course-actions flex items-center gap-3">
               <span 
@@ -199,15 +204,6 @@
               >
                 {{ getCourseStatus(course.is_published) }}
               </span>
-              <Link 
-                :href="safeRoute('admin.courses.edit', course.slug || course.id)" 
-                class="edit-button p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 hover:shadow-sm"
-                :title="t('common.edit')"
-              >
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-              </Link>
             </div>
           </div>
         </div>
@@ -318,6 +314,19 @@ const getCourseStatus = (isPublished) => {
     return safeTranslate('courses.status.published', t('admin.published') || 'Published');
   }
   return safeTranslate('courses.status.draft', t('admin.pending') || 'Draft');
+};
+
+// Handle image error
+const handleImageError = (event) => {
+  event.target.style.display = 'none';
+  const parent = event.target.parentElement;
+  if (parent && !parent.querySelector('span')) {
+    const courseTitle = event.target.alt || 'C';
+    const firstLetter = courseTitle[0]?.toUpperCase() || 'C';
+    const span = document.createElement('span');
+    span.textContent = firstLetter;
+    parent.appendChild(span);
+  }
 };
 </script>
 

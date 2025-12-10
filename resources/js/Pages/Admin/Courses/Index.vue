@@ -106,7 +106,7 @@
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center gap-2">
                                         <Link
-                                            :href="route('courses.show', course.slug || course.id)"
+                                            :href="route('admin.courses.show', course.slug || course.id)"
                                             class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                             :title="t('common.view')"
                                         >

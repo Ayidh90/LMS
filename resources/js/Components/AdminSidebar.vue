@@ -505,7 +505,6 @@ const menuItems = computed(() => {
                 title: t('admin.settings') || 'Settings',
                 icon: 'settings',
                 route: 'admin.settings.index',
-                permission: 'role-list',
             },
             {
                 title: t('admin.activity_logs'),
