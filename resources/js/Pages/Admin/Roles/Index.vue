@@ -21,7 +21,7 @@
             <!-- Roles Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div
-                    v-for="role in roles"
+                    v-for="role in (roles || [])"
                     :key="role.id"
                     class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300 group"
                 >
@@ -93,7 +93,7 @@
                 </div>
 
                 <!-- Empty State -->
-                <div v-if="roles.length === 0" class="col-span-full">
+                <div v-if="!roles || roles.length === 0" class="col-span-full">
                     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
                         <div class="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
                             <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -164,9 +164,15 @@ import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
 import { Link, router } from '@inertiajs/vue3';
 
-defineProps({
-    roles: Array,
-    permissions: Array,
+const props = defineProps({
+    roles: {
+        type: Array,
+        default: () => [],
+    },
+    permissions: {
+        type: Array,
+        default: () => [],
+    },
 });
 
 const { t } = useTranslation();

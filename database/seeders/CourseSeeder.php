@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use App\Models\Batch;
+use App\Models\Enrollment;
 // use App\Models\Category; // Removed - categories removed from system
 use Modules\Courses\Models\Course;
 use Modules\Courses\Models\Lesson;
@@ -26,6 +28,7 @@ class CourseSeeder extends Seeder
         
         // Ensure default course image exists or create placeholder
         $this->ensureDefaultCourseImage();
+        
         // Get or create instructor
         $instructor = User::where('email', 'instructor@lms.com')->first();
         if (!$instructor) {
@@ -36,6 +39,26 @@ class CourseSeeder extends Seeder
                 'role' => 'instructor',
                 'is_active' => true,
             ]);
+            // Assign instructor role using Spatie
+            if (method_exists($instructor, 'assignRole')) {
+                $instructor->assignRole('instructor');
+            }
+        }
+        
+        // Get or create student
+        $student = User::where('email', 'student@lms.com')->first();
+        if (!$student) {
+            $student = User::create([
+                'name' => 'Student User',
+                'email' => 'student@lms.com',
+                'password' => Hash::make('password'),
+                'role' => 'student',
+                'is_active' => true,
+            ]);
+            // Assign student role using Spatie
+            if (method_exists($student, 'assignRole')) {
+                $student->assignRole('student');
+            }
         }
 
         // Categories removed from system - no longer needed
@@ -285,12 +308,69 @@ class CourseSeeder extends Seeder
 
                 // Create sections and organize lessons
                 $this->createSectionsAndLessons($course, $lessons, $courseData);
+                
+                // Create batch for this course with instructor
+                $this->createBatchForCourse($course, $instructor, $student);
 
                 $this->command->info("Created course: {$course->title} (EN) / {$course->title_ar} (AR)");
+            } else {
+                // For existing courses, ensure they have a batch
+                $existingBatch = Batch::where('course_id', $course->id)->first();
+                if (!$existingBatch) {
+                    $this->createBatchForCourse($course, $instructor, $student);
+                }
             }
         }
 
         $this->command->info('Courses seeded successfully!');
+    }
+    
+    /**
+     * Create a batch for a course and enroll student
+     */
+    private function createBatchForCourse(Course $course, User $instructor, User $student): void
+    {
+        $batchName = 'Batch ' . date('Y') . ' - ' . $course->title;
+        $batchNameAr = 'دفعة ' . date('Y') . ' - ' . ($course->title_ar ?? $course->title);
+        
+        $batch = Batch::updateOrCreate(
+            [
+                'course_id' => $course->id,
+                'name' => $batchName,
+            ],
+            [
+                'course_id' => $course->id,
+                'instructor_id' => $instructor->id,
+                'name' => $batchName,
+                'name_ar' => $batchNameAr,
+                'description' => 'Batch for ' . $course->title,
+                'description_ar' => 'دفعة لـ ' . ($course->title_ar ?? $course->title),
+                'start_date' => now()->addDays(7),
+                'end_date' => now()->addMonths(3),
+                'max_students' => 50,
+                'is_active' => true,
+            ]
+        );
+        
+        $this->command->info("  Created batch: {$batchName} with instructor: {$instructor->email}");
+        
+        // Enroll student in batch if not already enrolled
+        $existingEnrollment = Enrollment::where('batch_id', $batch->id)
+            ->where('student_id', $student->id)
+            ->first();
+            
+        if (!$existingEnrollment) {
+            Enrollment::create([
+                'batch_id' => $batch->id,
+                'student_id' => $student->id,
+                'status' => 'enrolled',
+                'progress' => 0,
+                'enrolled_at' => now(),
+            ]);
+            $this->command->info("  Enrolled student: {$student->email} in batch: {$batchName}");
+        } else {
+            $this->command->info("  Student {$student->email} already enrolled in batch: {$batchName}");
+        }
     }
 
     /**

@@ -3,10 +3,10 @@
 namespace Modules\Roles\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use App\Models\Permission;
+use Spatie\Permission\Models\Role as SpatieRole;
+use Spatie\Permission\Contracts\Role as RoleContract;
 
-class Role extends Model
+class Role extends SpatieRole
 {
     use HasFactory;
 
@@ -23,50 +23,53 @@ class Role extends Model
     ];
 
     /**
-     * Get all models that have this role
+     * Boot the model
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Auto-generate slug from name if not provided
+        static::creating(function ($role) {
+            if (empty($role->slug) && !empty($role->name)) {
+                $role->slug = \Illuminate\Support\Str::slug($role->name);
+            }
+        });
+
+        static::updating(function ($role) {
+            if (empty($role->slug) && !empty($role->name)) {
+                $role->slug = \Illuminate\Support\Str::slug($role->name);
+            }
+        });
+    }
+
+    /**
+     * Alias for users() for backward compatibility
+     * Note: Spatie's Role model already has a users() method
      */
     public function models()
     {
-        return $this->morphToMany(
-            \App\Models\User::class,
-            'model',
-            'model_has_roles',
-            'role_id',
-            'model_id'
-        )->withPivot('model_type');
+        return $this->users();
     }
 
     /**
-     * Get all permissions for this role
+     * Check if role has a specific permission by slug
      */
-    public function permissions()
-    {
-        return $this->belongsToMany(
-            Permission::class,
-            'role_has_permissions',
-            'role_id',
-            'permission_id'
-        )->withTimestamps();
-    }
-
-    /**
-     * Check if role has a specific permission
-     */
-    public function hasPermission(string $permissionSlug): bool
+    public function hasPermissionBySlug(string $permissionSlug): bool
     {
         return $this->permissions()->where('slug', $permissionSlug)->exists();
     }
 
     /**
-     * Assign permissions to role
+     * Assign permissions to role by IDs
      */
     public function assignPermissions(array $permissionIds): void
     {
-        $this->permissions()->sync($permissionIds);
+        $this->syncPermissions($permissionIds);
     }
 
     /**
-     * Revoke permissions from role
+     * Revoke permissions from role by IDs
      */
     public function revokePermissions(array $permissionIds): void
     {

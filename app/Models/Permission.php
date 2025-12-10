@@ -3,9 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Spatie\Permission\Models\Permission as SpatiePermission;
 
-class Permission extends Model
+class Permission extends SpatiePermission
 {
     use HasFactory;
 
@@ -13,33 +13,34 @@ class Permission extends Model
         'name',
         'slug',
         'description',
+        'guard_name',
     ];
 
     /**
-     * Get roles that have this permission (new system)
+     * Boot the model
      */
-    public function roleModels()
+    protected static function boot()
     {
-        return $this->belongsToMany(
-            \Modules\Roles\Models\Role::class,
-            'role_has_permissions',
-            'permission_id',
-            'role_id'
-        )->withTimestamps();
-    }
+        parent::boot();
 
-    /**
-     * Alias for roleModels for easier access
-     */
-    public function rolesWithPermission()
-    {
-        return $this->roleModels();
+        // Auto-generate slug from name if not provided
+        static::creating(function ($permission) {
+            if (empty($permission->slug) && !empty($permission->name)) {
+                $permission->slug = \Str::slug($permission->name);
+            }
+        });
+
+        static::updating(function ($permission) {
+            if (empty($permission->slug) && !empty($permission->name)) {
+                $permission->slug = \Str::slug($permission->name);
+            }
+        });
     }
 
     /**
      * Legacy: Get roles that have this permission (old system)
      */
-    public function roles()
+    public function legacyRoles()
     {
         return $this->belongsToMany(RolePermission::class, 'role_permissions', 'permission_id', 'role');
     }

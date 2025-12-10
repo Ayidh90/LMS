@@ -32,14 +32,14 @@
                             <!-- Title English -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    {{ t('courses.fields.title') }} (English) <span class="text-red-500">*</span>
+                                    {{ t('courses.fields.title') }} ({{ t('common.language_english') }}) <span class="text-red-500">*</span>
                                 </label>
                                 <input
                                     v-model="form.title"
                                     type="text"
                                     class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                                     :class="{ 'border-red-500': form.errors.title }"
-                                    :placeholder="t('courses.placeholders.title') || 'Enter course title'"
+                                    :placeholder="t('courses.placeholders.title')"
                                 />
                                 <p v-if="form.errors.title" class="mt-1 text-sm text-red-500">{{ form.errors.title }}</p>
                             </div>
@@ -47,41 +47,41 @@
                             <!-- Title Arabic -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    {{ t('courses.fields.title') }} (العربية)
+                                    {{ t('courses.fields.title') }} ({{ t('common.language_arabic') }})
                                 </label>
                                 <input
                                     v-model="form.title_ar"
                                     type="text"
                                     dir="rtl"
                                     class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                                    :placeholder="'أدخل عنوان الدورة'"
+                                    :placeholder="t('courses.placeholders.title')"
                                 />
                             </div>
                             
                             <!-- Description English -->
                             <div class="md:col-span-2">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    {{ t('courses.fields.description') }} (English)
+                                    {{ t('courses.fields.description') }} ({{ t('common.language_english') }})
                                 </label>
                                 <textarea
                                     v-model="form.description"
                                     rows="4"
                                     class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none"
-                                    :placeholder="t('courses.placeholders.description') || 'Enter course description'"
+                                    :placeholder="t('courses.placeholders.description')"
                                 ></textarea>
                             </div>
                             
                             <!-- Description Arabic -->
                             <div class="md:col-span-2">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                                    {{ t('courses.fields.description') }} (العربية)
+                                    {{ t('courses.fields.description') }} ({{ t('common.language_arabic') }})
                                 </label>
                                 <textarea
                                     v-model="form.description_ar"
                                     rows="4"
                                     dir="rtl"
                                     class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none"
-                                    :placeholder="'أدخل وصف الدورة'"
+                                    :placeholder="t('courses.placeholders.description')"
                                 ></textarea>
                             </div>
                         </div>
@@ -160,7 +160,7 @@
                             <!-- Upload -->
                             <div class="flex-1">
                                 <label class="block">
-                                    <span class="sr-only">Choose thumbnail</span>
+                                    <span class="sr-only">{{ t('common.choose_thumbnail') }}</span>
                                     <input
                                         type="file"
                                         @change="handleThumbnail"
@@ -168,7 +168,7 @@
                                         class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
                                     />
                                 </label>
-                                <p class="mt-2 text-sm text-gray-500">{{ t('courses.thumbnail_hint') || 'PNG, JPG up to 2MB. Recommended size: 1280x720px' }}</p>
+                                <p class="mt-2 text-sm text-gray-500">{{ t('courses.thumbnail_hint') }}</p>
                             </div>
                         </div>
                     </div>
@@ -177,8 +177,8 @@
                     <div class="pt-6 border-t border-gray-100">
                         <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
                             <div>
-                                <h4 class="font-medium text-gray-900">{{ t('courses.publish_course') || 'Publish Course' }}</h4>
-                                <p class="text-sm text-gray-500">{{ t('courses.publish_hint') || 'Make this course visible to students' }}</p>
+                                <h4 class="font-medium text-gray-900">{{ t('courses.publish_course') }}</h4>
+                                <p class="text-sm text-gray-500">{{ t('courses.publish_hint') }}</p>
                             </div>
                             <label class="relative inline-flex items-center cursor-pointer">
                                 <input type="checkbox" v-model="form.is_published" class="sr-only peer">

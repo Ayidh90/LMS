@@ -10,10 +10,13 @@ return new class extends Migration
     {
         Schema::create('permissions', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();
-            $table->string('slug')->unique();
-            $table->text('description')->nullable();
+            $table->string('name'); // Spatie required (not unique alone)
+            $table->string('guard_name')->default('web'); // Spatie required
+            $table->string('slug')->unique(); // Custom field
+            $table->text('description')->nullable(); // Custom field
             $table->timestamps();
+
+            $table->unique(['name', 'guard_name']); // Spatie required unique constraint
         });
 
         Schema::create('role_permissions', function (Blueprint $table) {

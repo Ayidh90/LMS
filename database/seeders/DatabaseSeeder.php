@@ -64,11 +64,34 @@ class DatabaseSeeder extends Seeder
         $this->command->info('Instructor: instructor@lms.com / password');
         $this->command->info('Student: student@lms.com / password');
 
-        // Seed permissions
+        // Seed permissions first
         $this->call(PermissionSeeder::class);
         
+        // Seed roles (after permissions)
+        $this->call(RoleSeeder::class);
+        
+        // Assign roles to users
+        $superAdminUser = User::where('email', 'superadmin@lms.com')->first();
+        if ($superAdminUser) {
+            $superAdminUser->assignRole('super_admin');
+        }
+        
+        $adminUser = User::where('email', 'admin@lms.com')->first();
+        if ($adminUser) {
+            $adminUser->assignRole('admin');
+        }
+        
+        $instructorUser = User::where('email', 'instructor@lms.com')->first();
+        if ($instructorUser) {
+            $instructorUser->assignRole('instructor');
+        }
+        
+        $studentUser = User::where('email', 'student@lms.com')->first();
+        if ($studentUser) {
+            $studentUser->assignRole('student');
+        }
+        
         // Seed categories and FAQs
-        $this->call(CategorySeeder::class);
         $this->call(FAQSeeder::class);
         
         // Seed courses (must be after categories)

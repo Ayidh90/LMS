@@ -5,6 +5,7 @@ namespace Modules\Roles\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Permission;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class PermissionController extends Controller
@@ -14,10 +15,10 @@ class PermissionController extends Controller
      */
     public function index()
     {
-        $permissions = Permission::withCount('roleModels')->orderBy('name')->get();
+        $permissions = Permission::withCount('roles')->orderBy('name')->get();
 
         return Inertia::render('Admin/Permissions/Index', [
-            'permissions' => $permissions,
+            'permissions' => $permissions ? $permissions->toArray() : [],
         ]);
     }
 
@@ -28,11 +29,16 @@ class PermissionController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'slug' => ['required', 'string', 'max:255', 'unique:permissions,slug'],
+            'slug' => ['nullable', 'string', 'max:255', 'unique:permissions,slug'],
             'description' => ['nullable', 'string'],
         ]);
 
-        Permission::create($validated);
+        Permission::create([
+            'name' => $validated['name'],
+            'slug' => $validated['slug'] ?? Str::slug($validated['name']),
+            'description' => $validated['description'] ?? null,
+            'guard_name' => 'web',
+        ]);
 
         return redirect()->route('admin.permissions.index')
             ->with('success', __('messages.permissions.created_successfully'));
@@ -45,11 +51,15 @@ class PermissionController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'slug' => ['required', 'string', 'max:255', 'unique:permissions,slug,' . $permission->id],
+            'slug' => ['nullable', 'string', 'max:255', 'unique:permissions,slug,' . $permission->id],
             'description' => ['nullable', 'string'],
         ]);
 
-        $permission->update($validated);
+        $permission->update([
+            'name' => $validated['name'],
+            'slug' => $validated['slug'] ?? Str::slug($validated['name']),
+            'description' => $validated['description'] ?? $permission->description,
+        ]);
 
         return redirect()->route('admin.permissions.index')
             ->with('success', __('messages.permissions.updated_successfully'));

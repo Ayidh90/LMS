@@ -7,10 +7,11 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\DB;
 use App\Models\Permission;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasRoles;
 
     protected $fillable = [
         'name',
@@ -88,31 +89,17 @@ class User extends Authenticatable
     }
 
     /**
-     * Get all roles for this user (polymorphic)
+     * Check if user has a specific role by slug
      */
-    public function roles()
-    {
-        return $this->morphToMany(
-            \Modules\Roles\Models\Role::class,
-            'model',
-            'model_has_roles',
-            'model_id',
-            'role_id'
-        )->withPivot('model_type')->withTimestamps();
-    }
-
-    /**
-     * Check if user has a specific role
-     */
-    public function hasRole(string $roleSlug): bool
+    public function hasRoleBySlug(string $roleSlug): bool
     {
         return $this->roles()->where('slug', $roleSlug)->exists();
     }
 
     /**
-     * Check if user has any of the given roles
+     * Check if user has any of the given roles by slug
      */
-    public function hasAnyRole(array $roleSlugs): bool
+    public function hasAnyRoleBySlug(array $roleSlugs): bool
     {
         return $this->roles()->whereIn('slug', $roleSlugs)->exists();
     }
@@ -130,26 +117,35 @@ class User extends Authenticatable
         })->get();
     }
 
-    // Role checks
+    // Role checks - works with both Spatie roles and legacy role field
     public function isSuperAdmin(): bool
     {
-        return $this->role === 'super_admin' || ($this->is_admin && $this->role === 'admin');
+        return $this->hasRole('super_admin') || 
+               $this->hasRoleBySlug('super_admin') || 
+               $this->role === 'super_admin' || 
+               ($this->is_admin && $this->role === 'admin');
     }
 
     public function isAdmin(): bool
     {
-        // User must have is_admin flag set to true AND role must be admin or super_admin
-        return ($this->is_admin && ($this->role === 'admin' || $this->role === 'super_admin')) || $this->role === 'super_admin';
+        return $this->hasRole('admin') || 
+               $this->hasRoleBySlug('admin') || 
+               ($this->is_admin && ($this->role === 'admin' || $this->role === 'super_admin')) || 
+               $this->role === 'super_admin';
     }
 
     public function isInstructor(): bool
     {
-        return $this->role === 'instructor';
+        return $this->hasRole('instructor') || 
+               $this->hasRoleBySlug('instructor') || 
+               $this->role === 'instructor';
     }
 
     public function isStudent(): bool
     {
-        return $this->role === 'student';
+        return $this->hasRole('student') || 
+               $this->hasRoleBySlug('student') || 
+               $this->role === 'student';
     }
 
     public function canAccessCourse(\Modules\Courses\Models\Course $course): bool
@@ -175,9 +171,15 @@ class User extends Authenticatable
             return true;
         }
 
-        // Check permissions through roles
+        // Check using Spatie's permission system
+        $permission = Permission::where('slug', $permissionSlug)->first();
+        if ($permission && $this->hasPermissionTo($permission)) {
+            return true;
+        }
+
+        // Check permissions through roles (custom method)
         foreach ($this->roles as $role) {
-            if ($role->hasPermission($permissionSlug)) {
+            if (method_exists($role, 'hasPermissionBySlug') && $role->hasPermissionBySlug($permissionSlug)) {
                 return true;
             }
         }
@@ -216,10 +218,20 @@ class User extends Authenticatable
             return $permissions;
         }
 
-        // Get permissions through roles (new system)
+        // Get permissions through Spatie roles
         $roles = $this->roles()->with('permissions')->get();
         foreach ($roles as $role) {
             foreach ($role->permissions as $permission) {
+                if ($permission->slug) {
+                    $permissions[$permission->slug] = true;
+                }
+            }
+        }
+
+        // Also get direct permissions (Spatie supports direct user permissions)
+        $directPermissions = $this->permissions;
+        foreach ($directPermissions as $permission) {
+            if ($permission->slug) {
                 $permissions[$permission->slug] = true;
             }
         }
@@ -244,7 +256,12 @@ class User extends Authenticatable
      */
     public function getRoleNames()
     {
+        // Get Spatie roles by slug
         $roles = $this->roles()->pluck('slug')->toArray();
+        
+        // Also get role names from Spatie (using name field)
+        $spatieRoleNames = $this->roles()->pluck('name')->toArray();
+        $roles = array_unique(array_merge($roles, $spatieRoleNames));
         
         // Include legacy role field if it exists and is not already in the array
         if ($this->role && !in_array($this->role, $roles)) {

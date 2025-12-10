@@ -193,7 +193,6 @@ class DashboardRepository
                     'thumbnail' => $course->thumbnail,
                     'thumbnail_url' => $course->thumbnail_url,
                     'level' => $course->level,
-                    'price' => $course->price,
                     'is_published' => $course->is_published,
                     'duration_hours' => $course->duration_hours,
                     'students_count' => $course->students_count,

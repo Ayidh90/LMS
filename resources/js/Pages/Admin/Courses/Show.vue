@@ -36,7 +36,7 @@
             </div>
 
             <!-- Statistics Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
                 <Card class="stat-card-hover">
                     <template #content>
                         <div class="flex items-center justify-between mb-4">
@@ -82,6 +82,18 @@
                         </div>
                         <div class="text-3xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent mb-1">{{ statistics?.total_batches || 0 }}</div>
                         <div class="text-sm font-medium text-gray-600">{{ t('admin.total_batches') || 'Total Batches' }}</div>
+                    </template>
+                </Card>
+
+                <Card class="stat-card-hover">
+                    <template #content>
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-14 h-14 bg-gradient-to-br from-pink-500 to-rose-600 rounded-xl flex items-center justify-center shadow-lg">
+                                <i class="pi pi-question-circle text-2xl text-white"></i>
+                            </div>
+                        </div>
+                        <div class="text-3xl font-bold bg-gradient-to-r from-pink-600 to-rose-600 bg-clip-text text-transparent mb-1">{{ statistics?.total_questions || 0 }}</div>
+                        <div class="text-sm font-medium text-gray-600">{{ t('lessons.total_questions') || 'Total Questions' }}</div>
                     </template>
                 </Card>
             </div>
@@ -178,9 +190,18 @@
                                     {{ section.translated_description || section.description }}
                                 </p>
                                 <div v-if="section.lessons && section.lessons.length > 0" class="space-y-2">
-                                    <div v-for="lesson in section.lessons" :key="lesson.id" class="flex items-center gap-3 text-sm text-gray-700 pl-4 py-2 hover:bg-gray-50 rounded-lg transition-colors">
+                                    <div v-for="lesson in section.lessons" :key="lesson.id" class="border border-gray-100 rounded-lg p-3 hover:bg-gray-50 transition-colors">
+                                        <div class="flex items-center gap-3 mb-2">
                                         <i class="pi pi-play-circle text-blue-500"></i>
-                                        <span class="font-medium">{{ lesson.translated_title || lesson.title }}</span>
+                                            <span class="font-medium text-gray-900">{{ lesson.translated_title || lesson.title }}</span>
+                                            <Badge v-if="lesson.questions && lesson.questions.length > 0" :value="lesson.questions.length" severity="info" class="ml-auto" />
+                                        </div>
+                                        <div v-if="lesson.questions && lesson.questions.length > 0" class="pl-8 mt-2 space-y-1">
+                                            <div v-for="question in lesson.questions" :key="question.id" class="text-xs text-gray-600 flex items-center gap-2">
+                                                <i class="pi pi-circle-fill text-xs text-gray-400"></i>
+                                                <span>{{ question.translated_question || question.question }}</span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </Panel>

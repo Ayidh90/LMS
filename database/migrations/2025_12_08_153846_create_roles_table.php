@@ -13,12 +13,13 @@ return new class extends Migration
     {
         Schema::create('roles', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('slug')->unique();
-            $table->text('description')->nullable();
-            $table->string('guard_name')->default('web');
+            $table->string('name'); // Spatie required
+            $table->string('guard_name')->default('web'); // Spatie required
+            $table->string('slug')->unique(); // Custom field
+            $table->text('description')->nullable(); // Custom field
             $table->timestamps();
 
+            $table->unique(['name', 'guard_name']); // Spatie required unique constraint
             $table->index('slug');
         });
 

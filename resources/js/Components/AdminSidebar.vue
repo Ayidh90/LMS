@@ -460,19 +460,6 @@ const menuItems = computed(() => {
                 icon: 'separator',
             },
             {
-                title: t('categories.title') || 'Categories',
-                permission: 'categories.manage',
-            },
-            {
-                title: t('categories.title') || 'Categories',
-                icon: 'category',
-                route: 'admin.categories.index',
-                permission: 'categories.manage',
-            },
-            {
-                icon: 'separator',
-            },
-            {
                 title: t('admin.users_management'),
                 permission: 'users.manage',
             },
@@ -503,7 +490,7 @@ const menuItems = computed(() => {
             },
             {
                 title: t('admin.settings') || 'Settings',
-                icon: 'settings',
+                icon: 'setting-4',
                 route: 'admin.settings.index',
             },
             {

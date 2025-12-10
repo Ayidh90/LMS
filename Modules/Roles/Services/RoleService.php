@@ -6,6 +6,7 @@ use Modules\Roles\Models\Role;
 use App\Models\Permission;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class RoleService
 {
@@ -33,13 +34,13 @@ class RoleService
         return DB::transaction(function () use ($data, $permissionIds) {
             $role = Role::create([
                 'name' => $data['name'],
-                'slug' => $data['slug'] ?? \Str::slug($data['name']),
+                'slug' => $data['slug'] ?? Str::slug($data['name']),
                 'description' => $data['description'] ?? null,
                 'guard_name' => $data['guard_name'] ?? 'web',
             ]);
 
             if (!empty($permissionIds)) {
-                $role->assignPermissions($permissionIds);
+                $role->syncPermissions($permissionIds);
             }
 
             return $role->load('permissions');
@@ -60,7 +61,7 @@ class RoleService
             ]);
 
             if ($permissionIds !== null) {
-                $role->assignPermissions($permissionIds);
+                $role->syncPermissions($permissionIds);
             }
 
             return $role->load('permissions');
@@ -73,40 +74,34 @@ class RoleService
     public function deleteRole(Role $role): bool
     {
         return DB::transaction(function () use ($role) {
-            // Detach all permissions
-            $role->permissions()->detach();
-            
-            // Detach all models (users)
-            $role->models()->detach();
-            
+            // Spatie handles cleanup automatically
             return $role->delete();
         });
     }
 
     /**
-     * Assign role to user
+     * Assign role to user (using Spatie)
      */
     public function assignRoleToUser(User $user, Role $role): void
     {
-        if (!$user->roles()->where('roles.id', $role->id)->exists()) {
-            $user->roles()->attach($role->id, ['model_type' => User::class]);
-        }
+        $user->assignRole($role);
     }
 
     /**
-     * Remove role from user
+     * Remove role from user (using Spatie)
      */
     public function removeRoleFromUser(User $user, Role $role): void
     {
-        $user->roles()->detach($role->id);
+        $user->removeRole($role);
     }
 
     /**
-     * Sync user roles (replace all roles)
+     * Sync user roles (replace all roles using Spatie)
      */
     public function syncUserRoles(User $user, array $roleIds): void
     {
-        $user->roles()->sync($roleIds);
+        $roles = Role::whereIn('id', $roleIds)->get();
+        $user->syncRoles($roles);
     }
 
     /**
@@ -122,7 +117,7 @@ class RoleService
      */
     public function getUsersWithRole(Role $role)
     {
-        return $role->models()->paginate(15);
+        return $role->users()->paginate(15);
     }
 }
 

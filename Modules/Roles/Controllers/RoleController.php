@@ -23,8 +23,8 @@ class RoleController extends Controller
         $permissions = $this->roleService->getAllPermissions();
 
         return Inertia::render('Admin/Roles/Index', [
-            'roles' => $roles,
-            'permissions' => $permissions,
+            'roles' => $roles ? $roles->toArray() : [],
+            'permissions' => $permissions ? $permissions->toArray() : [],
         ]);
     }
 
@@ -36,7 +36,7 @@ class RoleController extends Controller
         $permissions = $this->roleService->getAllPermissions();
 
         return Inertia::render('Admin/Roles/Create', [
-            'permissions' => $permissions,
+            'permissions' => $permissions ? $permissions->toArray() : [],
         ]);
     }
 
@@ -72,9 +72,9 @@ class RoleController extends Controller
         $permissions = $this->roleService->getAllPermissions();
 
         return Inertia::render('Admin/Roles/Show', [
-            'role' => $role,
+            'role' => $role ? $role->toArray() : null,
             'users' => $users,
-            'permissions' => $permissions,
+            'permissions' => $permissions ? $permissions->toArray() : [],
         ]);
     }
 
@@ -87,8 +87,8 @@ class RoleController extends Controller
         $permissions = $this->roleService->getAllPermissions();
 
         return Inertia::render('Admin/Roles/Edit', [
-            'role' => $role,
-            'permissions' => $permissions,
+            'role' => $role ? $role->toArray() : null,
+            'permissions' => $permissions ? $permissions->toArray() : [],
         ]);
     }
 

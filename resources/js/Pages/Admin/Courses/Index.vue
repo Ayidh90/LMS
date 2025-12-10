@@ -27,7 +27,7 @@
                                 <i class="pi pi-search" />
                                 <InputText
                                     v-model="search"
-                                    :placeholder="t('common.search') || 'Search courses...'"
+                                    :placeholder="t('common.search_placeholder')"
                                     class="w-full"
                                     @input="debouncedSearch"
                                 />
