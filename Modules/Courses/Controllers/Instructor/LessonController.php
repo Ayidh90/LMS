@@ -14,6 +14,7 @@ use App\Models\Batch;
 use App\Models\Enrollment;
 use App\Models\LessonCompletion;
 use App\Models\UserQuestionAnswer;
+use App\Services\ImageService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -23,7 +24,8 @@ class LessonController extends Controller
 {
     public function __construct(
         private LessonService $lessonService,
-        private LessonAttendanceService $attendanceService
+        private LessonAttendanceService $attendanceService,
+        private ImageService $imageService
     ) {}
 
     public function index(Course $course)
@@ -53,10 +55,21 @@ class LessonController extends Controller
             return back()->withErrors(['section_id' => __('Invalid section selected.')]);
         }
 
+        // Handle file uploads
+        if ($request->hasFile('video_file') && $data['type'] === 'video_file') {
+            $filePath = $this->imageService->upload($request->file('video_file'), 'lessons/videos');
+            $data['video_url'] = $filePath;
+        } elseif ($request->hasFile('image_file') && $data['type'] === 'image') {
+            $filePath = $this->imageService->upload($request->file('image_file'), 'lessons/images');
+            $data['video_url'] = $filePath;
+        } elseif ($request->hasFile('document_file') && $data['type'] === 'document_file') {
+            $filePath = $this->imageService->upload($request->file('document_file'), 'lessons/documents');
+            $data['video_url'] = $filePath;
+        }
+
         $this->lessonService->create($course, $data);
 
-        return redirect()->route('instructor.sections.index', $course)
-            ->with('success', __('Lesson created successfully.'));
+        return back()->with('success', __('Lesson created successfully.'));
     }
 
     public function show(Course $course, Lesson $lesson)

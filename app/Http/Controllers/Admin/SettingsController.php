@@ -7,6 +7,7 @@ use App\Services\SettingsService;
 use App\Services\ImageService;
 use App\Models\Settings;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class SettingsController extends Controller
@@ -21,13 +22,10 @@ class SettingsController extends Controller
      */
     public function index()
     {
-        // Initialize default settings if they don't exist
         $this->settingsService->initializeDefaults();
         
-        $settings = $this->settingsService->getAll();
-        
         return Inertia::render('Admin/Settings/Index', [
-            'settings' => $settings,
+            'settings' => $this->settingsService->getAll(),
         ]);
     }
 
@@ -36,57 +34,99 @@ class SettingsController extends Controller
      */
     public function update(Request $request)
     {
-        $validated = $request->validate([
+        $validated = $this->validateRequest($request);
+
+        try {
+            $settingsToUpdate = $this->prepareSettingsToUpdate($validated, $request);
+            
+            if (!empty($settingsToUpdate)) {
+                $this->settingsService->update($settingsToUpdate);
+            }
+
+            return redirect()
+                ->route('admin.settings.index')
+                ->with('success', __('Settings updated successfully.'));
+        } catch (\Exception $e) {
+            Log::error('Settings update failed: ' . $e->getMessage(), [
+                'exception' => $e,
+                'request_data' => $request->except(['website_logo', 'website_favicon']),
+            ]);
+
+            return back()
+                ->withErrors(['general' => __('An error occurred while updating settings. Please try again.')])
+                ->withInput();
+        }
+    }
+
+    /**
+     * Validate the incoming request
+     */
+    private function validateRequest(Request $request): array
+    {
+        return $request->validate([
             // Instructor permissions
-            'instructor_can_create_sections' => 'nullable|boolean',
-            'instructor_can_create_lessons' => 'nullable|boolean',
-            'instructor_can_create_questions' => 'nullable|boolean',
+            'instructor_can_create_sections' => ['nullable', 'boolean'],
+            'instructor_can_create_lessons' => ['nullable', 'boolean'],
+            'instructor_can_create_questions' => ['nullable', 'boolean'],
             
             // Website settings
-            'website_name' => 'nullable|string|max:255',
-            'website_logo' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'website_favicon' => 'nullable|image|mimes:jpeg,png,jpg,gif,ico,svg|max:512',
-            'website_info' => 'nullable|string|max:1000',
-            'website_email' => 'nullable|email|max:255',
-            'website_mobile' => 'nullable|string|max:50',
+            'website_name' => ['nullable', 'string', 'max:255'],
+            'website_logo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:2048'],
+            'website_favicon' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,ico,svg', 'max:512'],
+            'website_info' => ['nullable', 'string', 'max:1000'],
+            'website_email' => ['nullable', 'email', 'max:255'],
+            'website_mobile' => ['nullable', 'string', 'max:50'],
+        ], [
+            'website_logo.image' => __('The logo must be an image file.'),
+            'website_logo.mimes' => __('The logo must be a file of type: jpeg, png, jpg, gif, svg.'),
+            'website_logo.max' => __('The logo may not be greater than 2MB.'),
+            'website_favicon.image' => __('The favicon must be an image file.'),
+            'website_favicon.mimes' => __('The favicon must be a file of type: jpeg, png, jpg, gif, ico, svg.'),
+            'website_favicon.max' => __('The favicon may not be greater than 512KB.'),
+            'website_email.email' => __('The email must be a valid email address.'),
+            'website_name.max' => __('The website name may not be greater than 255 characters.'),
+            'website_info.max' => __('The website info may not be greater than 1000 characters.'),
+            'website_mobile.max' => __('The mobile number may not be greater than 50 characters.'),
         ]);
+    }
 
+    /**
+     * Prepare settings array for update
+     */
+    private function prepareSettingsToUpdate(array $validated, Request $request): array
+    {
         $settingsToUpdate = [];
 
-        // Handle instructor permissions
-        if (isset($validated['instructor_can_create_sections'])) {
-            $settingsToUpdate['instructor_can_create_sections'] = $validated['instructor_can_create_sections'];
-        }
-        if (isset($validated['instructor_can_create_lessons'])) {
-            $settingsToUpdate['instructor_can_create_lessons'] = $validated['instructor_can_create_lessons'];
-        }
-        if (isset($validated['instructor_can_create_questions'])) {
-            $settingsToUpdate['instructor_can_create_questions'] = $validated['instructor_can_create_questions'];
+        // Process instructor permissions
+        $permissionFields = [
+            'instructor_can_create_sections',
+            'instructor_can_create_lessons',
+            'instructor_can_create_questions',
+        ];
+
+        foreach ($permissionFields as $field) {
+            if (array_key_exists($field, $validated)) {
+                $settingsToUpdate[$field] = $validated[$field];
+            }
         }
 
-        // Handle website settings
-        if (isset($validated['website_name'])) {
-            $settingsToUpdate['website_name'] = $validated['website_name'];
-        }
-        if (isset($validated['website_info'])) {
-            $settingsToUpdate['website_info'] = $validated['website_info'];
-        }
-        if (isset($validated['website_email'])) {
-            $settingsToUpdate['website_email'] = $validated['website_email'];
-        }
-        if (isset($validated['website_mobile'])) {
-            $settingsToUpdate['website_mobile'] = $validated['website_mobile'];
+        // Process website text fields
+        $websiteFields = [
+            'website_name',
+            'website_info',
+            'website_email',
+            'website_mobile',
+        ];
+
+        foreach ($websiteFields as $field) {
+            if (array_key_exists($field, $validated)) {
+                $settingsToUpdate[$field] = $validated[$field];
+            }
         }
 
         // Handle logo upload
         if ($request->hasFile('website_logo')) {
-            $oldLogo = Settings::websiteLogo();
-            $logoPath = $this->imageService->upload(
-                $request->file('website_logo'),
-                'settings',
-                $oldLogo,
-                'logo.' . $request->file('website_logo')->getClientOriginalExtension()
-            );
+            $logoPath = $this->handleLogoUpload($request->file('website_logo'));
             if ($logoPath) {
                 $settingsToUpdate['website_logo'] = $logoPath;
             }
@@ -94,24 +134,54 @@ class SettingsController extends Controller
 
         // Handle favicon upload
         if ($request->hasFile('website_favicon')) {
-            $oldFavicon = Settings::websiteFavicon();
-            $faviconPath = $this->imageService->upload(
-                $request->file('website_favicon'),
-                'settings',
-                $oldFavicon,
-                'favicon.' . $request->file('website_favicon')->getClientOriginalExtension()
-            );
+            $faviconPath = $this->handleFaviconUpload($request->file('website_favicon'));
             if ($faviconPath) {
                 $settingsToUpdate['website_favicon'] = $faviconPath;
             }
         }
 
-        // Update settings
-        if (!empty($settingsToUpdate)) {
-            $this->settingsService->update($settingsToUpdate);
-        }
+        return $settingsToUpdate;
+    }
 
-        return redirect()->route('admin.settings.index')
-            ->with('success', __('Settings updated successfully.'));
+    /**
+     * Handle logo upload
+     */
+    private function handleLogoUpload($file): ?string
+    {
+        try {
+            $oldLogo = Settings::websiteLogo();
+            $extension = $file->getClientOriginalExtension();
+            
+            return $this->imageService->upload(
+                $file,
+                'settings',
+                $oldLogo,
+                'logo.' . $extension
+            );
+        } catch (\Exception $e) {
+            Log::error('Logo upload failed: ' . $e->getMessage());
+            throw new \RuntimeException(__('Failed to upload logo. Please try again.'), 0, $e);
+        }
+    }
+
+    /**
+     * Handle favicon upload
+     */
+    private function handleFaviconUpload($file): ?string
+    {
+        try {
+            $oldFavicon = Settings::websiteFavicon();
+            $extension = $file->getClientOriginalExtension();
+            
+            return $this->imageService->upload(
+                $file,
+                'settings',
+                $oldFavicon,
+                'favicon.' . $extension
+            );
+        } catch (\Exception $e) {
+            Log::error('Favicon upload failed: ' . $e->getMessage());
+            throw new \RuntimeException(__('Failed to upload favicon. Please try again.'), 0, $e);
+        }
     }
 }

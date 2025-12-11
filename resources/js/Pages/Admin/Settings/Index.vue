@@ -29,6 +29,28 @@
                 <p class="text-green-800 font-medium flex-1">{{ page.props.flash.success }}</p>
             </div>
 
+            <!-- Error Messages -->
+            <div v-if="websiteForm.hasErrors || form.hasErrors" class="error-message bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-xl p-4 shadow-sm">
+                <div class="flex items-start gap-3">
+                    <div class="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mt-0.5">
+                        <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-red-800 font-semibold mb-2">{{ t('common.error') || 'Please fix the following errors:' }}</h3>
+                        <ul class="list-disc list-inside space-y-1 text-sm text-red-700">
+                            <li v-for="(error, field) in websiteForm.errors" :key="`website-${field}`">
+                                {{ Array.isArray(error) ? error[0] : error }}
+                            </li>
+                            <li v-for="(error, field) in form.errors" :key="`form-${field}`">
+                                {{ Array.isArray(error) ? error[0] : error }}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
             <!-- Website Settings Form -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-6">
                 <div class="p-6 border-b border-gray-100">
@@ -45,9 +67,15 @@
                         <input
                             type="text"
                             v-model="websiteForm.website_name"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            :class="[
+                                'w-full px-4 py-2.5 border rounded-lg transition-colors focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+                                websiteForm.errors.website_name ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
+                            ]"
                             :placeholder="t('admin.website_name_placeholder') || 'Enter website name'"
                         />
+                        <p v-if="websiteForm.errors.website_name" class="mt-1 text-sm text-red-600">
+                            {{ Array.isArray(websiteForm.errors.website_name) ? websiteForm.errors.website_name[0] : websiteForm.errors.website_name }}
+                        </p>
                     </div>
 
                     <!-- Website Logo -->
@@ -68,9 +96,15 @@
                                     type="file"
                                     @change="handleLogoChange"
                                     accept="image/*"
-                                    class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                    :class="[
+                                        'block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors',
+                                        websiteForm.errors.website_logo ? 'file:bg-red-50 file:text-red-700' : ''
+                                    ]"
                                 />
-                                <p class="mt-1 text-xs text-gray-500">{{ t('admin.logo_hint') || 'Recommended: PNG or JPG, max 2MB' }}</p>
+                                <p v-if="websiteForm.errors.website_logo" class="mt-1 text-xs text-red-600">
+                                    {{ Array.isArray(websiteForm.errors.website_logo) ? websiteForm.errors.website_logo[0] : websiteForm.errors.website_logo }}
+                                </p>
+                                <p v-else class="mt-1 text-xs text-gray-500">{{ t('admin.logo_hint') || 'Recommended: PNG or JPG, max 2MB' }}</p>
                             </div>
                         </div>
                     </div>
@@ -93,9 +127,15 @@
                                     type="file"
                                     @change="handleFaviconChange"
                                     accept="image/*"
-                                    class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                    :class="[
+                                        'block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors',
+                                        websiteForm.errors.website_favicon ? 'file:bg-red-50 file:text-red-700' : ''
+                                    ]"
                                 />
-                                <p class="mt-1 text-xs text-gray-500">{{ t('admin.favicon_hint') || 'Recommended: ICO, PNG or SVG, max 512KB' }}</p>
+                                <p v-if="websiteForm.errors.website_favicon" class="mt-1 text-xs text-red-600">
+                                    {{ Array.isArray(websiteForm.errors.website_favicon) ? websiteForm.errors.website_favicon[0] : websiteForm.errors.website_favicon }}
+                                </p>
+                                <p v-else class="mt-1 text-xs text-gray-500">{{ t('admin.favicon_hint') || 'Recommended: ICO, PNG or SVG, max 512KB' }}</p>
                             </div>
                         </div>
                     </div>
@@ -108,9 +148,15 @@
                         <textarea
                             v-model="websiteForm.website_info"
                             rows="3"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            :class="[
+                                'w-full px-4 py-2.5 border rounded-lg transition-colors focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-y',
+                                websiteForm.errors.website_info ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
+                            ]"
                             :placeholder="t('admin.website_info_placeholder') || 'Enter website description or information'"
                         ></textarea>
+                        <p v-if="websiteForm.errors.website_info" class="mt-1 text-sm text-red-600">
+                            {{ Array.isArray(websiteForm.errors.website_info) ? websiteForm.errors.website_info[0] : websiteForm.errors.website_info }}
+                        </p>
                     </div>
 
                     <!-- Website Email -->
@@ -121,9 +167,15 @@
                         <input
                             type="email"
                             v-model="websiteForm.website_email"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            :class="[
+                                'w-full px-4 py-2.5 border rounded-lg transition-colors focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+                                websiteForm.errors.website_email ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
+                            ]"
                             :placeholder="t('admin.website_email_placeholder') || 'contact@example.com'"
                         />
+                        <p v-if="websiteForm.errors.website_email" class="mt-1 text-sm text-red-600">
+                            {{ Array.isArray(websiteForm.errors.website_email) ? websiteForm.errors.website_email[0] : websiteForm.errors.website_email }}
+                        </p>
                     </div>
 
                     <!-- Website Mobile -->
@@ -134,9 +186,15 @@
                         <input
                             type="text"
                             v-model="websiteForm.website_mobile"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            :class="[
+                                'w-full px-4 py-2.5 border rounded-lg transition-colors focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+                                websiteForm.errors.website_mobile ? 'border-red-300 bg-red-50' : 'border-gray-300 bg-white'
+                            ]"
                             :placeholder="t('admin.website_mobile_placeholder') || '+1234567890'"
                         />
+                        <p v-if="websiteForm.errors.website_mobile" class="mt-1 text-sm text-red-600">
+                            {{ Array.isArray(websiteForm.errors.website_mobile) ? websiteForm.errors.website_mobile[0] : websiteForm.errors.website_mobile }}
+                        </p>
                     </div>
 
                     <!-- Submit Button -->
@@ -144,7 +202,7 @@
                         <button
                             type="submit"
                             :disabled="websiteForm.processing"
-                            class="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-50 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40"
+                            class="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40"
                         >
                             <svg v-if="websiteForm.processing" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -244,7 +302,7 @@
                         <button
                             type="submit"
                             :disabled="form.processing"
-                            class="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-50 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40"
+                            class="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40"
                         >
                             <svg v-if="form.processing" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -275,18 +333,18 @@ const { route } = useRoute();
 const page = usePage();
 
 const form = useForm({
-    instructor_can_create_sections: computed(() => props.settings?.instructor_can_create_sections?.value ?? true),
-    instructor_can_create_lessons: computed(() => props.settings?.instructor_can_create_lessons?.value ?? true),
-    instructor_can_create_questions: computed(() => props.settings?.instructor_can_create_questions?.value ?? true),
+    instructor_can_create_sections: props.settings?.instructor_can_create_sections?.value ?? true,
+    instructor_can_create_lessons: props.settings?.instructor_can_create_lessons?.value ?? true,
+    instructor_can_create_questions: props.settings?.instructor_can_create_questions?.value ?? true,
 });
 
 const websiteForm = useForm({
-    website_name: computed(() => props.settings?.website_name?.value ?? ''),
+    website_name: props.settings?.website_name?.value ?? '',
     website_logo: null,
     website_favicon: null,
-    website_info: computed(() => props.settings?.website_info?.value ?? ''),
-    website_email: computed(() => props.settings?.website_email?.value ?? ''),
-    website_mobile: computed(() => props.settings?.website_mobile?.value ?? ''),
+    website_info: props.settings?.website_info?.value ?? '',
+    website_email: props.settings?.website_email?.value ?? '',
+    website_mobile: props.settings?.website_mobile?.value ?? '',
     website_logo_preview: null,
     website_favicon_preview: null,
 });
@@ -349,7 +407,7 @@ const submitWebsiteSettings = () => {
     }).post(route('admin.settings.update'), {
         preserveScroll: true,
         forceFormData: true,
-        method: 'put',
+        _method: 'put',
     });
 };
 </script>

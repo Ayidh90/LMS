@@ -89,7 +89,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
         Route::get('/settings', [AdminSettingsController::class, 'index'])->name('settings.index');
     });
     Route::middleware('permission:settings.edit')->group(function () {
-        Route::put('/settings', [AdminSettingsController::class, 'update'])->name('settings.update');
+        Route::match(['put', 'post'], '/settings', [AdminSettingsController::class, 'update'])->name('settings.update');
     });
 });
 

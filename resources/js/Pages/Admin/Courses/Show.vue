@@ -285,6 +285,18 @@
                                     />
                                 </Link>
                                 <Link
+                                    :href="route('admin.courses.sections.index', course?.slug || course?.id)"
+                                    class="block w-full group"
+                                >
+                                    <Button 
+                                        :label="t('admin.manage_sections') || 'Manage Sections'" 
+                                        icon="pi pi-list"
+                                        class="w-full justify-start hover:scale-105 transition-transform duration-200"
+                                        outlined
+                                        severity="warning"
+                                    />
+                                </Link>
+                                <Link
                                     :href="route('admin.courses.lessons.create', course?.slug || course?.id)"
                                     class="block w-full group"
                                 >
@@ -333,23 +345,78 @@
                                         severity="help"
                                     />
                                 </Link>
+                                <Link
+                                    :href="route('admin.courses.batches.create', course?.slug || course?.id)"
+                                    class="block w-full group"
+                                >
+                                    <Button 
+                                        :label="t('admin.create_batch') || 'Create Batch'" 
+                                        icon="pi pi-plus"
+                                        class="w-full justify-start hover:scale-105 transition-transform duration-200"
+                                        outlined
+                                        severity="success"
+                                    />
+                                </Link>
                             </div>
                         </template>
                     </Card>
 
                     <!-- Batches -->
-                    <Card v-if="course?.batches && course.batches.length > 0">
+                    <Card>
                         <template #header>
-                            <h3 class="text-lg font-bold text-gray-900 p-6 pb-0">{{ t('admin.batches') || 'Batches' }}</h3>
+                            <div class="flex items-center justify-between p-6 pb-0">
+                                <div>
+                                    <h3 class="text-lg font-bold text-gray-900">{{ t('admin.batches') || 'Batches' }}</h3>
+                                    <p class="text-sm text-gray-500 mt-1">{{ t('admin.batches_description') || 'Manage course batches' }}</p>
+                                </div>
+                                <Link :href="route('admin.courses.batches.index', course?.slug || course?.id)">
+                                    <Button 
+                                        icon="pi pi-plus"
+                                        severity="success"
+                                        text
+                                        rounded
+                                        :title="t('admin.create_batch') || 'Create Batch'"
+                                    />
+                                </Link>
+                            </div>
                         </template>
                         <template #content>
-                            <div class="space-y-3">
-                                <div v-for="batch in course.batches" :key="batch.id" class="border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:bg-blue-50/30 transition-all duration-300">
-                                    <div class="font-bold text-gray-900 mb-1">{{ batch.name }}</div>
-                                    <div class="text-sm text-gray-600">
-                                        {{ t('admin.instructor') || 'Instructor' }}: <Tag :value="batch.instructor?.name || '-'" severity="info" />
+                            <div v-if="course?.batches && course.batches.length > 0" class="space-y-3">
+                                <Link 
+                                    v-for="batch in course.batches" 
+                                    :key="batch.id" 
+                                    :href="route('admin.courses.batches.show', [course?.slug || course?.id, batch.id])"
+                                    class="block border border-gray-200 rounded-xl p-4 hover:border-blue-300 hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-indigo-50/30 transition-all duration-300 group"
+                                >
+                                    <div class="flex items-start justify-between mb-2">
+                                        <div class="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{{ batch.name }}</div>
+                                        <Tag 
+                                            :value="batch.is_active ? t('common.active') : t('common.inactive')" 
+                                            :severity="batch.is_active ? 'success' : 'secondary'"
+                                        />
                                     </div>
-                                </div>
+                                    <div class="text-sm text-gray-600 flex items-center gap-2">
+                                        <i class="pi pi-user text-blue-600"></i>
+                                        <span>{{ t('admin.instructor') || 'Instructor' }}:</span>
+                                        <span class="font-medium">{{ batch.instructor?.name || '-' }}</span>
+                                    </div>
+                                    <div v-if="batch.enrollments_count !== undefined" class="text-sm text-gray-600 flex items-center gap-2 mt-2">
+                                        <i class="pi pi-users text-indigo-600"></i>
+                                        <span>{{ batch.enrollments_count }} {{ t('admin.students') || 'students' }}</span>
+                                    </div>
+                                </Link>
+                            </div>
+                            <div v-else class="text-center py-8">
+                                <i class="pi pi-users text-4xl text-gray-300 mb-4"></i>
+                                <p class="text-gray-500 mb-4">{{ t('admin.no_batches') || 'No batches yet' }}</p>
+                                <Link :href="route('admin.courses.batches.create', course?.slug || course?.id)">
+                                    <Button 
+                                        :label="t('admin.create_batch') || 'Create Batch'" 
+                                        icon="pi pi-plus"
+                                        size="small"
+                                        class="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                                    />
+                                </Link>
                             </div>
                         </template>
                     </Card>

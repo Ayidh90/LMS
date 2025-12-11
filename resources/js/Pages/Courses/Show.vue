@@ -139,6 +139,28 @@
                                     </span>
                                 </div>
                                 <div class="flex items-center gap-3">
+                                    <!-- Create Section Button -->
+                                    <button
+                                        v-if="canCreateSection"
+                                        @click.stop="openCreateSectionModal"
+                                        class="px-4 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 text-sm font-semibold transition-all duration-200 flex items-center gap-2 shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40"
+                                    >
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        {{ t('sections.actions.add') }}
+                                    </button>
+                                    <!-- Create Lesson Button -->
+                                    <button
+                                        v-if="canCreateLesson"
+                                        @click.stop="openCreateLessonModal"
+                                        class="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl hover:from-purple-700 hover:to-indigo-700 text-sm font-semibold transition-all duration-200 flex items-center gap-2 shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40"
+                                    >
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        {{ t('lessons.actions.add') }}
+                                    </button>
                                     <Link
                                         v-if="showEditButtons && can('sections.view')"
                                         @click.stop
@@ -265,6 +287,17 @@
                                             </div>
                                             <div v-else class="p-6 text-center text-gray-500">
                                                 {{ t('sections.no_lessons') }}
+                                                <div v-if="canCreateLesson" class="mt-4">
+                                                    <button
+                                                        @click.stop="openCreateLessonModal(section.id)"
+                                                        class="px-5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl hover:from-purple-700 hover:to-indigo-700 text-sm font-semibold transition-all duration-200 flex items-center gap-2 mx-auto shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40"
+                                                    >
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                                        </svg>
+                                                        {{ t('lessons.actions.add') }}
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     </transition>
@@ -693,6 +726,471 @@
             </div>
         </div>
 
+        <!-- Create Section Modal -->
+        <Transition
+            enter-active-class="transition-all duration-300 ease-out"
+            enter-from-class="opacity-0"
+            enter-to-class="opacity-100"
+            leave-active-class="transition-all duration-200 ease-in"
+            leave-from-class="opacity-100"
+            leave-to-class="opacity-0"
+        >
+            <div v-if="showCreateSectionModal" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4" @click.self="closeCreateSectionModal">
+                <Transition
+                    enter-active-class="transition-all duration-300 ease-out"
+                    enter-from-class="opacity-0 scale-95 translate-y-4"
+                    enter-to-class="opacity-100 scale-100 translate-y-0"
+                    leave-active-class="transition-all duration-200 ease-in"
+                    leave-from-class="opacity-100 scale-100 translate-y-0"
+                    leave-to-class="opacity-0 scale-95 translate-y-4"
+                >
+                    <div v-if="showCreateSectionModal" class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col" :dir="direction">
+                        <!-- Modal Header -->
+                        <div class="px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                        </svg>
+                                    </div>
+                                    <h3 class="text-xl font-bold text-gray-900">
+                                        {{ t('sections.actions.add') }}
+                                    </h3>
+                                </div>
+                                <button 
+                                    @click="closeCreateSectionModal" 
+                                    class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg p-2 transition-all duration-200"
+                                >
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Modal Body -->
+                        <form @submit.prevent="saveSection" class="flex-1 overflow-y-auto">
+                            <div class="p-6 space-y-5">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                        {{ t('sections.fields.title') }} <span class="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        v-model="sectionForm.title"
+                                        type="text"
+                                        required
+                                        :placeholder="t('sections.fields.title')"
+                                        class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
+                                    />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                        {{ t('sections.fields.title_ar') }}
+                                    </label>
+                                    <input
+                                        v-model="sectionForm.title_ar"
+                                        type="text"
+                                        :placeholder="t('sections.fields.title_ar')"
+                                        class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200"
+                                    />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                        {{ t('sections.fields.description') }}
+                                    </label>
+                                    <textarea
+                                        v-model="sectionForm.description"
+                                        rows="4"
+                                        :placeholder="t('sections.fields.description')"
+                                        class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 resize-none"
+                                    ></textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                        {{ t('sections.fields.description_ar') }}
+                                    </label>
+                                    <textarea
+                                        v-model="sectionForm.description_ar"
+                                        rows="4"
+                                        :placeholder="t('sections.fields.description_ar')"
+                                        class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 resize-none"
+                                    ></textarea>
+                                </div>
+                            </div>
+                            
+                            <!-- Modal Footer -->
+                            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex items-center justify-end gap-3">
+                                <button
+                                    type="button"
+                                    @click="closeCreateSectionModal"
+                                    class="px-5 py-2.5 text-gray-700 bg-white border-2 border-gray-300 rounded-xl hover:bg-gray-50 hover:border-gray-400 font-medium transition-all duration-200"
+                                >
+                                    {{ t('common.cancel') }}
+                                </button>
+                                <button
+                                    type="submit"
+                                    :disabled="isSubmittingSection"
+                                    class="px-6 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 transition-all duration-200 flex items-center gap-2"
+                                >
+                                    <svg v-if="isSubmittingSection" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    {{ isSubmittingSection ? t('common.saving') : t('common.create') }}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </Transition>
+            </div>
+        </Transition>
+
+        <!-- Create Lesson Modal -->
+        <Transition
+            enter-active-class="transition-all duration-300 ease-out"
+            enter-from-class="opacity-0"
+            enter-to-class="opacity-100"
+            leave-active-class="transition-all duration-200 ease-in"
+            leave-from-class="opacity-100"
+            leave-to-class="opacity-0"
+        >
+            <div v-if="showCreateLessonModal" class="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 p-4" @click.self="closeCreateLessonModal">
+                <Transition
+                    enter-active-class="transition-all duration-300 ease-out"
+                    enter-from-class="opacity-0 scale-95 translate-y-4"
+                    enter-to-class="opacity-100 scale-100 translate-y-0"
+                    leave-active-class="transition-all duration-200 ease-in"
+                    leave-from-class="opacity-100 scale-100 translate-y-0"
+                    leave-to-class="opacity-0 scale-95 translate-y-4"
+                >
+                    <div v-if="showCreateLessonModal" class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col" :dir="direction">
+                        <!-- Modal Header -->
+                        <div class="px-6 py-5 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-indigo-50">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                        </svg>
+                                    </div>
+                                    <h3 class="text-xl font-bold text-gray-900">
+                                        {{ t('lessons.actions.add') }}
+                                    </h3>
+                                </div>
+                                <button 
+                                    @click="closeCreateLessonModal" 
+                                    class="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg p-2 transition-all duration-200"
+                                >
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Modal Body -->
+                        <form @submit.prevent="saveLesson" class="flex-1 overflow-y-auto">
+                            <div class="p-6 space-y-5">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                        {{ t('lessons.fields.title') }} <span class="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        v-model="lessonForm.title"
+                                        type="text"
+                                        required
+                                        :placeholder="t('lessons.fields.title')"
+                                        class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200"
+                                    />
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                        {{ t('lessons.fields.title_ar') }}
+                                    </label>
+                                    <input
+                                        v-model="lessonForm.title_ar"
+                                        type="text"
+                                        :placeholder="t('lessons.fields.title_ar')"
+                                        class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200"
+                                    />
+                                </div>
+                                <div v-if="course.sections && course.sections.length > 0">
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                        {{ t('lessons.fields.section') }}
+                                    </label>
+                                    <select
+                                        v-model="lessonForm.section_id"
+                                        class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-white"
+                                    >
+                                        <option :value="null">{{ t('lessons.fields.no_section') }}</option>
+                                        <option
+                                            v-for="section in course.sections"
+                                            :key="section.id"
+                                            :value="section.id"
+                                        >
+                                            {{ section.translated_title || section.title }}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                        {{ t('lessons.fields.type') }} <span class="text-red-500">*</span>
+                                    </label>
+                                    <select
+                                        v-model="lessonForm.type"
+                                        required
+                                        class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-white"
+                                    >
+                                        <option value="">{{ t('common.select') }}</option>
+                                        <option value="text">{{ t('lessons.types.text') }}</option>
+                                        <option value="video_file">{{ t('lessons.types.video_file') }}</option>
+                                        <option value="youtube_video">{{ t('lessons.types.youtube_video') }}</option>
+                                        <option value="google_drive_video">{{ t('lessons.types.google_drive_video') }}</option>
+                                        <option value="image">{{ t('lessons.types.image') }}</option>
+                                        <option value="document_file">{{ t('lessons.types.document_file') }}</option>
+                                        <option value="embed_frame">{{ t('lessons.types.embed_frame') }}</option>
+                                        <option value="assignment">{{ t('lessons.types.assignment') }}</option>
+                                        <option value="test">{{ t('lessons.types.test') }}</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                        {{ t('lessons.fields.description') }}
+                                    </label>
+                                    <textarea
+                                        v-model="lessonForm.description"
+                                        rows="4"
+                                        :placeholder="t('lessons.fields.description')"
+                                        class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 resize-none"
+                                    ></textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                        {{ t('lessons.fields.description_ar') }}
+                                    </label>
+                                    <textarea
+                                        v-model="lessonForm.description_ar"
+                                        rows="4"
+                                        :placeholder="t('lessons.fields.description_ar')"
+                                        :dir="direction === 'rtl' ? 'rtl' : 'ltr'"
+                                        class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 resize-none"
+                                    ></textarea>
+                                </div>
+                                
+                                <!-- Video/File URL (for video, image, document types) -->
+                                <Transition
+                                    enter-active-class="transition-all duration-300 ease-out"
+                                    enter-from-class="opacity-0 max-h-0"
+                                    enter-to-class="opacity-100 max-h-96"
+                                    leave-active-class="transition-all duration-200 ease-in"
+                                    leave-from-class="opacity-100 max-h-96"
+                                    leave-to-class="opacity-0 max-h-0"
+                                >
+                                    <div v-if="['youtube_video', 'google_drive_video', 'embed_frame', 'video_file', 'image', 'document_file'].includes(lessonForm.type)" class="overflow-hidden space-y-4">
+                                        <!-- File Upload (for video_file, image, document_file) -->
+                                        <div v-if="['video_file', 'image', 'document_file'].includes(lessonForm.type)">
+                                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                <span v-if="lessonForm.type === 'video_file'">
+                                                    {{ t('lessons.fields.upload_video') || 'Upload Video File' }}
+                                                </span>
+                                                <span v-else-if="lessonForm.type === 'image'">
+                                                    {{ t('lessons.fields.upload_image') || 'Upload Image File' }}
+                                                </span>
+                                                <span v-else-if="lessonForm.type === 'document_file'">
+                                                    {{ t('lessons.fields.upload_document') || 'Upload Document File' }}
+                                                </span>
+                                            </label>
+                                            <div class="relative">
+                                                <input
+                                                    v-if="lessonForm.type === 'video_file'"
+                                                    ref="videoFileInput"
+                                                    type="file"
+                                                    accept="video/*"
+                                                    @change="handleFileChange($event, 'video_file')"
+                                                    class="hidden"
+                                                />
+                                                <input
+                                                    v-else-if="lessonForm.type === 'image'"
+                                                    ref="imageFileInput"
+                                                    type="file"
+                                                    accept="image/*"
+                                                    @change="handleFileChange($event, 'image')"
+                                                    class="hidden"
+                                                />
+                                                <input
+                                                    v-else-if="lessonForm.type === 'document_file'"
+                                                    ref="documentFileInput"
+                                                    type="file"
+                                                    accept=".pdf,.doc,.docx,.txt,.rtf,.odt"
+                                                    @change="handleFileChange($event, 'document_file')"
+                                                    class="hidden"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    @click="triggerFileInput(lessonForm.type)"
+                                                    class="w-full border-2 border-dashed border-gray-300 rounded-xl px-4 py-6 hover:border-purple-500 hover:bg-purple-50 transition-all duration-200 flex flex-col items-center justify-center gap-2"
+                                                >
+                                                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                                    </svg>
+                                                    <span class="text-sm font-medium text-gray-700">
+                                                        <span v-if="selectedFile">{{ selectedFile.name }}</span>
+                                                        <span v-else>{{ t('lessons.actions.choose_file') || 'Choose File' }}</span>
+                                                    </span>
+                                                    <span class="text-xs text-gray-500">
+                                                        <span v-if="lessonForm.type === 'video_file'">
+                                                            {{ t('lessons.hints.video_file_types') || 'MP4, AVI, MOV, WMV, FLV, WebM (Max 100MB)' }}
+                                                        </span>
+                                                        <span v-else-if="lessonForm.type === 'image'">
+                                                            {{ t('lessons.hints.image_file_types') || 'JPG, PNG, GIF, WebP, SVG (Max 10MB)' }}
+                                                        </span>
+                                                        <span v-else>
+                                                            {{ t('lessons.hints.document_file_types') || 'PDF, DOC, DOCX, TXT, RTF, ODT (Max 10MB)' }}
+                                                        </span>
+                                                    </span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- URL Input (for all types, or as alternative) -->
+                                        <div>
+                                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                <span v-if="['youtube_video', 'google_drive_video', 'embed_frame', 'video_file'].includes(lessonForm.type)">
+                                                    {{ t('lessons.fields.video_url') }} {{ ['youtube_video', 'google_drive_video', 'embed_frame'].includes(lessonForm.type) ? '' : '(' + (t('lessons.fields.or_url') || 'or URL') + ')' }}
+                                                </span>
+                                                <span v-else-if="lessonForm.type === 'image'">
+                                                    {{ t('lessons.fields.image_url') || 'Image URL' }} ({{ t('lessons.fields.or_url') || 'or URL' }})
+                                                </span>
+                                                <span v-else-if="lessonForm.type === 'document_file'">
+                                                    {{ t('lessons.fields.document_url') || 'Document URL' }} ({{ t('lessons.fields.or_url') || 'or URL' }})
+                                                </span>
+                                                <span v-if="['youtube_video', 'google_drive_video', 'embed_frame'].includes(lessonForm.type)" class="text-red-500">*</span>
+                                            </label>
+                                            <input
+                                                v-model="lessonForm.video_url"
+                                                type="text"
+                                                :required="['youtube_video', 'google_drive_video', 'embed_frame'].includes(lessonForm.type) && !selectedFile"
+                                                :placeholder="getUrlPlaceholder(lessonForm.type)"
+                                                class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200"
+                                            />
+                                            <p class="mt-2 text-xs text-gray-500">
+                                                <span v-if="lessonForm.type === 'youtube_video'">
+                                                    {{ t('lessons.hints.youtube_url') || 'Enter YouTube video URL' }}
+                                                </span>
+                                                <span v-else-if="lessonForm.type === 'google_drive_video'">
+                                                    {{ t('lessons.hints.google_drive_url') || 'Enter Google Drive video URL' }}
+                                                </span>
+                                                <span v-else-if="lessonForm.type === 'embed_frame'">
+                                                    {{ t('lessons.hints.embed_url') || 'Enter embed URL' }}
+                                                </span>
+                                                <span v-else-if="lessonForm.type === 'video_file'">
+                                                    {{ t('lessons.hints.video_file_url') || 'Or enter video file URL' }}
+                                                </span>
+                                                <span v-else-if="lessonForm.type === 'image'">
+                                                    {{ t('lessons.hints.image_url') || 'Or enter image URL' }}
+                                                </span>
+                                                <span v-else-if="lessonForm.type === 'document_file'">
+                                                    {{ t('lessons.hints.document_url') || 'Or enter document URL' }}
+                                                </span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </Transition>
+                                
+                                <!-- Content (for text, assignment, test types) -->
+                                <Transition
+                                    enter-active-class="transition-all duration-300 ease-out"
+                                    enter-from-class="opacity-0 max-h-0"
+                                    enter-to-class="opacity-100 max-h-[500px]"
+                                    leave-active-class="transition-all duration-200 ease-in"
+                                    leave-from-class="opacity-100 max-h-[500px]"
+                                    leave-to-class="opacity-0 max-h-0"
+                                >
+                                    <div v-if="['text', 'assignment', 'test'].includes(lessonForm.type)" class="space-y-4 overflow-hidden">
+                                        <div>
+                                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                <span v-if="lessonForm.type === 'text'">
+                                                    {{ t('lessons.fields.content') }}
+                                                </span>
+                                                <span v-else-if="lessonForm.type === 'assignment'">
+                                                    {{ t('lessons.fields.assignment_instructions') || 'Assignment Instructions' }}
+                                                </span>
+                                                <span v-else-if="lessonForm.type === 'test'">
+                                                    {{ t('lessons.fields.test_instructions') || 'Test Instructions' }}
+                                                </span>
+                                            </label>
+                                            <textarea
+                                                v-model="lessonForm.content"
+                                                rows="6"
+                                                :placeholder="lessonForm.type === 'text' ? t('lessons.fields.content') : lessonForm.type === 'assignment' ? (t('lessons.placeholders.assignment') || 'Enter assignment instructions...') : (t('lessons.placeholders.test') || 'Enter test instructions...')"
+                                                class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 resize-none font-mono text-sm"
+                                            ></textarea>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                <span v-if="lessonForm.type === 'text'">
+                                                    {{ t('lessons.fields.content_ar') }}
+                                                </span>
+                                                <span v-else-if="lessonForm.type === 'assignment'">
+                                                    {{ t('lessons.fields.assignment_instructions_ar') || 'Assignment Instructions (Arabic)' }}
+                                                </span>
+                                                <span v-else-if="lessonForm.type === 'test'">
+                                                    {{ t('lessons.fields.test_instructions_ar') || 'Test Instructions (Arabic)' }}
+                                                </span>
+                                            </label>
+                                            <textarea
+                                                v-model="lessonForm.content_ar"
+                                                rows="6"
+                                                :placeholder="lessonForm.type === 'text' ? t('lessons.fields.content_ar') : lessonForm.type === 'assignment' ? 'أدخل تعليمات المهمة...' : 'أدخل تعليمات الاختبار...'"
+                                                :dir="direction === 'rtl' ? 'rtl' : 'ltr'"
+                                                class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 resize-none font-mono text-sm"
+                                            ></textarea>
+                                        </div>
+                                    </div>
+                                </Transition>
+                                
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                        {{ t('lessons.fields.duration_minutes') }}
+                                    </label>
+                                    <input
+                                        v-model.number="lessonForm.duration_minutes"
+                                        type="number"
+                                        min="0"
+                                        :placeholder="t('lessons.fields.duration_minutes')"
+                                        class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200"
+                                    />
+                                </div>
+                            </div>
+                            
+                            <!-- Modal Footer -->
+                            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex items-center justify-end gap-3">
+                                <button
+                                    type="button"
+                                    @click="closeCreateLessonModal"
+                                    class="px-5 py-2.5 text-gray-700 bg-white border-2 border-gray-300 rounded-xl hover:bg-gray-50 hover:border-gray-400 font-medium transition-all duration-200"
+                                >
+                                    {{ t('common.cancel') }}
+                                </button>
+                                <button
+                                    type="submit"
+                                    :disabled="isSubmittingLesson"
+                                    class="px-6 py-2.5 bg-purple-600 text-white rounded-xl hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-500/40 transition-all duration-200 flex items-center gap-2"
+                                >
+                                    <svg v-if="isSubmittingLesson" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    {{ isSubmittingLesson ? t('common.saving') : t('common.create') }}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </Transition>
+            </div>
+        </Transition>
+
         <!-- Add Question Modal -->
         <div v-if="showQuestionModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" @click.self="closeQuestionModal">
             <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" :dir="direction">
@@ -780,7 +1278,7 @@ import { useRoute } from '@/composables/useRoute';
 import { useAlert } from '@/composables/useAlert';
 import { usePermissions } from '@/composables/usePermissions';
 import { Link, usePage, router } from '@inertiajs/vue3';
-import { computed, ref, onMounted } from 'vue';
+import { computed, ref, reactive, onMounted } from 'vue';
 
 const props = defineProps({
     course: Object,
@@ -801,6 +1299,22 @@ const page = usePage();
 
 const auth = computed(() => page.props.auth?.user);
 const layout = computed(() => auth.value ? AuthenticatedLayout : AppLayout);
+
+// Settings and permissions
+const settings = computed(() => page.props.settings);
+const canCreateSection = computed(() => {
+    if (!auth.value) return false;
+    const hasPermission = can('sections.create');
+    const settingEnabled = settings.value?.instructor_permissions?.can_create_sections ?? true;
+    return hasPermission && settingEnabled && (showEditButtons.value || props.isInstructor);
+});
+
+const canCreateLesson = computed(() => {
+    if (!auth.value) return false;
+    const hasPermission = can('lessons.create');
+    const settingEnabled = settings.value?.instructor_permissions?.can_create_lessons ?? true;
+    return hasPermission && settingEnabled && (showEditButtons.value || props.isInstructor);
+});
 
 // Check if user is admin - admins should not see edit buttons
 const isAdmin = computed(() => {
@@ -839,6 +1353,223 @@ onMounted(() => {
 
 const toggleSection = (sectionId) => {
     expandedSections.value[sectionId] = !expandedSections.value[sectionId];
+};
+
+// Section Modal State
+const showCreateSectionModal = ref(false);
+const isSubmittingSection = ref(false);
+const sectionForm = reactive({
+    title: '',
+    title_ar: '',
+    description: '',
+    description_ar: '',
+});
+
+const openCreateSectionModal = () => {
+    showCreateSectionModal.value = true;
+    sectionForm.title = '';
+    sectionForm.title_ar = '';
+    sectionForm.description = '';
+    sectionForm.description_ar = '';
+};
+
+const closeCreateSectionModal = () => {
+    showCreateSectionModal.value = false;
+    sectionForm.title = '';
+    sectionForm.title_ar = '';
+    sectionForm.description = '';
+    sectionForm.description_ar = '';
+};
+
+const saveSection = () => {
+    isSubmittingSection.value = true;
+    router.post(route('instructor.sections.store', { course: props.course.slug || props.course.id }), sectionForm, {
+        preserveScroll: true,
+        onSuccess: () => {
+            showSuccess(
+                t('sections.created_successfully') || 'Section created successfully!',
+                t('common.success') || 'Success'
+            );
+            closeCreateSectionModal();
+        },
+        onError: (errors) => {
+            showError(
+                errors.message || Object.values(errors).flat().join(', ') || (t('common.error') || 'An error occurred'),
+                t('common.error') || 'Error'
+            );
+        },
+        onFinish: () => {
+            isSubmittingSection.value = false;
+        },
+    });
+};
+
+// Lesson Modal State
+const showCreateLessonModal = ref(false);
+const isSubmittingLesson = ref(false);
+const selectedSectionIdForLesson = ref(null);
+const selectedFile = ref(null);
+const videoFileInput = ref(null);
+const imageFileInput = ref(null);
+const documentFileInput = ref(null);
+const lessonForm = reactive({
+    title: '',
+    title_ar: '',
+    section_id: null,
+    type: '',
+    description: '',
+    description_ar: '',
+    content: '',
+    content_ar: '',
+    video_url: '',
+    duration_minutes: null,
+});
+
+const openCreateLessonModal = (sectionId = null) => {
+    showCreateLessonModal.value = true;
+    selectedSectionIdForLesson.value = sectionId;
+    selectedFile.value = null;
+    lessonForm.title = '';
+    lessonForm.title_ar = '';
+    lessonForm.section_id = sectionId || null;
+    lessonForm.type = '';
+    lessonForm.description = '';
+    lessonForm.description_ar = '';
+    lessonForm.content = '';
+    lessonForm.content_ar = '';
+    lessonForm.video_url = '';
+    lessonForm.duration_minutes = null;
+};
+
+const closeCreateLessonModal = () => {
+    showCreateLessonModal.value = false;
+    selectedSectionIdForLesson.value = null;
+    selectedFile.value = null;
+    lessonForm.title = '';
+    lessonForm.title_ar = '';
+    lessonForm.section_id = null;
+    lessonForm.type = '';
+    lessonForm.description = '';
+    lessonForm.description_ar = '';
+    lessonForm.content = '';
+    lessonForm.content_ar = '';
+    lessonForm.video_url = '';
+    lessonForm.duration_minutes = null;
+    // Reset file inputs
+    if (videoFileInput.value) videoFileInput.value.value = '';
+    if (imageFileInput.value) imageFileInput.value.value = '';
+    if (documentFileInput.value) documentFileInput.value.value = '';
+};
+
+const triggerFileInput = (type) => {
+    if (type === 'video_file' && videoFileInput.value) {
+        videoFileInput.value.click();
+    } else if (type === 'image' && imageFileInput.value) {
+        imageFileInput.value.click();
+    } else if (type === 'document_file' && documentFileInput.value) {
+        documentFileInput.value.click();
+    }
+};
+
+const handleFileChange = (event, type) => {
+    const file = event.target.files[0];
+    if (file) {
+        selectedFile.value = file;
+        // Clear URL when file is selected
+        lessonForm.video_url = '';
+    } else {
+        selectedFile.value = null;
+    }
+};
+
+const getUrlPlaceholder = (type) => {
+    switch(type) {
+        case 'youtube_video':
+            return 'https://www.youtube.com/watch?v=...';
+        case 'google_drive_video':
+            return 'https://drive.google.com/file/d/...';
+        case 'embed_frame':
+            return 'https://...';
+        case 'video_file':
+            return 'https://... or /storage/videos/...';
+        case 'image':
+            return 'https://... or /storage/images/...';
+        case 'document_file':
+            return 'https://... or /storage/documents/...';
+        default:
+            return 'https://...';
+    }
+};
+
+const saveLesson = () => {
+    // Validate required fields based on type
+    const needsFileOrUrl = ['youtube_video', 'google_drive_video', 'embed_frame', 'video_file', 'image', 'document_file'].includes(lessonForm.type);
+    const hasFile = selectedFile.value !== null;
+    const hasUrl = lessonForm.video_url && lessonForm.video_url.trim() !== '';
+    
+    if (needsFileOrUrl && !hasFile && !hasUrl) {
+        const fieldName = lessonForm.type === 'image' 
+            ? (t('lessons.fields.image_url') || 'Image URL')
+            : lessonForm.type === 'document_file'
+            ? (t('lessons.fields.document_url') || 'Document URL')
+            : t('lessons.fields.video_url');
+        showError(
+            (t('lessons.errors.file_or_url_required') || 'Please upload a file or enter a URL') + ' - ' + fieldName,
+            t('common.error') || 'Error'
+        );
+        return;
+    }
+    
+    isSubmittingLesson.value = true;
+    
+    // Create FormData for file uploads
+    const formData = new FormData();
+    
+    // Add file if selected
+    if (selectedFile.value) {
+        if (lessonForm.type === 'video_file') {
+            formData.append('video_file', selectedFile.value);
+        } else if (lessonForm.type === 'image') {
+            formData.append('image_file', selectedFile.value);
+        } else if (lessonForm.type === 'document_file') {
+            formData.append('document_file', selectedFile.value);
+        }
+    }
+    
+    // Add form fields
+    formData.append('title', lessonForm.title);
+    if (lessonForm.title_ar) formData.append('title_ar', lessonForm.title_ar);
+    formData.append('type', lessonForm.type);
+    if (lessonForm.section_id) formData.append('section_id', lessonForm.section_id);
+    if (lessonForm.description) formData.append('description', lessonForm.description);
+    if (lessonForm.description_ar) formData.append('description_ar', lessonForm.description_ar);
+    if (lessonForm.content) formData.append('content', lessonForm.content);
+    if (lessonForm.content_ar) formData.append('content_ar', lessonForm.content_ar);
+    if (lessonForm.video_url) formData.append('video_url', lessonForm.video_url);
+    if (lessonForm.duration_minutes !== null && lessonForm.duration_minutes !== '') {
+        formData.append('duration_minutes', lessonForm.duration_minutes);
+    }
+    
+    router.post(route('instructor.lessons.store', { course: props.course.slug || props.course.id }), formData, {
+        preserveScroll: true,
+        forceFormData: true,
+        onSuccess: () => {
+            showSuccess(
+                t('lessons.created_successfully') || 'Lesson created successfully!',
+                t('common.success') || 'Success'
+            );
+            closeCreateLessonModal();
+        },
+        onError: (errors) => {
+            showError(
+                errors.message || Object.values(errors).flat().join(', ') || (t('common.error') || 'An error occurred'),
+                t('common.error') || 'Error'
+            );
+        },
+        onFinish: () => {
+            isSubmittingLesson.value = false;
+        },
+    });
 };
 
 // Question Modal State
