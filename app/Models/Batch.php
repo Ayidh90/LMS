@@ -32,6 +32,10 @@ class Batch extends Model
         ];
     }
 
+    protected $attributes = [
+        'is_active' => true,
+    ];
+
     // Relationships
     public function course()
     {

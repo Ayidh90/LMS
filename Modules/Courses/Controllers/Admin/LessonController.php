@@ -59,7 +59,12 @@ class LessonController extends Controller
     {
         $data = $request->validated();
         
-        if (isset($data['section_id'])) {
+        // Convert empty string to null for section_id
+        if (isset($data['section_id']) && $data['section_id'] === '') {
+            $data['section_id'] = null;
+        }
+        
+        if (!empty($data['section_id'])) {
             $section = $this->sectionService->getById($data['section_id']);
             if (!$section || !$this->sectionService->belongsToCourse($section, $course)) {
                 return back()->withErrors(['section_id' => __('Invalid section selected.')]);
@@ -67,6 +72,12 @@ class LessonController extends Controller
         }
 
         $this->lessonService->create($course, $data);
+
+        // If request wants to stay on same page (from modal), return back to course show
+        if ($request->header('X-Inertia')) {
+            return redirect()->route('admin.courses.show', $course)
+                ->with('success', __('Lesson created successfully.'));
+        }
 
         return redirect()->route('admin.courses.lessons.index', $course)
             ->with('success', __('Lesson created successfully.'));
@@ -106,6 +117,7 @@ class LessonController extends Controller
             'students' => $students,
             'attendances' => $attendances,
             'attendanceStats' => $attendanceStats,
+            'questionTypes' => $this->getQuestionTypes(),
         ]);
     }
     
@@ -355,15 +367,25 @@ class LessonController extends Controller
     private function getLessonTypes(): array
     {
         return [
-            ['value' => 'text', 'label' => __('Text')],
-            ['value' => 'youtube_video', 'label' => __('YouTube Video')],
-            ['value' => 'google_drive_video', 'label' => __('Google Drive Video')],
-            ['value' => 'video_file', 'label' => __('Uploaded Video')],
-            ['value' => 'image', 'label' => __('Image')],
-            ['value' => 'document_file', 'label' => __('Document')],
-            ['value' => 'embed_frame', 'label' => __('Embed Frame')],
-            ['value' => 'assignment', 'label' => __('Assignment')],
-            ['value' => 'test', 'label' => __('Test/Quiz')],
+            ['value' => 'text', 'label' => __('lessons.types.text')],
+            ['value' => 'youtube_video', 'label' => __('lessons.types.youtube_video')],
+            ['value' => 'google_drive_video', 'label' => __('lessons.types.google_drive_video')],
+            ['value' => 'video_file', 'label' => __('lessons.types.video_file')],
+            ['value' => 'image', 'label' => __('lessons.types.image')],
+            ['value' => 'document_file', 'label' => __('lessons.types.document_file')],
+            ['value' => 'embed_frame', 'label' => __('lessons.types.embed_frame')],
+            ['value' => 'assignment', 'label' => __('lessons.types.assignment')],
+            ['value' => 'test', 'label' => __('lessons.types.test')],
+        ];
+    }
+
+    private function getQuestionTypes(): array
+    {
+        return [
+            ['value' => 'multiple_choice', 'label' => __('Multiple Choice')],
+            ['value' => 'true_false', 'label' => __('True/False')],
+            ['value' => 'short_answer', 'label' => __('Short Answer')],
+            ['value' => 'essay', 'label' => __('Essay')],
         ];
     }
 }

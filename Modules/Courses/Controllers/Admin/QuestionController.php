@@ -31,20 +31,14 @@ class QuestionController extends Controller
             'course' => $this->formatCourse($course),
             'lesson' => $this->formatLesson($lesson),
             'questions' => $questions->map(fn($q) => $this->formatQuestion($q)),
+            'questionTypes' => $this->getQuestionTypes(),
         ]);
     }
 
     public function create(Course $course, Lesson $lesson)
     {
-        if (!$this->lessonService->belongsToCourse($lesson, $course)) {
-            abort(404);
-        }
-
-        return Inertia::render('Admin/Questions/Create', [
-            'course' => $this->formatCourse($course),
-            'lesson' => $this->formatLesson($lesson),
-            'questionTypes' => $this->getQuestionTypes(),
-        ]);
+        // Form is now handled via modal popup, redirect back
+        return redirect()->back();
     }
 
     public function store(StoreQuestionRequest $request, Course $course, Lesson $lesson)
@@ -66,6 +60,12 @@ class QuestionController extends Controller
             'order' => $data['order'] ?? null,
         ], $data['answers'] ?? []);
 
+        // If request wants to stay on same page (from modal), return back to course show
+        if ($request->header('X-Inertia')) {
+            return redirect()->route('admin.courses.show', $course)
+                ->with('success', __('Question created successfully.'));
+        }
+
         return redirect()->route('admin.courses.lessons.questions.index', [$course, $lesson])
             ->with('success', __('Question created successfully.'));
     }
@@ -86,27 +86,14 @@ class QuestionController extends Controller
             'course' => $this->formatCourse($course),
             'lesson' => $this->formatLesson($lesson),
             'question' => $this->formatQuestionFull($question),
+            'questionTypes' => $this->getQuestionTypes(),
         ]);
     }
 
     public function edit(Course $course, Lesson $lesson, Question $question)
     {
-        if (!$this->lessonService->belongsToCourse($lesson, $course)) {
-            abort(404);
-        }
-
-        if (!$this->questionService->belongsToLesson($question, $lesson)) {
-            abort(404);
-        }
-
-        $question->load('answers');
-
-        return Inertia::render('Admin/Questions/Edit', [
-            'course' => $this->formatCourse($course),
-            'lesson' => $this->formatLesson($lesson),
-            'question' => $this->formatQuestionFull($question),
-            'questionTypes' => $this->getQuestionTypes(),
-        ]);
+        // Form is now handled via modal popup, redirect back
+        return redirect()->back();
     }
 
     public function update(StoreQuestionRequest $request, Course $course, Lesson $lesson, Question $question)
@@ -130,6 +117,12 @@ class QuestionController extends Controller
             'points' => $data['points'],
             'order' => $data['order'] ?? $question->order,
         ], $data['answers'] ?? []);
+
+        // If request wants to stay on same page (from modal), return back to course show
+        if ($request->header('X-Inertia')) {
+            return redirect()->route('admin.courses.show', $course)
+                ->with('success', __('Question updated successfully.'));
+        }
 
         return redirect()->route('admin.courses.lessons.questions.index', [$course, $lesson])
             ->with('success', __('Question updated successfully.'));

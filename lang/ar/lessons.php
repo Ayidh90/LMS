@@ -59,6 +59,15 @@ return [
     'no_video' => 'لا يوجد فيديو متاح',
     
     'types' => [
+        'text' => 'نص',
+        'youtube_video' => 'فيديو يوتيوب',
+        'google_drive_video' => 'فيديو جوجل درايف',
+        'video_file' => 'فيديو مرفوع',
+        'image' => 'صورة',
+        'document_file' => 'مستند',
+        'embed_frame' => 'إطار مدمج',
+        'assignment' => 'واجب',
+        'test' => 'اختبار/امتحان',
         'multiple_choice' => 'اختيار متعدد',
         'true_false' => 'صحيح/خطأ',
         'short_answer' => 'إجابة قصيرة',

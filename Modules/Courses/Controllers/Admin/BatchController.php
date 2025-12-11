@@ -24,6 +24,7 @@ class BatchController extends Controller
         return Inertia::render('Admin/Batches/Index', [
             'course' => $this->formatCourse($course),
             'batches' => $batches,
+            'instructors' => $this->getInstructors(),
         ]);
     }
 
@@ -40,6 +41,12 @@ class BatchController extends Controller
         $validated = $this->validateBatch($request);
         $course->batches()->create($validated);
 
+        // If request wants to stay on same page (from modal), return back to course show
+        if ($request->header('X-Inertia')) {
+            return redirect()->route('admin.courses.show', $course)
+                ->with('success', __('Batch created successfully.'));
+        }
+
         return redirect()->route('admin.courses.batches.index', $course)
             ->with('success', __('Batch created successfully.'));
     }
@@ -53,15 +60,61 @@ class BatchController extends Controller
             'course' => $this->formatCourse($course),
             'batch' => $this->formatBatchWithStudents($batch),
             'availableStudents' => $availableStudents,
+            'instructors' => $this->getInstructors(),
         ]);
     }
 
     public function edit(Course $course, Batch $batch)
     {
-        return Inertia::render('Admin/Batches/Edit', [
+        // Form is now handled via modal popup, return batch data for modal
+        // Check if request is from show page (has referer) or index page
+        $referer = request()->header('referer');
+        $isFromShow = $referer && str_contains($referer, '/batches/' . $batch->id);
+        
+        if ($isFromShow) {
+            // Return Show view with batch data including raw fields for editing
+            $batch->load(['instructor:id,name,email', 'enrollments.student']);
+            $availableStudents = $this->getAvailableStudents($batch);
+            
+            $batchData = $this->formatBatchWithStudents($batch);
+            // Add raw fields for editing
+            $batchData['name'] = $batch->name;
+            $batchData['name_ar'] = $batch->name_ar;
+            $batchData['description'] = $batch->description;
+            $batchData['description_ar'] = $batch->description_ar;
+            $batchData['instructor_id'] = $batch->instructor_id;
+            $batchData['max_students'] = $batch->max_students;
+            
+            return Inertia::render('Admin/Batches/Show', [
+                'course' => $this->formatCourse($course),
+                'batch' => $batchData,
+                'availableStudents' => $availableStudents,
+                'instructors' => $this->getInstructors(),
+            ]);
+        }
+        
+        // Return Index view with batch data
+        return Inertia::render('Admin/Batches/Index', [
             'course' => $this->formatCourse($course),
-            'batch' => $batch,
+            'batches' => $course->batches()
+                ->with(['instructor:id,name,email'])
+                ->withCount('enrollments')
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(fn($b) => $this->formatBatch($b)),
             'instructors' => $this->getInstructors(),
+            'batch' => [
+                'id' => $batch->id,
+                'name' => $batch->name,
+                'name_ar' => $batch->name_ar,
+                'description' => $batch->description,
+                'description_ar' => $batch->description_ar,
+                'instructor_id' => $batch->instructor_id,
+                'start_date' => $batch->start_date,
+                'end_date' => $batch->end_date,
+                'max_students' => $batch->max_students,
+                'is_active' => $batch->is_active,
+            ],
         ]);
     }
 
@@ -69,6 +122,12 @@ class BatchController extends Controller
     {
         $validated = $this->validateBatch($request);
         $batch->update($validated);
+
+        // If request wants to stay on same page (from modal), return back to course show
+        if ($request->header('X-Inertia')) {
+            return redirect()->route('admin.courses.show', $course)
+                ->with('success', __('Batch updated successfully.'));
+        }
 
         return redirect()->route('admin.courses.batches.index', $course)
             ->with('success', __('Batch updated successfully.'));
@@ -92,7 +151,7 @@ class BatchController extends Controller
         foreach ($validated['student_ids'] as $studentId) {
             Enrollment::firstOrCreate(
                 ['batch_id' => $batch->id, 'student_id' => $studentId],
-                ['enrolled_at' => now(), 'status' => 'active', 'progress' => 0]
+                ['enrolled_at' => now(), 'status' => 'enrolled', 'progress' => 0]
             );
         }
 
@@ -170,6 +229,12 @@ class BatchController extends Controller
     {
         return [
             ...$this->formatBatch($batch),
+            'name' => $batch->name, // Include raw name for editing
+            'name_ar' => $batch->name_ar,
+            'description' => $batch->description, // Include raw description for editing
+            'description_ar' => $batch->description_ar,
+            'instructor_id' => $batch->instructor_id,
+            'max_students' => $batch->max_students,
             'students' => $batch->enrollments->map(fn($e) => [
                 'id' => $e->student->id,
                 'name' => $e->student->name,

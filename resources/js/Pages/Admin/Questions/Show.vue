@@ -14,15 +14,15 @@
                         <h1 class="text-2xl font-bold text-gray-900">{{ t('questions.view') || 'View Question' }}</h1>
                         <p class="text-sm text-gray-500">{{ lesson.title }}</p>
                     </div>
-                    <Link
-                        :href="route('admin.courses.lessons.questions.edit', [course.slug || course.id, lesson.id, question.id])"
+                    <button
+                        @click="openQuestionModal"
                         class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 text-gray-700 font-medium transition-all"
                     >
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                         {{ t('common.edit') }}
-                    </Link>
+                    </button>
                 </div>
             </div>
 
@@ -92,23 +92,176 @@
                 </div>
             </div>
         </div>
+
+        <!-- Question Form Modal -->
+        <QuestionForm
+            :show="showQuestionModal"
+            :question="question"
+            :form-data="questionForm"
+            :errors="questionForm.errors"
+            :processing="questionForm.processing"
+            :question-types="questionTypes"
+            @close="closeQuestionModal"
+            @submit="submitQuestion"
+            @type-change="handleQuestionTypeChange"
+        />
     </AdminLayout>
 </template>
 
 <script setup>
+import { ref, watch } from 'vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
-import { Head, Link } from '@inertiajs/vue3';
+import { useAlert } from '@/composables/useAlert';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import QuestionForm from '@/Pages/Admin/Questions/Form.vue';
 
-defineProps({
+const props = defineProps({
     course: Object,
     lesson: Object,
     question: Object,
+    questionTypes: Array,
 });
 
 const { t } = useTranslation();
 const { route } = useRoute();
+const { showSuccess, showError } = useAlert();
+
+// Modal state
+const showQuestionModal = ref(false);
+
+// Question form
+const questionForm = useForm({
+    type: '',
+    question: '',
+    question_ar: '',
+    explanation: '',
+    explanation_ar: '',
+    points: 1,
+    order: 0,
+    answers: [],
+});
+
+// Watch for type changes to initialize answers
+watch(() => questionForm.type, (newType) => {
+    if (newType === 'true_false') {
+        questionForm.answers = [
+            { answer: 'True', answer_ar: 'صحيح', is_correct: false, order: 0 },
+            { answer: 'False', answer_ar: 'خطأ', is_correct: false, order: 1 },
+        ];
+    } else if (newType === 'multiple_choice' && questionForm.answers.length < 2) {
+        questionForm.answers = [
+            { answer: '', answer_ar: '', is_correct: false, order: 0 },
+            { answer: '', answer_ar: '', is_correct: false, order: 1 },
+        ];
+    }
+});
+
+const openQuestionModal = () => {
+    // Load question data into form
+    questionForm.type = props.question.type || '';
+    questionForm.question = props.question.question || '';
+    questionForm.question_ar = props.question.question_ar || '';
+    questionForm.explanation = props.question.explanation || '';
+    questionForm.explanation_ar = props.question.explanation_ar || '';
+    questionForm.points = props.question.points || 1;
+    questionForm.order = props.question.order || 0;
+    
+    if (props.question.answers && props.question.answers.length > 0) {
+        questionForm.answers = props.question.answers.map((answer, index) => ({
+            id: answer.id || null,
+            answer: answer.answer || '',
+            answer_ar: answer.answer_ar || '',
+            is_correct: answer.is_correct || false,
+            order: answer.order !== undefined ? answer.order : index,
+        }));
+    } else {
+        if (props.question.type === 'true_false') {
+            questionForm.answers = [
+                { answer: 'True', answer_ar: 'صحيح', is_correct: false, order: 0 },
+                { answer: 'False', answer_ar: 'خطأ', is_correct: false, order: 1 },
+            ];
+        } else {
+            questionForm.answers = [
+                { answer: '', answer_ar: '', is_correct: false, order: 0 },
+                { answer: '', answer_ar: '', is_correct: false, order: 1 },
+            ];
+        }
+    }
+    
+    showQuestionModal.value = true;
+};
+
+const closeQuestionModal = () => {
+    showQuestionModal.value = false;
+    questionForm.clearErrors();
+};
+
+const handleQuestionTypeChange = (type) => {
+    if (type === 'true_false') {
+        questionForm.answers = [
+            { answer: 'True', answer_ar: 'صحيح', is_correct: false, order: 0 },
+            { answer: 'False', answer_ar: 'خطأ', is_correct: false, order: 1 },
+        ];
+    } else if (type === 'multiple_choice' && questionForm.answers.length < 2) {
+        questionForm.answers = [
+            { answer: '', answer_ar: '', is_correct: false, order: 0 },
+            { answer: '', answer_ar: '', is_correct: false, order: 1 },
+        ];
+    }
+};
+
+const submitQuestion = (formData) => {
+    // Prepare form data - convert empty strings to null for nullable fields
+    ['question_ar', 'explanation', 'explanation_ar'].forEach(field => {
+        if (questionForm[field] === '') {
+            questionForm[field] = null;
+        }
+    });
+    
+    // Ensure points and order are integers
+    if (questionForm.points === '' || questionForm.points === null) {
+        questionForm.points = 1;
+    } else {
+        questionForm.points = parseInt(questionForm.points) || 1;
+    }
+    
+    if (questionForm.order === '' || questionForm.order === null) {
+        questionForm.order = 0;
+    } else {
+        questionForm.order = parseInt(questionForm.order) || 0;
+    }
+    
+    // Clean up answers - remove empty answers and ensure order is set
+    if (questionForm.answers && Array.isArray(questionForm.answers)) {
+        questionForm.answers = questionForm.answers
+            .filter(answer => answer.answer && answer.answer.trim() !== '')
+            .map((answer, index) => ({
+                ...answer,
+                order: index,
+            }));
+    }
+    
+    // Update existing question
+    questionForm.put(route('admin.courses.lessons.questions.update', [
+        props.course.slug || props.course.id,
+        props.lesson.id,
+        props.question.id
+    ]), {
+        preserveScroll: true,
+        onSuccess: () => {
+            showSuccess(t('questions.updated_successfully') || 'Question updated successfully!', t('common.success') || 'Success');
+            closeQuestionModal();
+            router.reload({ only: ['question'] });
+        },
+        onError: (errors) => {
+            if (errors.message) {
+                showError(errors.message, t('common.error') || 'Error');
+            }
+        },
+    });
+};
 
 const getQuestionTypeBadge = (type) => {
     const badges = {
@@ -121,13 +274,7 @@ const getQuestionTypeBadge = (type) => {
 };
 
 const formatQuestionType = (type) => {
-    const types = {
-        multiple_choice: t('questions.types.multiple_choice') || 'Multiple Choice',
-        true_false: t('questions.types.true_false') || 'True/False',
-        short_answer: t('questions.types.short_answer') || 'Short Answer',
-        essay: t('questions.types.essay') || 'Essay',
-    };
-    return types[type] || type;
+    return t(`lessons.types.${type}`) || type;
 };
 </script>
 

@@ -59,6 +59,15 @@ return [
     'no_video' => 'No video available',
     
     'types' => [
+        'text' => 'Text',
+        'youtube_video' => 'YouTube Video',
+        'google_drive_video' => 'Google Drive Video',
+        'video_file' => 'Uploaded Video',
+        'image' => 'Image',
+        'document_file' => 'Document',
+        'embed_frame' => 'Embed Frame',
+        'assignment' => 'Assignment',
+        'test' => 'Test/Quiz',
         'multiple_choice' => 'Multiple Choice',
         'true_false' => 'True/False',
         'short_answer' => 'Short Answer',

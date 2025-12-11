@@ -37,6 +37,12 @@ class SectionController extends Controller
     {
         $this->sectionService->create($course, $request->validated());
 
+        // If request wants to stay on same page (from modal), return back to course show
+        if ($request->header('X-Inertia')) {
+            return redirect()->route('admin.courses.show', $course)
+                ->with('success', __('Section created successfully.'));
+        }
+
         return redirect()->route('admin.courses.sections.index', $course)
             ->with('success', __('Section created successfully.'));
     }
@@ -68,6 +74,12 @@ class SectionController extends Controller
         ]);
 
         $this->sectionService->update($section, $validated);
+
+        // If request wants to stay on same page (from modal), return back to course show
+        if ($request->header('X-Inertia')) {
+            return redirect()->route('admin.courses.show', $course)
+                ->with('success', __('Section updated successfully.'));
+        }
 
         return redirect()->route('admin.courses.sections.index', $course)
             ->with('success', __('Section updated successfully.'));

@@ -244,16 +244,14 @@
                                                                 </small>
                                                             </div>
                                                             <div class="d-flex gap-2 align-items-center flex-wrap" @click.stop>
-                                                                <Link 
-                                                                    v-if="lesson.id && course && (course.slug || course.id)" 
-                                                                    :href="route('admin.courses.lessons.questions.create', [course.slug || course.id, lesson.id])" 
+                                                                <button 
+                                                                    @click.stop="openQuestionModal(lesson.id)"
                                                                     class="btn btn-sm lesson-action-btn-add"
                                                                     :title="t('admin.add_question') || 'Add Question'"
-                                                                    @click.stop
                                                                 >
                                                                     <i class="bi bi-plus-circle me-1"></i>
                                                                     <span class="d-none d-sm-inline">{{ t('admin.add_question') || 'Add Question' }}</span>
-                                                                </Link>
+                                                                </button>
                                                                 <Link 
                                                                     v-if="lesson.id && course && (course.slug || course.id)" 
                                                                     :href="route('admin.courses.lessons.questions.index', [course.slug || course.id, lesson.id])" 
@@ -281,6 +279,13 @@
                                                             <div v-for="question in lesson.questions" :key="question.id" class="d-flex align-items-start gap-2 mb-2">
                                                                 <i class="bi bi-circle-fill text-primary flex-shrink-0 mt-1" style="font-size: 0.5rem;"></i>
                                                                 <small class="text-muted flex-grow-1">{{ question.translated_question || question.question }}</small>
+                                                                <button
+                                                                    @click.stop="openQuestionModal(lesson.id, question)"
+                                                                    class="btn btn-sm btn-link text-primary p-0 ms-auto"
+                                                                    :title="t('admin.edit_question') || 'Edit Question'"
+                                                                >
+                                                                    <i class="bi bi-pencil"></i>
+                                                                </button>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -297,15 +302,13 @@
                             <div v-else class="text-center py-5">
                                 <i class="bi bi-inbox fs-1 text-muted d-block mb-3"></i>
                                 <p class="text-muted mb-3">{{ t('admin.no_sections') || 'No sections added yet' }}</p>
-                                <Link 
-                                    v-if="course && (course.slug || course.id)" 
-                                    :href="route('admin.courses.sections.create', course.slug || course.id)" 
+                                <button 
+                                    @click="openSectionModal()"
                                     class="btn btn-primary"
-                                    style="position: relative; z-index: 10; pointer-events: auto;"
                                 >
                                     <i class="bi bi-plus-circle me-2"></i>
                                     {{ t('admin.add_section') || 'Add Section' }}
-                                </Link>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -324,30 +327,31 @@
                         </div>
                         <div class="card-body">
                             <div class="d-grid gap-2">
-                                <Link v-if="course && (course.slug || course.id)" :href="route('admin.courses.sections.create', course.slug || course.id)" class="btn btn-outline-info">
-                                    <i class="bi bi-plus-circle me-2"></i>
-                                    {{ t('admin.add_section') || 'Add Section' }}
-                                </Link>
-                                <Link v-if="course && (course.slug || course.id)" :href="route('admin.courses.sections.index', course.slug || course.id)" class="btn btn-outline-warning">
-                                    <i class="bi bi-list me-2"></i>
-                                    {{ t('admin.manage_sections') || 'Manage Chapters' }}
-                                </Link>
-                                <Link v-if="course && (course.slug || course.id)" :href="route('admin.courses.lessons.create', course.slug || course.id)" class="btn btn-outline-secondary">
-                                    <i class="bi bi-book me-2"></i>
-                                    {{ t('admin.add_lesson') || 'Add Lesson' }}
-                                </Link>
-                                <Link v-if="course && (course.slug || course.id) && course?.sections && course.sections.length > 0 && course.sections.some(s => s.lessons && s.lessons.length > 0)" :href="route('admin.courses.lessons.index', course.slug || course.id)" class="btn btn-outline-warning">
-                                    <i class="bi bi-list me-2"></i>
-                                    {{ t('admin.manage_lessons') || 'Manage Lessons' }}
-                                </Link>
                                 <Link v-if="course && (course.slug || course.id)" :href="route('admin.courses.batches.index', course.slug || course.id)" class="btn btn-outline-primary">
                                     <i class="bi bi-people me-2"></i>
                                     {{ t('admin.manage_batches') || 'Manage Batches' }}
                                 </Link>
-                                <Link v-if="course && (course.slug || course.id)" :href="route('admin.courses.batches.create', course.slug || course.id)" class="btn btn-outline-success">
+                                <button @click="openBatchModal()" class="btn btn-outline-success">
                                     <i class="bi bi-plus-circle me-2"></i>
                                     {{ t('admin.create_batch') || 'Create Batch' }}
+                                </button>
+                                <button @click="openSectionModal()" class="btn btn-outline-info">
+                                    <i class="bi bi-plus-circle me-2"></i>
+                                    {{ t('admin.add_section') || 'Add Section' }}
+                                </button>
+                                <Link v-if="course && (course.slug || course.id)" :href="route('admin.courses.sections.index', course.slug || course.id)" class="btn btn-outline-warning">
+                                    <i class="bi bi-list me-2"></i>
+                                    {{ t('admin.manage_sections') || 'Manage Chapters' }}
                                 </Link>
+                                <button @click="openLessonModal()" class="btn btn-outline-secondary">
+                                    <i class="bi bi-book me-2"></i>
+                                    {{ t('admin.add_lesson') || 'Add Lesson' }}
+                                </button>
+                                <Link v-if="course && (course.slug || course.id) && course?.sections && course.sections.length > 0 && course.sections.some(s => s.lessons && s.lessons.length > 0)" :href="route('admin.courses.lessons.index', course.slug || course.id)" class="btn btn-outline-warning">
+                                    <i class="bi bi-list me-2"></i>
+                                    {{ t('admin.manage_lessons') || 'Manage Lessons' }}
+                                </Link>
+                           
                             </div>
                         </div>
                     </div>
@@ -367,10 +371,10 @@
                                     <i class="bi bi-list me-1"></i>
                                     <span class="d-none d-sm-inline">{{ t('admin.manage_batches') || 'Manage' }}</span>
                                 </Link>
-                                <Link v-if="course && (course.slug || course.id)" :href="route('admin.courses.batches.create', course.slug || course.id)" class="btn btn-sm btn-success" :title="t('admin.create_batch') || 'Create Batch'">
+                                <button @click="openBatchModal()" class="btn btn-sm btn-success" :title="t('admin.create_batch') || 'Create Batch'">
                                     <i class="bi bi-plus me-1"></i>
                                     <span class="d-none d-sm-inline">{{ t('admin.create_batch') || 'Create' }}</span>
-                            </Link>
+                                </button>
                             </div>
                         </div>
                         <div class="card-body">
@@ -384,9 +388,15 @@
                                     <div class="d-flex justify-content-between align-items-start mb-2 flex-wrap gap-2">
                                         <div class="flex-grow-1">
                                             <strong class="d-block mb-1">{{ batch.name }}</strong>
-                                    <div class="text-muted small">
-                                        <i class="bi bi-person me-1"></i>
-                                        {{ t('admin.instructor') || 'Instructor' }}: <strong>{{ batch.instructor?.name || '-' }}</strong>
+                                            <div class="d-flex align-items-center justify-content-between gap-2 text-muted small">
+                                                <div class="d-flex align-items-center gap-1">
+                                                    <i class="bi bi-person"></i>
+                                                    <span>{{ t('admin.instructor') || 'Instructor' }}: <strong>{{ batch.instructor?.name || '-' }}</strong></span>
+                                                </div>
+                                                <div v-if="batch.enrollments_count !== undefined" class="d-flex align-items-center gap-1 flex-shrink-0">
+                                                    <i class="bi bi-people text-info"></i>
+                                                    <span class="badge bg-info text-white fw-bold">{{ batch.enrollments_count || 0 }}</span>
+                                                </div>
                                     </div>
                                         </div>
                                         <span :class="batch.is_active ? 'badge bg-success' : 'badge bg-secondary'">
@@ -394,12 +404,8 @@
                                             {{ batch.is_active ? (t('admin.active') || 'Active') : (t('admin.inactive') || 'Inactive') }}
                                         </span>
                                     </div>
-                                    <div v-if="batch.enrollments_count !== undefined" class="text-muted small mt-2 d-flex align-items-center gap-2">
+                                    <div v-if="batch.start_date" class="text-muted small mt-2 d-flex align-items-center gap-2">
                                         <span>
-                                        <i class="bi bi-people me-1"></i>
-                                        {{ batch.enrollments_count }} {{ t('admin.students') || 'students' }}
-                                        </span>
-                                        <span v-if="batch.start_date" class="text-muted">
                                             <i class="bi bi-calendar me-1"></i>
                                             {{ new Date(batch.start_date).toLocaleDateString() }}
                                         </span>
@@ -409,33 +415,92 @@
                             <div v-else class="text-center py-5">
                                 <i class="bi bi-people fs-1 text-muted d-block mb-3"></i>
                                 <p class="text-muted mb-4">{{ t('admin.no_batches') || 'No batches yet' }}</p>
-                                <Link v-if="course && (course.slug || course.id)" :href="route('admin.courses.batches.create', course.slug || course.id)" class="btn btn-primary">
+                                <button @click="openBatchModal()" class="btn btn-primary">
                                     <i class="bi bi-plus-circle me-2"></i>
                                     {{ t('admin.create_batch') || 'Create Batch' }}
-                                </Link>
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Section Form Modal -->
+        <SectionForm
+            :show="showSectionModal"
+            :section="editingSection"
+            :form-data="sectionForm"
+            :errors="sectionForm.errors"
+            :processing="sectionForm.processing"
+            @close="closeSectionModal"
+            @submit="submitSection"
+        />
+
+        <!-- Lesson Form Modal -->
+        <LessonForm
+            :show="showLessonModal"
+            :lesson="editingLesson"
+            :form-data="lessonForm"
+            :errors="lessonForm.errors"
+            :processing="lessonForm.processing"
+            :sections="sections"
+            :lesson-types="lessonTypes"
+            @close="closeLessonModal"
+            @submit="submitLesson"
+        />
+
+        <!-- Question Form Modal -->
+        <QuestionForm
+            :show="showQuestionModal"
+            :question="editingQuestion"
+            :form-data="questionForm"
+            :errors="questionForm.errors"
+            :processing="questionForm.processing"
+            :question-types="questionTypes"
+            @close="closeQuestionModal"
+            @submit="submitQuestion"
+            @type-change="handleQuestionTypeChange"
+        />
+
+        <!-- Batch Form Modal -->
+        <BatchForm
+            :show="showBatchModal"
+            :batch="editingBatch"
+            :form-data="batchForm"
+            :errors="batchForm.errors"
+            :processing="batchForm.processing"
+            :instructors="instructors"
+            @close="closeBatchModal"
+            @submit="submitBatch"
+        />
     </AdminLayout>
 </template>
 
 <script setup>
 import AdminLayout from '@/Layouts/AdminLayout.vue';
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import { Head, Link, usePage, useForm, router } from '@inertiajs/vue3';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
+import { useAlert } from '@/composables/useAlert';
 import { computed, onMounted, nextTick, ref, watch } from 'vue';
+import SectionForm from '@/Pages/Admin/Sections/Form.vue';
+import LessonForm from '@/Pages/Admin/Lessons/Form.vue';
+import QuestionForm from '@/Pages/Admin/Questions/Form.vue';
+import BatchForm from '@/Pages/Admin/Batches/Form.vue';
 
 const props = defineProps({
     course: Object,
     statistics: Object,
+    sections: Array,
+    instructors: Array,
+    lessonTypes: Array,
+    questionTypes: Array,
 });
 
 const { t } = useTranslation();
 const { route } = useRoute();
+const { showSuccess, showError } = useAlert();
 const page = usePage();
 
 const direction = computed(() => page.props.direction || 'ltr');
@@ -483,6 +548,450 @@ const isSectionExpanded = (sectionId) => {
 const handleImageError = (event) => {
     event.target.src = '/images/default-course.avif';
 };
+
+// Modal states
+const showSectionModal = ref(false);
+const showLessonModal = ref(false);
+const showQuestionModal = ref(false);
+const showBatchModal = ref(false);
+const editingSection = ref(null);
+const editingLesson = ref(null);
+const editingQuestion = ref(null);
+const editingBatch = ref(null);
+const selectedSectionIdForLesson = ref(null);
+const selectedLessonIdForQuestion = ref(null);
+
+// Forms
+const sectionForm = useForm({
+    title: '',
+    title_ar: '',
+    description: '',
+    description_ar: '',
+    order: null,
+});
+
+const lessonForm = useForm({
+    title: '',
+    title_ar: '',
+    type: '',
+    section_id: null,
+    order: 1,
+    duration_minutes: 0,
+    description: '',
+    description_ar: '',
+    content: '',
+    content_ar: '',
+    video_url: '',
+});
+
+const questionForm = useForm({
+    type: '',
+    question: '',
+    question_ar: '',
+    explanation: '',
+    explanation_ar: '',
+    points: 1,
+    order: 0,
+    answers: [
+        { answer: '', answer_ar: '', is_correct: false, order: 0 },
+        { answer: '', answer_ar: '', is_correct: false, order: 1 },
+    ],
+});
+
+const batchForm = useForm({
+    name: '',
+    name_ar: '',
+    description: '',
+    description_ar: '',
+    instructor_id: null,
+    start_date: null,
+    end_date: null,
+    max_students: null,
+    is_active: true,
+});
+
+// Section Modal Functions
+const openSectionModal = (section = null) => {
+    editingSection.value = section;
+    if (section) {
+        sectionForm.title = section.title || '';
+        sectionForm.title_ar = section.title_ar || '';
+        sectionForm.description = section.description || '';
+        sectionForm.description_ar = section.description_ar || '';
+        sectionForm.order = section.order;
+    } else {
+        sectionForm.reset();
+    }
+    showSectionModal.value = true;
+};
+
+const closeSectionModal = () => {
+    showSectionModal.value = false;
+    editingSection.value = null;
+    sectionForm.reset();
+    sectionForm.clearErrors();
+};
+
+const submitSection = (formData) => {
+    // Prepare form data
+    const data = { ...formData };
+    if (data.order !== null && data.order !== '') {
+        data.order = parseInt(data.order);
+    } else {
+        data.order = null;
+    }
+    
+    if (editingSection.value) {
+        sectionForm.put(route('admin.courses.sections.update', [props.course.slug || props.course.id, editingSection.value.id]), {
+            preserveScroll: true,
+            onSuccess: () => {
+                showSuccess(t('sections.updated_successfully') || 'Section updated successfully!', t('common.success') || 'Success');
+                closeSectionModal();
+            },
+            onError: (errors) => {
+                if (errors.message) {
+                    showError(errors.message, t('common.error') || 'Error');
+                }
+            },
+        });
+    } else {
+        sectionForm.post(route('admin.courses.sections.store', props.course.slug || props.course.id), {
+            preserveScroll: true,
+            onSuccess: () => {
+                showSuccess(t('sections.created_successfully') || 'Section created successfully!', t('common.success') || 'Success');
+                closeSectionModal();
+            },
+            onError: (errors) => {
+                if (errors.message) {
+                    showError(errors.message, t('common.error') || 'Error');
+                }
+            },
+        });
+    }
+};
+
+// Lesson Modal Functions
+const openLessonModal = (sectionId = null) => {
+    editingLesson.value = null;
+    selectedSectionIdForLesson.value = sectionId;
+    lessonForm.reset();
+    lessonForm.section_id = sectionId || null;
+    showLessonModal.value = true;
+};
+
+const closeLessonModal = () => {
+    showLessonModal.value = false;
+    editingLesson.value = null;
+    selectedSectionIdForLesson.value = null;
+    lessonForm.reset();
+    lessonForm.clearErrors();
+};
+
+const submitLesson = (formData) => {
+    // Convert empty strings to null for nullable fields
+    if (lessonForm.section_id === '' || lessonForm.section_id === null) {
+        lessonForm.section_id = null;
+    } else if (lessonForm.section_id) {
+        lessonForm.section_id = parseInt(lessonForm.section_id);
+    }
+    
+    // Convert empty strings to null for other nullable fields
+    ['description', 'description_ar', 'content', 'content_ar', 'video_url', 'title_ar'].forEach(field => {
+        if (lessonForm[field] === '') {
+            lessonForm[field] = null;
+        }
+    });
+    
+    // Ensure order and duration_minutes are integers or null
+    if (lessonForm.order === '' || lessonForm.order === null) {
+        lessonForm.order = null;
+    } else {
+        lessonForm.order = parseInt(lessonForm.order) || null;
+    }
+    
+    if (lessonForm.duration_minutes === '' || lessonForm.duration_minutes === null) {
+        lessonForm.duration_minutes = null;
+    } else {
+        lessonForm.duration_minutes = parseInt(lessonForm.duration_minutes) || null;
+    }
+    
+    lessonForm.post(route('admin.courses.lessons.store', props.course.slug || props.course.id), {
+        preserveScroll: true,
+        onSuccess: () => {
+            showSuccess(t('lessons.created_successfully') || 'Lesson created successfully!', t('common.success') || 'Success');
+            closeLessonModal();
+        },
+        onError: (errors) => {
+            if (errors.message) {
+                showError(errors.message, t('common.error') || 'Error');
+            }
+        },
+    });
+};
+
+// Question Modal Functions
+const openQuestionModal = (lessonId, question = null) => {
+    editingQuestion.value = question;
+    selectedLessonIdForQuestion.value = lessonId;
+    questionForm.reset();
+    
+    if (question) {
+        // Editing existing question
+        questionForm.type = question.type || '';
+        questionForm.question = question.translated_question || question.question || '';
+        questionForm.question_ar = question.question_ar || '';
+        questionForm.explanation = question.translated_explanation || question.explanation || '';
+        questionForm.explanation_ar = question.explanation_ar || '';
+        questionForm.points = question.points || 1;
+        questionForm.order = question.order || 0;
+        
+        // Load answers if they exist
+        if (question.answers && question.answers.length > 0) {
+            questionForm.answers = question.answers.map((answer, index) => ({
+                id: answer.id || null,
+                answer: answer.translated_answer || answer.answer || '',
+                answer_ar: answer.answer_ar || '',
+                is_correct: answer.is_correct || false,
+                order: answer.order !== undefined ? answer.order : index,
+            }));
+        } else {
+            // Default answers based on type
+            if (question.type === 'true_false') {
+                questionForm.answers = [
+                    { answer: 'True', answer_ar: 'صحيح', is_correct: false, order: 0 },
+                    { answer: 'False', answer_ar: 'خطأ', is_correct: false, order: 1 },
+                ];
+            } else {
+                questionForm.answers = [
+                    { answer: '', answer_ar: '', is_correct: false, order: 0 },
+                    { answer: '', answer_ar: '', is_correct: false, order: 1 },
+                ];
+            }
+        }
+    } else {
+        // Creating new question
+        questionForm.answers = [
+            { answer: '', answer_ar: '', is_correct: false, order: 0 },
+            { answer: '', answer_ar: '', is_correct: false, order: 1 },
+        ];
+    }
+    
+    showQuestionModal.value = true;
+};
+
+const closeQuestionModal = () => {
+    showQuestionModal.value = false;
+    editingQuestion.value = null;
+    selectedLessonIdForQuestion.value = null;
+    questionForm.reset();
+    questionForm.clearErrors();
+};
+
+const handleQuestionTypeChange = (type) => {
+    if (type === 'true_false') {
+        questionForm.answers = [
+            { answer: 'True', answer_ar: 'صحيح', is_correct: false, order: 0 },
+            { answer: 'False', answer_ar: 'خطأ', is_correct: false, order: 1 },
+        ];
+    } else if (type === 'multiple_choice' && questionForm.answers.length < 2) {
+        questionForm.answers = [
+            { answer: '', answer_ar: '', is_correct: false, order: 0 },
+            { answer: '', answer_ar: '', is_correct: false, order: 1 },
+        ];
+    }
+};
+
+const addAnswer = () => {
+    questionForm.answers.push({
+        answer: '',
+        answer_ar: '',
+        is_correct: false,
+        order: questionForm.answers.length,
+    });
+};
+
+const removeAnswer = (index) => {
+    if (questionForm.answers.length > 2) {
+        questionForm.answers.splice(index, 1);
+        questionForm.answers.forEach((answer, idx) => {
+            answer.order = idx;
+        });
+    }
+};
+
+const submitQuestion = (formData) => {
+    if (!selectedLessonIdForQuestion.value) {
+        showError('Please select a lesson', t('common.error') || 'Error');
+        return;
+    }
+    
+    // Prepare form data - convert empty strings to null for nullable fields
+    ['question_ar', 'explanation', 'explanation_ar'].forEach(field => {
+        if (questionForm[field] === '') {
+            questionForm[field] = null;
+        }
+    });
+    
+    // Ensure points and order are integers
+    if (questionForm.points === '' || questionForm.points === null) {
+        questionForm.points = 1;
+    } else {
+        questionForm.points = parseInt(questionForm.points) || 1;
+    }
+    
+    if (questionForm.order === '' || questionForm.order === null) {
+        questionForm.order = 0;
+    } else {
+        questionForm.order = parseInt(questionForm.order) || 0;
+    }
+    
+    // Clean up answers - remove empty answers and ensure order is set
+    if (questionForm.answers && Array.isArray(questionForm.answers)) {
+        questionForm.answers = questionForm.answers
+            .filter(answer => answer.answer && answer.answer.trim() !== '')
+            .map((answer, index) => ({
+                ...answer,
+                order: index,
+            }));
+    }
+    
+    if (editingQuestion.value) {
+        // Update existing question
+        questionForm.put(route('admin.courses.lessons.questions.update', [
+            props.course.slug || props.course.id,
+            selectedLessonIdForQuestion.value,
+            editingQuestion.value.id
+        ]), {
+            preserveScroll: true,
+            onSuccess: () => {
+                showSuccess(t('questions.updated_successfully') || 'Question updated successfully!', t('common.success') || 'Success');
+                closeQuestionModal();
+            },
+            onError: (errors) => {
+                if (errors.message) {
+                    showError(errors.message, t('common.error') || 'Error');
+                }
+            },
+        });
+    } else {
+        // Create new question
+        questionForm.post(route('admin.courses.lessons.questions.store', [
+            props.course.slug || props.course.id,
+            selectedLessonIdForQuestion.value
+        ]), {
+            preserveScroll: true,
+            onSuccess: () => {
+                showSuccess(t('questions.created_successfully') || 'Question created successfully!', t('common.success') || 'Success');
+                closeQuestionModal();
+            },
+            onError: (errors) => {
+                if (errors.message) {
+                    showError(errors.message, t('common.error') || 'Error');
+                }
+            },
+        });
+    }
+};
+
+// Batch Modal Functions
+const openBatchModal = (batch = null) => {
+    editingBatch.value = batch;
+    if (batch) {
+        batchForm.name = batch.name || '';
+        batchForm.name_ar = batch.name_ar || '';
+        batchForm.description = batch.description || '';
+        batchForm.description_ar = batch.description_ar || '';
+        batchForm.instructor_id = batch.instructor?.id || null;
+        batchForm.start_date = batch.start_date;
+        batchForm.end_date = batch.end_date;
+        batchForm.max_students = batch.max_students;
+        batchForm.is_active = batch.is_active !== undefined ? batch.is_active : true;
+    } else {
+        batchForm.reset();
+    }
+    showBatchModal.value = true;
+};
+
+const closeBatchModal = () => {
+    showBatchModal.value = false;
+    editingBatch.value = null;
+    batchForm.reset();
+    batchForm.clearErrors();
+};
+
+const getInstructorName = (instructorId) => {
+    const instructor = props.instructors?.find(i => i.id === instructorId);
+    return instructor ? instructor.name : '';
+};
+
+const submitBatch = (formData) => {
+    // Ensure instructor_id is properly set (required field)
+    if (!batchForm.instructor_id || batchForm.instructor_id === '') {
+        batchForm.instructor_id = null;
+    } else {
+        batchForm.instructor_id = parseInt(batchForm.instructor_id);
+    }
+    
+    // Convert empty strings to null for nullable fields
+    ['name_ar', 'description', 'description_ar'].forEach(field => {
+        if (batchForm[field] === '') {
+            batchForm[field] = null;
+        }
+    });
+    
+    // Handle date fields
+    if (batchForm.start_date === '') {
+        batchForm.start_date = null;
+    }
+    if (batchForm.end_date === '') {
+        batchForm.end_date = null;
+    }
+    
+    // Handle max_students
+    if (batchForm.max_students === '' || batchForm.max_students === null) {
+        batchForm.max_students = null;
+    } else {
+        batchForm.max_students = parseInt(batchForm.max_students) || null;
+    }
+    
+    // Ensure is_active is boolean
+    batchForm.is_active = Boolean(batchForm.is_active);
+    
+    if (editingBatch.value) {
+        batchForm.put(route('admin.courses.batches.update', [props.course.slug || props.course.id, editingBatch.value.id]), {
+            preserveScroll: true,
+            onSuccess: () => {
+                showSuccess(t('admin.batch_updated_successfully') || 'Batch updated successfully!', t('common.success') || 'Success');
+                closeBatchModal();
+            },
+            onError: (errors) => {
+                if (errors.message) {
+                    showError(errors.message, t('common.error') || 'Error');
+                }
+            },
+        });
+    } else {
+        batchForm.post(route('admin.courses.batches.store', props.course.slug || props.course.id), {
+            preserveScroll: true,
+            onSuccess: () => {
+                showSuccess(t('admin.batch_created_successfully') || 'Batch created successfully!', t('common.success') || 'Success');
+                closeBatchModal();
+            },
+            onError: (errors) => {
+                if (errors.message) {
+                    showError(errors.message, t('common.error') || 'Error');
+                }
+            },
+        });
+    }
+};
+
+// Watch for flash messages
+watch(() => page.props.flash?.success, (success) => {
+    if (success) {
+        showSuccess(success, t('common.success') || 'Success');
+    }
+});
                         
 // Initialize Bootstrap accordion and other components
 onMounted(() => {

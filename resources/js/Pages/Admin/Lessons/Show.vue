@@ -288,15 +288,15 @@
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                     <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                         <h3 class="text-lg font-semibold text-gray-900">{{ t('questions.title') || 'Questions' }}</h3>
-                        <Link
-                            :href="route('admin.courses.lessons.questions.create', [course.slug || course.id, lesson.id])"
+                        <button
+                            @click="openQuestionModal(null)"
                             class="inline-flex items-center gap-2 px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-xl font-medium transition-all"
                         >
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                             </svg>
                             {{ t('admin.add_question') || 'Add Question' }}
-                        </Link>
+                        </button>
                     </div>
                     
                     <div v-if="lesson.questions && lesson.questions.length > 0" class="divide-y divide-gray-100">
@@ -318,14 +318,14 @@
                                     </div>
                                     <p class="text-gray-900">{{ question.translated_question || question.question }}</p>
                                 </div>
-                                <Link
-                                    :href="route('admin.courses.lessons.questions.edit', [course.slug || course.id, lesson.id, question.id])"
+                                <button
+                                    @click="openQuestionModal(question)"
                                     class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                 >
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                     </svg>
-                                </Link>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -341,15 +341,30 @@
                 </div>
             </div>
         </div>
+
+        <!-- Question Form Modal -->
+        <QuestionForm
+            :show="showQuestionModal"
+            :question="editingQuestion"
+            :form-data="questionForm"
+            :errors="questionForm.errors"
+            :processing="questionForm.processing"
+            :question-types="questionTypes"
+            @close="closeQuestionModal"
+            @submit="submitQuestion"
+            @type-change="handleQuestionTypeChange"
+        />
     </AdminLayout>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { useAlert } from '@/composables/useAlert';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import QuestionForm from '@/Pages/Admin/Questions/Form.vue';
 
 const props = defineProps({
     course: Object,
@@ -358,16 +373,200 @@ const props = defineProps({
     students: Array,
     attendances: Array,
     attendanceStats: Object,
+    questionTypes: Array,
 });
 
 const { t } = useTranslation();
 const { route } = useRoute();
+const { showSuccess, showError } = useAlert();
 
 const activeTab = ref('details');
 const selectedBatch = ref('');
 const saving = ref(false);
 const attendanceChanges = ref({});
 const changedStudents = ref(new Set());
+
+// Question modal state
+const showQuestionModal = ref(false);
+const editingQuestion = ref(null);
+
+// Question form
+const questionForm = useForm({
+    type: '',
+    question: '',
+    question_ar: '',
+    explanation: '',
+    explanation_ar: '',
+    points: 1,
+    order: 0,
+    answers: [
+        { answer: '', answer_ar: '', is_correct: false, order: 0 },
+        { answer: '', answer_ar: '', is_correct: false, order: 1 },
+    ],
+});
+
+// Watch for type changes to initialize answers
+watch(() => questionForm.type, (newType) => {
+    if (newType === 'true_false') {
+        questionForm.answers = [
+            { answer: 'True', answer_ar: 'صحيح', is_correct: false, order: 0 },
+            { answer: 'False', answer_ar: 'خطأ', is_correct: false, order: 1 },
+        ];
+    } else if (newType === 'multiple_choice' && questionForm.answers.length < 2) {
+        questionForm.answers = [
+            { answer: '', answer_ar: '', is_correct: false, order: 0 },
+            { answer: '', answer_ar: '', is_correct: false, order: 1 },
+        ];
+    }
+});
+
+const openQuestionModal = (question = null) => {
+    editingQuestion.value = question;
+    questionForm.reset();
+    
+    if (question) {
+        // Load question data - need to fetch full question with answers
+        router.get(route('admin.courses.lessons.questions.show', [
+            props.course.slug || props.course.id,
+            props.lesson.id,
+            question.id
+        ]), {}, {
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: (page) => {
+                const fullQuestion = page.props.question;
+                questionForm.type = fullQuestion.type || '';
+                questionForm.question = fullQuestion.question || '';
+                questionForm.question_ar = fullQuestion.question_ar || '';
+                questionForm.explanation = fullQuestion.explanation || '';
+                questionForm.explanation_ar = fullQuestion.explanation_ar || '';
+                questionForm.points = fullQuestion.points || 1;
+                questionForm.order = fullQuestion.order || 0;
+                
+                if (fullQuestion.answers && fullQuestion.answers.length > 0) {
+                    questionForm.answers = fullQuestion.answers.map((answer, index) => ({
+                        id: answer.id || null,
+                        answer: answer.answer || '',
+                        answer_ar: answer.answer_ar || '',
+                        is_correct: answer.is_correct || false,
+                        order: answer.order !== undefined ? answer.order : index,
+                    }));
+                } else {
+                    if (fullQuestion.type === 'true_false') {
+                        questionForm.answers = [
+                            { answer: 'True', answer_ar: 'صحيح', is_correct: false, order: 0 },
+                            { answer: 'False', answer_ar: 'خطأ', is_correct: false, order: 1 },
+                        ];
+                    } else {
+                        questionForm.answers = [
+                            { answer: '', answer_ar: '', is_correct: false, order: 0 },
+                            { answer: '', answer_ar: '', is_correct: false, order: 1 },
+                        ];
+                    }
+                }
+                showQuestionModal.value = true;
+            },
+        });
+    } else {
+        questionForm.answers = [
+            { answer: '', answer_ar: '', is_correct: false, order: 0 },
+            { answer: '', answer_ar: '', is_correct: false, order: 1 },
+        ];
+        showQuestionModal.value = true;
+    }
+};
+
+const closeQuestionModal = () => {
+    showQuestionModal.value = false;
+    editingQuestion.value = null;
+    questionForm.reset();
+    questionForm.clearErrors();
+};
+
+const handleQuestionTypeChange = (type) => {
+    if (type === 'true_false') {
+        questionForm.answers = [
+            { answer: 'True', answer_ar: 'صحيح', is_correct: false, order: 0 },
+            { answer: 'False', answer_ar: 'خطأ', is_correct: false, order: 1 },
+        ];
+    } else if (type === 'multiple_choice' && questionForm.answers.length < 2) {
+        questionForm.answers = [
+            { answer: '', answer_ar: '', is_correct: false, order: 0 },
+            { answer: '', answer_ar: '', is_correct: false, order: 1 },
+        ];
+    }
+};
+
+const submitQuestion = (formData) => {
+    // Prepare form data - convert empty strings to null for nullable fields
+    ['question_ar', 'explanation', 'explanation_ar'].forEach(field => {
+        if (questionForm[field] === '') {
+            questionForm[field] = null;
+        }
+    });
+    
+    // Ensure points and order are integers
+    if (questionForm.points === '' || questionForm.points === null) {
+        questionForm.points = 1;
+    } else {
+        questionForm.points = parseInt(questionForm.points) || 1;
+    }
+    
+    if (questionForm.order === '' || questionForm.order === null) {
+        questionForm.order = 0;
+    } else {
+        questionForm.order = parseInt(questionForm.order) || 0;
+    }
+    
+    // Clean up answers - remove empty answers and ensure order is set
+    if (questionForm.answers && Array.isArray(questionForm.answers)) {
+        questionForm.answers = questionForm.answers
+            .filter(answer => answer.answer && answer.answer.trim() !== '')
+            .map((answer, index) => ({
+                ...answer,
+                order: index,
+            }));
+    }
+    
+    if (editingQuestion.value) {
+        // Update existing question
+        questionForm.put(route('admin.courses.lessons.questions.update', [
+            props.course.slug || props.course.id,
+            props.lesson.id,
+            editingQuestion.value.id
+        ]), {
+            preserveScroll: true,
+            onSuccess: () => {
+                showSuccess(t('questions.updated_successfully') || 'Question updated successfully!', t('common.success') || 'Success');
+                closeQuestionModal();
+                router.reload({ only: ['lesson'] });
+            },
+            onError: (errors) => {
+                if (errors.message) {
+                    showError(errors.message, t('common.error') || 'Error');
+                }
+            },
+        });
+    } else {
+        // Create new question
+        questionForm.post(route('admin.courses.lessons.questions.store', [
+            props.course.slug || props.course.id,
+            props.lesson.id
+        ]), {
+            preserveScroll: true,
+            onSuccess: () => {
+                showSuccess(t('questions.created_successfully') || 'Question created successfully!', t('common.success') || 'Success');
+                closeQuestionModal();
+                router.reload({ only: ['lesson'] });
+            },
+            onError: (errors) => {
+                if (errors.message) {
+                    showError(errors.message, t('common.error') || 'Error');
+                }
+            },
+        });
+    }
+};
 
 // Initialize attendance changes from existing data
 onMounted(() => {
@@ -457,12 +656,6 @@ const formatLessonType = (type) => {
 };
 
 const formatQuestionType = (type) => {
-    const types = {
-        multiple_choice: t('questions.types.multiple_choice') || 'Multiple Choice',
-        true_false: t('questions.types.true_false') || 'True/False',
-        short_answer: t('questions.types.short_answer') || 'Short Answer',
-        essay: t('questions.types.essay') || 'Essay',
-    };
-    return types[type] || type;
+    return t(`lessons.types.${type}`) || type;
 };
 </script>

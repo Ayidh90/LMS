@@ -1,12 +1,13 @@
 <template>
     <div class="admin-layout-wrapper" :class="[direction === 'rtl' ? 'is-rtl' : 'is-ltr']" :dir="direction">
         <!-- Sidebar -->
-        <AdminSidebar />
+        <AdminSidebar v-if="!isModalOpen" />
 
         <!-- Main Content -->
         <div class="admin-main-content" :class="{ 
-            'sidebar-expanded': !sidebarMinimized, 
-            'sidebar-minimized': sidebarMinimized 
+            'sidebar-expanded': !sidebarMinimized && !isModalOpen, 
+            'sidebar-minimized': sidebarMinimized && !isModalOpen,
+            'sidebar-hidden': isModalOpen
         }">
             <!-- Top Bar -->
             <header class="admin-header">
@@ -50,6 +51,7 @@
 import { computed, ref, provide } from 'vue';
 import { useDirection } from '@/composables/useDirection';
 import { useTranslation } from '@/composables/useTranslation';
+import { provideModal } from '@/composables/useModal';
 import AdminSidebar from '@/Components/AdminSidebar.vue';
 import LanguageSwitcher from '@/Components/LanguageSwitcher.vue';
 import UserDropdown from '@/Components/UserDropdown.vue';
@@ -70,6 +72,9 @@ const resolvedTitle = computed(() => props.pageTitle || t('admin.dashboard'));
 
 const sidebarMinimized = ref(false);
 const mobileSidebarOpen = ref(false);
+
+// Provide modal state to child components
+const { isModalOpen } = provideModal();
 
 const toggleSidebar = () => {
     mobileSidebarOpen.value = !mobileSidebarOpen.value;
@@ -118,6 +123,11 @@ provide('toggleMinimize', toggleMinimize);
 
 .admin-main-content.sidebar-minimized {
     margin-right: 75px;
+    margin-left: 0;
+}
+
+.admin-main-content.sidebar-hidden {
+    margin-right: 0;
     margin-left: 0;
 }
 

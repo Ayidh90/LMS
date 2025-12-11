@@ -4,12 +4,14 @@ namespace Modules\Courses\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Enrollment;
+use App\Models\User;
 use Modules\Courses\Models\Course;
 use Modules\Courses\Models\Question;
 use Modules\Courses\Repositories\CourseRepository;
 use Modules\Courses\Requests\StoreCourseRequest;
 use Modules\Courses\Requests\UpdateCourseRequest;
 use Modules\Courses\Services\CourseService;
+use Modules\Courses\Services\SectionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -22,7 +24,8 @@ class CourseController extends Controller
 
     public function __construct(
         private CourseService $courseService,
-        private CourseRepository $courseRepository
+        private CourseRepository $courseRepository,
+        private SectionService $sectionService
     ) {}
 
     /**
@@ -76,10 +79,26 @@ class CourseController extends Controller
             $this->makeTranslatedFieldsVisible($course);
 
             $statistics = $this->getCourseStatistics($course);
+            
+            // Get sections for modals
+            $sections = $this->sectionService->getByCourse($course->id)->map(fn($s) => [
+                'id' => $s->id,
+                'title' => $s->translated_title ?? $s->title,
+                'title_ar' => $s->title_ar,
+            ]);
+            
+            // Get instructors for batch modals
+            $instructors = User::where('role', 'instructor')
+                ->orderBy('name')
+                ->get(['id', 'name', 'email']);
 
             return Inertia::render('Admin/Courses/Show', [
                 'course' => $course,
                 'statistics' => $statistics,
+                'sections' => $sections,
+                'instructors' => $instructors,
+                'lessonTypes' => $this->getLessonTypes(),
+                'questionTypes' => $this->getQuestionTypes(),
             ]);
         } catch (\Exception $e) {
             Log::error('Error in CourseController@show: ' . $e->getMessage(), [
@@ -92,6 +111,31 @@ class CourseController extends Controller
                 ->route('admin.courses.index')
                 ->with('error', __('messages.courses.show_error') ?? 'Error loading course details.');
         }
+    }
+    
+    private function getLessonTypes(): array
+    {
+        return [
+            ['value' => 'text', 'label' => __('lessons.types.text')],
+            ['value' => 'youtube_video', 'label' => __('lessons.types.youtube_video')],
+            ['value' => 'google_drive_video', 'label' => __('lessons.types.google_drive_video')],
+            ['value' => 'video_file', 'label' => __('lessons.types.video_file')],
+            ['value' => 'image', 'label' => __('lessons.types.image')],
+            ['value' => 'document_file', 'label' => __('lessons.types.document_file')],
+            ['value' => 'embed_frame', 'label' => __('lessons.types.embed_frame')],
+            ['value' => 'assignment', 'label' => __('lessons.types.assignment')],
+            ['value' => 'test', 'label' => __('lessons.types.test')],
+        ];
+    }
+    
+    private function getQuestionTypes(): array
+    {
+        return [
+            ['value' => 'multiple_choice', 'label' => __('Multiple Choice')],
+            ['value' => 'true_false', 'label' => __('True/False')],
+            ['value' => 'short_answer', 'label' => __('Short Answer')],
+            ['value' => 'essay', 'label' => __('Essay')],
+        ];
     }
 
     /**

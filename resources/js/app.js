@@ -18,6 +18,7 @@ import Card from 'primevue/card';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
+import InputNumber from 'primevue/inputnumber';
 import Textarea from 'primevue/textarea';
 import Dropdown from 'primevue/dropdown';
 import Checkbox from 'primevue/checkbox';
@@ -35,6 +36,7 @@ import Toast from 'primevue/toast';
 import ToastService from 'primevue/toastservice';
 import ConfirmationService from 'primevue/confirmationservice';
 import ConfirmDialog from 'primevue/confirmdialog';
+import Dialog from 'primevue/dialog';
 
 // ApexCharts
 import VueApexCharts from 'vue3-apexcharts';
@@ -63,6 +65,7 @@ createInertiaApp({
             .component('DataTable', DataTable)
             .component('Column', Column)
             .component('InputText', InputText)
+            .component('InputNumber', InputNumber)
             .component('Textarea', Textarea)
             .component('Dropdown', Dropdown)
             .component('Checkbox', Checkbox)
@@ -78,6 +81,7 @@ createInertiaApp({
             .component('Menubar', Menubar)
             .component('Toast', Toast)
             .component('ConfirmDialog', ConfirmDialog)
+            .component('Dialog', Dialog)
             .use(VueApexCharts);
         
         // Make route available in template context
