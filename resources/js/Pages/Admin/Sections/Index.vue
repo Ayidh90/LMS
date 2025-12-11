@@ -1,7 +1,7 @@
 <template>
     <AdminLayout :page-title="t('admin.sections_management') || 'Sections Management'">
         <Head :title="t('admin.sections_management') || 'Sections Management'" />
-        <div class="space-y-6">
+        <div class="space-y-6 min-h-screen pb-8">
             <!-- Page Header -->
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div class="flex items-center gap-3">
@@ -223,10 +223,12 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
+import { useAlert } from '@/composables/useAlert';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 
 const props = defineProps({
@@ -236,6 +238,8 @@ const props = defineProps({
 
 const { t } = useTranslation();
 const { route } = useRoute();
+const { showSuccess, showError, showConfirm } = useAlert();
+const page = usePage();
 
 const showCreateModal = ref(false);
 const showEditModal = ref(false);
@@ -269,19 +273,65 @@ const closeModals = () => {
 const submitSection = () => {
     if (showEditModal.value && editingSection.value) {
         sectionForm.put(route('admin.courses.sections.update', [props.course.slug || props.course.id, editingSection.value.id]), {
-            onSuccess: () => closeModals(),
+            onSuccess: () => {
+                showSuccess(
+                    t('sections.updated_successfully') || page.props.flash?.success || 'Section updated successfully!',
+                    t('common.success') || 'Success'
+                );
+                closeModals();
+            },
+            onError: (errors) => {
+                if (errors.message) {
+                    showError(errors.message, t('common.error') || 'Error');
+                }
+            },
         });
     } else {
         sectionForm.post(route('admin.courses.sections.store', props.course.slug || props.course.id), {
-            onSuccess: () => closeModals(),
+            onSuccess: () => {
+                showSuccess(
+                    t('sections.created_successfully') || page.props.flash?.success || 'Section created successfully!',
+                    t('common.success') || 'Success'
+                );
+                closeModals();
+            },
+            onError: (errors) => {
+                if (errors.message) {
+                    showError(errors.message, t('common.error') || 'Error');
+                }
+            },
         });
     }
 };
 
-const confirmDelete = (section) => {
-    if (confirm(t('sections.confirm_delete') || 'Are you sure you want to delete this section?')) {
-        router.delete(route('admin.courses.sections.destroy', [props.course.slug || props.course.id, section.id]));
+const confirmDelete = async (section) => {
+    const result = await showConfirm(
+        t('sections.confirm_delete') || 'Are you sure you want to delete this section?',
+        t('common.confirm_delete') || 'Confirm Delete'
+    );
+    
+    if (result.isConfirmed) {
+        router.delete(route('admin.courses.sections.destroy', [props.course.slug || props.course.id, section.id]), {
+            onSuccess: () => {
+                showSuccess(
+                    t('sections.deleted_successfully') || page.props.flash?.success || 'Section deleted successfully!',
+                    t('common.success') || 'Success'
+                );
+            },
+            onError: (errors) => {
+                if (errors.message) {
+                    showError(errors.message, t('common.error') || 'Error');
+                }
+            },
+        });
     }
 };
+
+// Watch for flash messages
+watch(() => page.props.flash?.success, (success) => {
+    if (success) {
+        showSuccess(success, t('common.success') || 'Success');
+    }
+});
 </script>
 

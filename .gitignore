@@ -1,35 +1,191 @@
+# Dependencies
 /vendor/
 node_modules/
-npm-debug.log
-yarn-error.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# Laravel 4 specific
+# Laravel specific
 bootstrap/compiled.php
 app/storage/
-
-# Laravel 5 & Lumen specific
 public/storage
 public/hot
-
-# Laravel 5 & Lumen specific with changed public path
 public_html/storage
 public_html/hot
-
 storage/*.key
+storage/logs/*.log
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+!storage/framework/cache/.gitignore
+!storage/framework/sessions/.gitignore
+!storage/framework/views/.gitignore
+storage/app/*
+!storage/app/.gitignore
+storage/app/public/*
+!storage/app/public/.gitignore
+
+# Environment files
 .env
+.env.*
+!.env.example
 .env.backup
 .env.production
-Homestead.yaml
-Homestead.json
-/.vagrant
+.env.local
+.env.*.local
+
+# Build artifacts
+/public/build
+/public/mix-manifest.json
+/public/hot
+/public/storage
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Cache files
 .phpunit.result.cache
 .phpactor.json
-auth.json
+.cache/
+*.cache
+.parcel-cache/
+.next/
+.nuxt/
+dist/
+build/
+out/
 
-/public/build
-/storage/pail
+# Database
+*.sqlite
+*.sqlite3
+*.db
+database/*.sqlite
+database/*.sqlite-journal
 
-# IDE specific
+# Testing
+.phpunit.cache
+coverage/
+.nyc_output/
+.phpunit.result.cache
+
+# IDE and Editor files
 /.fleet
 /.idea
 /.vscode
+/.vs
+*.swp
+*.swo
+*~
+.DS_Store
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
+*.code-workspace
+
+# OS specific files
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# Docker
+docker-compose.override.yml
+
+# Homestead & Vagrant
+Homestead.yaml
+Homestead.json
+/.vagrant
+Vagrantfile
+
+# Composer
+auth.json
+composer.phar
+
+# NPM/Yarn
+.npm
+.eslintcache
+.stylelintcache
+.yarn-integrity
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+*.orig
+*.save
+
+# Laravel specific additional
+bootstrap/cache/*
+!bootstrap/cache/.gitignore
+.php_cs.cache
+.php_cs.dist.php
+
+# Sail
+docker-compose.override.yml
+
+# Debug files
+*.stackdump
+*.dmp
+*.core
+
+# Archive files (commonly generated)
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+*.gz
+*.bz2

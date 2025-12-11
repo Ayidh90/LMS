@@ -1,18 +1,24 @@
 <template>
     <AdminLayout :page-title="t('admin.create_lesson') || 'Create Lesson'">
         <Head :title="t('admin.create_lesson') || 'Create Lesson'" />
-        <div class="max-w-4xl mx-auto">
+        <div class="max-w-4xl mx-auto min-h-screen pb-8">
             <!-- Page Header -->
-            <div class="mb-8">
-                <div class="flex items-center gap-3 mb-2">
-                    <Link :href="route('admin.courses.lessons.index', course.slug || course.id)" class="text-gray-400 hover:text-gray-600 transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                        </svg>
-                    </Link>
-                    <h1 class="text-2xl font-bold text-gray-900">{{ t('admin.create_lesson') || 'Create Lesson' }}</h1>
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-2xl p-8 shadow-2xl relative overflow-hidden mb-6">
+                <div class="absolute inset-0 bg-black/5"></div>
+                <div class="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -mr-48 -mt-48 blur-3xl"></div>
+                <div class="relative z-10 text-white flex-1">
+                    <div class="flex items-center gap-2 text-sm text-blue-100 mb-3">
+                        <Link :href="route('admin.courses.index')" class="hover:text-white transition-colors font-medium">{{ t('admin.courses_management') || 'Courses' }}</Link>
+                        <span>›</span>
+                        <Link :href="route('admin.courses.show', course.slug || course.id)" class="hover:text-white transition-colors font-medium">{{ course.translated_title || course.title }}</Link>
+                        <span>›</span>
+                        <Link :href="route('admin.courses.lessons.index', course.slug || course.id)" class="hover:text-white transition-colors font-medium">{{ t('lessons.title') || 'Lessons' }}</Link>
+                        <span>›</span>
+                        <span class="text-white font-semibold">{{ t('admin.create_lesson') || 'Create Lesson' }}</span>
+                    </div>
+                    <h1 class="text-4xl font-bold mb-3">{{ t('admin.create_lesson') || 'Create Lesson' }}</h1>
+                    <p class="text-blue-100 text-base">{{ t('admin.create_lesson_description') || 'Create a new lesson for this course' }}</p>
                 </div>
-                <p class="text-gray-500">{{ course.translated_title || course.title }}</p>
             </div>
 
             <!-- Form Card -->
@@ -230,9 +236,12 @@
 </template>
 
 <script setup>
+import { watch } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
+import { useAlert } from '@/composables/useAlert';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 
 const props = defineProps({
@@ -243,6 +252,8 @@ const props = defineProps({
 
 const { t } = useTranslation();
 const { route } = useRoute();
+const { showSuccess, showError } = useAlert();
+const page = usePage();
 
 const form = useForm({
     title: '',
@@ -259,7 +270,26 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.post(route('admin.courses.lessons.store', props.course.slug || props.course.id));
+    form.post(route('admin.courses.lessons.store', props.course.slug || props.course.id), {
+        onSuccess: () => {
+            showSuccess(
+                t('lessons.created_successfully') || page.props.flash?.success || 'Lesson created successfully!',
+                t('common.success') || 'Success'
+            );
+        },
+        onError: (errors) => {
+            if (errors.message) {
+                showError(errors.message, t('common.error') || 'Error');
+            }
+        },
+    });
 };
+
+// Watch for flash messages
+watch(() => page.props.flash?.success, (success) => {
+    if (success) {
+        showSuccess(success, t('common.success') || 'Success');
+    }
+});
 </script>
 

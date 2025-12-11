@@ -2,7 +2,7 @@
     <AdminLayout :page-title="t('admin.create_batch') || 'Create Batch'">
         <Head :title="t('admin.create_batch') || 'Create Batch'" />
         
-        <div class="space-y-6 min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 pb-8">
+        <div class="space-y-6 min-h-screen pb-8">
             <!-- Page Header -->
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-2xl p-8 shadow-2xl relative overflow-hidden">
                 <div class="absolute inset-0 bg-black/5"></div>
@@ -208,10 +208,13 @@
 </template>
 
 <script setup>
+import { watch } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
+import { useAlert } from '@/composables/useAlert';
 
 const props = defineProps({
     course: Object,
@@ -220,6 +223,8 @@ const props = defineProps({
 
 const { t } = useTranslation();
 const { route } = useRoute();
+const { showSuccess, showError } = useAlert();
+const page = usePage();
 
 const form = useForm({
     name: '',
@@ -241,10 +246,25 @@ const getInstructorName = (instructorId) => {
 const submit = () => {
     form.post(route('admin.courses.batches.store', props.course.slug || props.course.id), {
         onSuccess: () => {
-            // Redirect handled by controller
+            showSuccess(
+                t('admin.batch_created_successfully') || page.props.flash?.success || 'Batch created successfully!',
+                t('common.success') || 'Success'
+            );
+        },
+        onError: (errors) => {
+            if (errors.message) {
+                showError(errors.message, t('common.error') || 'Error');
+            }
         },
     });
 };
+
+// Watch for flash messages
+watch(() => page.props.flash?.success, (success) => {
+    if (success) {
+        showSuccess(success, t('common.success') || 'Success');
+    }
+});
 </script>
 
 <style scoped>
