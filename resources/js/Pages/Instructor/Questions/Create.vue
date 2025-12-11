@@ -1,5 +1,6 @@
 <template>
     <AuthenticatedLayout>
+        <Head :title="t('lessons.actions.add_question') || 'Add Question'" />
         <div class="min-h-screen bg-gray-50" :dir="direction">
             <!-- Hero Section -->
             <div class="relative bg-gradient-to-r from-slate-700 to-slate-800 py-12 overflow-hidden">
@@ -314,7 +315,7 @@ import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
 import { useAlert } from '@/composables/useAlert';
 import { usePermissions } from '@/composables/usePermissions';
-import { useForm, usePage, router } from '@inertiajs/vue3';
+import { Head, useForm, usePage, router } from '@inertiajs/vue3';
 import { Link } from '@inertiajs/vue3';
 
 const props = defineProps({

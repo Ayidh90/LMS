@@ -27,6 +27,7 @@ return [
     'next' => 'التالي',
     'previous' => 'السابق',
     'search' => 'بحث',
+    'search_placeholder' => 'ابحث في الدورات...',
     'filter' => 'تصفية',
     'actions' => 'الإجراءات',
     'status' => 'الحالة',
@@ -43,5 +44,12 @@ return [
     'select' => 'اختر',
     'login_required' => 'يرجى تسجيل الدخول للمتابعة',
     'confirm_delete' => 'هل أنت متأكد من حذف هذا العنصر؟',
+    'refresh' => 'تحديث',
+    'export' => 'تصدير',
+    'showing' => 'عرض',
+    'to' => 'إلى',
+    'of' => 'من',
+    'hours' => 'ساعات',
+    'hour' => 'ساعة',
 ];
 

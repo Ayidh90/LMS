@@ -1,3 +1,7 @@
+/* Bootstrap Styles */
+@import 'bootstrap/dist/css/bootstrap.min.css';
+@import 'bootstrap-icons/font/bootstrap-icons.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -127,5 +131,437 @@
 /* Background pattern for hero sections */
 .bg-pattern {
     background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* Bootstrap Custom Styles */
+:root {
+    --bs-primary: #3b82f6;
+    --bs-primary-rgb: 59, 130, 246;
+    --bs-secondary: #6b7280;
+    --bs-success: #10b981;
+    --bs-info: #3b82f6;
+    --bs-warning: #f59e0b;
+    --bs-danger: #ef4444;
+    --bs-light: #f9fafb;
+    --bs-dark: #111827;
+    --bs-border-radius: 0.75rem;
+    --bs-border-radius-sm: 0.5rem;
+    --bs-border-radius-lg: 1rem;
+    --bs-box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --bs-box-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --bs-box-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Bootstrap Button Enhancements */
+.btn {
+    border-radius: var(--bs-border-radius);
+    font-weight: 500;
+    padding: 0.625rem 1.25rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: none;
+    box-shadow: var(--bs-box-shadow-sm);
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--bs-box-shadow);
+}
+
+.btn-primary {
+    background-color: var(--bs-primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #2563eb;
+    color: white;
+}
+
+.btn-secondary {
+    background-color: var(--bs-secondary);
+    color: white;
+}
+
+.btn-success {
+    background-color: var(--bs-success);
+    color: white;
+}
+
+.btn-danger {
+    background-color: var(--bs-danger);
+    color: white;
+}
+
+.btn-outline-primary {
+    border: 2px solid var(--bs-primary);
+    color: var(--bs-primary);
+    background: transparent;
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--bs-primary);
+    color: white;
+}
+
+/* Bootstrap Form Controls */
+.form-control {
+    border-radius: var(--bs-border-radius-sm);
+    border: 1.5px solid #e5e7eb;
+    padding: 0.75rem 1rem;
+    transition: all 0.2s ease;
+}
+
+.form-control:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    outline: none;
+}
+
+.form-select {
+    border-radius: var(--bs-border-radius-sm);
+    border: 1.5px solid #e5e7eb;
+    padding: 0.75rem 1rem;
+    transition: all 0.2s ease;
+}
+
+.form-select:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    outline: none;
+}
+
+/* Bootstrap Card Enhancements */
+.card {
+    border-radius: var(--bs-border-radius-lg);
+    border: 1px solid #e5e7eb;
+    box-shadow: var(--bs-box-shadow-sm);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card:hover {
+    box-shadow: var(--bs-box-shadow-lg);
+}
+
+.card-header {
+    border-bottom: 1px solid #e5e7eb;
+    padding: 1.25rem 1.5rem;
+    background: linear-gradient(to bottom, #f9fafb 0%, #f3f4f6 100%);
+    font-weight: 600;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* Bootstrap Badge Enhancements */
+.badge {
+    padding: 0.375rem 0.75rem;
+    border-radius: var(--bs-border-radius-sm);
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+/* Bootstrap Table Enhancements */
+.table {
+    border-radius: var(--bs-border-radius);
+    overflow: hidden;
+}
+
+.table thead th {
+    background: linear-gradient(to bottom, #f9fafb 0%, #f3f4f6 100%);
+    border-bottom: 2px solid #e5e7eb;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    padding: 1.25rem 1.5rem;
+}
+
+.table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.table tbody tr:hover {
+    background-color: #f9fafb;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.table td {
+    padding: 1.5rem 1.5rem;
+    vertical-align: middle;
+}
+
+/* Bootstrap Alert Enhancements */
+.alert {
+    border-radius: var(--bs-border-radius);
+    border: none;
+    padding: 1rem 1.25rem;
+    box-shadow: var(--bs-box-shadow-sm);
+}
+
+/* Bootstrap Modal Enhancements */
+.modal-content {
+    border-radius: var(--bs-border-radius-lg);
+    border: none;
+    box-shadow: var(--bs-box-shadow-lg);
+}
+
+.modal-header {
+    border-bottom: 1px solid #e5e7eb;
+    padding: 1.5rem;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    border-top: 1px solid #e5e7eb;
+    padding: 1.5rem;
+}
+
+/* Bootstrap Nav Enhancements */
+.nav-link {
+    border-radius: var(--bs-border-radius-sm);
+    padding: 0.5rem 1rem;
+    transition: all 0.2s ease;
+}
+
+.nav-link:hover {
+    background-color: #f3f4f6;
+}
+
+.nav-link.active {
+    background-color: var(--bs-primary);
+    color: white;
+}
+
+/* RTL Support for Bootstrap */
+[dir="rtl"] .btn-group > .btn:not(:first-child),
+[dir="rtl"] .btn-group > .btn:not(:last-child) {
+    border-radius: 0;
+}
+
+[dir="rtl"] .btn-group > .btn:first-child {
+    border-top-left-radius: 0;
+    border-top-right-radius: var(--bs-border-radius);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: var(--bs-border-radius);
+}
+
+[dir="rtl"] .btn-group > .btn:last-child {
+    border-top-right-radius: 0;
+    border-top-left-radius: var(--bs-border-radius);
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: var(--bs-border-radius);
+}
+
+/* Bootstrap and Tailwind Compatibility */
+.btn.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+.btn.btn-lg {
+    padding: 0.875rem 1.75rem;
+    font-size: 1rem;
+}
+
+/* Custom Bootstrap Utilities */
+.shadow-custom {
+    box-shadow: var(--bs-box-shadow);
+}
+
+.shadow-custom-lg {
+    box-shadow: var(--bs-box-shadow-lg);
+}
+
+/* Admin Layout Global Styles */
+html, body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+    min-height: 100vh;
+}
+
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Ensure proper layout structure */
+#app {
+    width: 100%;
+    min-height: 100vh;
+}
+
+/* Admin Layout Wrapper */
+.admin-layout-wrapper {
+    width: 100%;
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-color: #f8f9fa;
+}
+
+/* Prevent horizontal scroll on main content */
+.admin-main-content {
+    overflow-x: hidden;
+}
+
+/* ============================================
+   SIDEBAR POSITIONING
+   Sidebar is always on the RIGHT side
+   ============================================ */
+
+.app-sidebar {
+    right: 0 !important;
+    left: auto !important;
+    border-right: none !important;
+    border-left: 1px solid #dee2e6 !important;
+    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Hidden sidebar - slides to the right */
+.app-sidebar.sidebar-hidden {
+    transform: translateX(100%) !important;
+}
+
+.app-sidebar.sidebar-visible {
+    transform: translateX(0) !important;
+}
+
+/* Desktop: Always visible */
+@media (min-width: 992px) {
+    .app-sidebar.sidebar-hidden {
+        transform: translateX(0) !important;
+    }
+}
+
+/* ============================================
+   MOBILE STYLES
+   ============================================ */
+@media (max-width: 991px) {
+    .app-sidebar {
+        z-index: 1050 !important;
+    }
+}
+
+/* ============================================
+   TABLE STYLES
+   ============================================ */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ============================================
+   FORM CONTROLS
+   ============================================ */
+.form-control,
+.form-select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+/* Better focus states */
+*:focus {
+    outline: none;
+}
+
+*:focus-visible {
+    outline: 2px solid var(--bs-primary);
+    outline-offset: 2px;
+}
+
+/* Smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* ============================================
+   BOOTSTRAP OVERRIDES FOR ADMIN
+   ============================================ */
+.container-fluid {
+    width: 100%;
+    padding-right: 0;
+    padding-left: 0;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+/* ============================================
+   BUTTON STYLES
+   ============================================ */
+
+/* Success Button - Green */
+.btn-success {
+    background-color: #198754 !important;
+    border-color: #198754 !important;
+    color: #ffffff !important;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-success:hover,
+.btn-success:focus {
+    background-color: #157347 !important;
+    border-color: #146c43 !important;
+    color: #ffffff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(25, 135, 84, 0.3);
+}
+
+.btn-success:active {
+    background-color: #146c43 !important;
+    border-color: #13653f !important;
+    transform: translateY(0);
+}
+
+/* Primary Button - Blue */
+.btn-primary {
+    background-color: #0d6efd !important;
+    border-color: #0d6efd !important;
+    color: #ffffff !important;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: #0b5ed7 !important;
+    border-color: #0a58ca !important;
+    color: #ffffff !important;
+}
+
+/* Outline Success Button */
+.btn-outline-success {
+    color: #198754 !important;
+    border-color: #198754 !important;
+    background-color: transparent !important;
+}
+
+.btn-outline-success:hover,
+.btn-outline-success:focus {
+    background-color: #198754 !important;
+    border-color: #198754 !important;
+    color: #ffffff !important;
+}
+
+/* Outline Primary Button */
+.btn-outline-primary {
+    color: #0d6efd !important;
+    border-color: #0d6efd !important;
+    background-color: transparent !important;
+}
+
+.btn-outline-primary:hover,
+.btn-outline-primary:focus {
+    background-color: #0d6efd !important;
+    border-color: #0d6efd !important;
+    color: #ffffff !important;
 }
 

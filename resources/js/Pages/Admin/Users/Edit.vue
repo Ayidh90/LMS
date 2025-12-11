@@ -1,5 +1,6 @@
 <template>
-    <AdminLayout :page-title="t('users.edit')">
+    <AdminLayout :page-title="t('users.edit') || 'Edit User'">
+        <Head :title="t('users.edit') || 'Edit User'" />
         <div class="max-w-3xl mx-auto space-y-6">
             <!-- Page Header -->
             <div class="flex items-center gap-4">
@@ -61,6 +62,26 @@
                         <p v-if="form.errors.email" class="mt-2 text-sm text-red-600">{{ form.errors.email }}</p>
                         </div>
 
+                    <!-- National ID Field -->
+                        <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            {{ t('users.fields.national_id') }} <span class="text-gray-400 text-xs">({{ t('common.optional') }})</span>
+                        </label>
+                        <div class="relative">
+                            <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+                            </svg>
+                            <input
+                                v-model="form.national_id"
+                                type="text"
+                                class="w-full pr-10 pl-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                :class="{ 'border-red-500 focus:ring-red-500': form.errors.national_id }"
+                                :placeholder="t('users.fields.national_id_placeholder') || 'National ID (Optional)'"
+                            />
+                        </div>
+                        <p v-if="form.errors.national_id" class="mt-2 text-sm text-red-600">{{ form.errors.national_id }}</p>
+                        </div>
+
                     <!-- Password Fields -->
                     <div class="p-4 bg-amber-50 border border-amber-200 rounded-xl">
                         <p class="text-sm text-amber-700 mb-4 flex items-center gap-2">
@@ -105,32 +126,33 @@
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                             <label
                                 v-for="role in roles"
-                                :key="role.value"
+                                :key="role.id"
                                 class="relative flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all"
-                                :class="form.role === role.value ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500' : 'border-gray-200 hover:border-gray-300'"
+                                :class="form.role_id === role.id ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500' : 'border-gray-200 hover:border-gray-300'"
                             >
                                 <input
-                                    v-model="form.role"
+                                    v-model="form.role_id"
                                     type="radio"
-                                    :value="role.value"
+                                    :value="role.id"
                                     class="sr-only"
                                 />
-                                <div class="w-10 h-10 rounded-full flex items-center justify-center" :class="role.bgClass">
-                                    <svg class="w-5 h-5" :class="role.iconClass" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="role.icon" />
+                                <div class="w-10 h-10 rounded-full flex items-center justify-center" :class="getRoleColorClass(role.slug)">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                                     </svg>
                                 </div>
-                                <div>
-                                    <p class="font-medium text-gray-900 text-sm">{{ role.label }}</p>
+                                <div class="flex-1">
+                                    <p class="font-medium text-gray-900 text-sm">{{ getRoleName(role) }}</p>
+                                    <p v-if="role.description || role.description_ar" class="text-xs text-gray-500 mt-0.5 line-clamp-1">{{ getRoleDescription(role) }}</p>
                                 </div>
-                                <div v-if="form.role === role.value" class="absolute top-2 left-2">
+                                <div v-if="form.role_id === role.id" class="absolute top-2 left-2">
                                     <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                                     </svg>
                                 </div>
                             </label>
                         </div>
-                        <p v-if="form.errors.role" class="mt-2 text-sm text-red-600">{{ form.errors.role }}</p>
+                        <p v-if="form.errors.role_id || form.errors.role" class="mt-2 text-sm text-red-600">{{ form.errors.role_id || form.errors.role }}</p>
                         </div>
 
                     <!-- Status Toggles -->
@@ -191,59 +213,83 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
-import { Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 
 const props = defineProps({
     user: Object,
+    roles: {
+        type: Array,
+        default: () => [],
+    },
 });
 
-const { t } = useTranslation();
+const { t, locale } = useTranslation();
 const { route } = useRoute();
+
+// Get current user role ID from roles relationship
+const getCurrentRoleId = () => {
+    if (props.user.roles && props.user.roles.length > 0) {
+        return props.user.roles[0].id;
+    }
+    // Fallback: try to find role by slug or name
+    if (props.user.role && props.roles.length > 0) {
+        const foundRole = props.roles.find(r => 
+            r.slug === props.user.role || 
+            r.name === props.user.role ||
+            r.name_ar === props.user.role
+        );
+        return foundRole ? foundRole.id : null;
+    }
+    return null;
+};
 
 const form = useForm({
     name: props.user.name,
     email: props.user.email,
+    national_id: props.user.national_id || '',
     password: '',
     password_confirmation: '',
-    role: props.user.role,
+    role_id: getCurrentRoleId(),
+    role: props.user.role, // Keep for backward compatibility
     is_admin: props.user.is_admin || false,
     is_active: props.user.is_active ?? true,
 });
 
-const roles = computed(() => [
-    {
-        value: 'student',
-        label: t('users.roles.student'),
-        bgClass: 'bg-emerald-100',
-        iconClass: 'text-emerald-600',
-        icon: 'M12 14l9-5-9-5-9 5 9 5z M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z',
-    },
-    {
-        value: 'instructor',
-        label: t('users.roles.instructor'),
-        bgClass: 'bg-blue-100',
-        iconClass: 'text-blue-600',
-        icon: 'M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z',
-    },
-    {
-        value: 'admin',
-        label: t('users.roles.admin'),
-        bgClass: 'bg-red-100',
-        iconClass: 'text-red-600',
-        icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
-    },
-    {
-        value: 'super_admin',
-        label: t('users.roles.super_admin'),
-        bgClass: 'bg-purple-100',
-        iconClass: 'text-purple-600',
-        icon: 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z',
-    },
-]);
+const roles = computed(() => props.roles || []);
+
+// Get role name based on locale
+const getRoleName = (role) => {
+    if (!role) return '';
+    if (locale.value === 'ar' && role.name_ar) {
+        return role.name_ar;
+    }
+    return role.name || '';
+};
+
+// Get role description based on locale
+const getRoleDescription = (role) => {
+    if (!role) return '';
+    if (locale.value === 'ar' && role.description_ar) {
+        return role.description_ar;
+    }
+    return role.description || '';
+};
+
+// Get role color class based on slug
+const getRoleColorClass = (slug) => {
+    const colors = {
+        'super_admin': 'bg-gradient-to-br from-purple-500 to-purple-700',
+        'super-admin': 'bg-gradient-to-br from-purple-500 to-purple-700',
+        'admin': 'bg-gradient-to-br from-red-500 to-red-700',
+        'instructor': 'bg-gradient-to-br from-blue-500 to-blue-700',
+        'student': 'bg-gradient-to-br from-emerald-500 to-emerald-700',
+    };
+    return colors[slug] || 'bg-gradient-to-br from-gray-500 to-gray-700';
+};
 
 const getInitials = (name) => {
     if (!name) return '?';
@@ -251,16 +297,22 @@ const getInitials = (name) => {
 };
 
 const getAvatarColor = (role) => {
-    const colors = {
-        'super_admin': 'bg-gradient-to-br from-purple-500 to-purple-700',
-        'admin': 'bg-gradient-to-br from-red-500 to-red-700',
-        'instructor': 'bg-gradient-to-br from-blue-500 to-blue-700',
-        'student': 'bg-gradient-to-br from-emerald-500 to-emerald-700',
-    };
-    return colors[role] || 'bg-gradient-to-br from-gray-500 to-gray-700';
+    // Try to get from user's roles first
+    if (props.user.roles && props.user.roles.length > 0) {
+        return getRoleColorClass(props.user.roles[0].slug);
+    }
+    // Fallback to legacy role field
+    return getRoleColorClass(role);
 };
 
 const submit = () => {
+    // Set role name/slug for backward compatibility
+    if (form.role_id) {
+        const selectedRole = roles.value.find(r => r.id === form.role_id);
+        if (selectedRole) {
+            form.role = selectedRole.slug || selectedRole.name;
+        }
+    }
     form.put(route('admin.users.update', props.user.id));
 };
 </script>

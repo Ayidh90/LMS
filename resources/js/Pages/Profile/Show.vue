@@ -1,5 +1,6 @@
 <template>
     <component :is="layout">
+        <Head :title="user?.name || t('profile.title') || 'Profile'" />
         <div class="min-h-screen bg-slate-100" :dir="direction">
             <!-- Top Bar -->
             <div class="bg-slate-800 text-white py-2 text-sm">
@@ -319,7 +320,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { useDirection } from '@/composables/useDirection';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
-import { Link, useForm, usePage, router } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage, router } from '@inertiajs/vue3';
 
 const props = defineProps({
     user: Object,

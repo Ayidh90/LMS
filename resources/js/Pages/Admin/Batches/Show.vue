@@ -1,6 +1,6 @@
 <template>
-    <AdminLayout :page-title="batch?.name || t('admin.batch_details')">
-        <Head :title="batch?.name || t('admin.batch_details')" />
+    <AdminLayout :page-title="batch?.name || t('admin.batch_details') || 'Batch Details'">
+        <Head :title="batch?.name || t('admin.batch_details') || 'Batch Details'" />
         
         <div class="space-y-6 min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 pb-8">
             <!-- Page Header -->

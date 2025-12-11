@@ -121,7 +121,8 @@ class RoleService
      */
     public function getUsersWithRole(Role $role)
     {
-        return $role->users()->paginate(15);
+        // Use Spatie's role scope to get users with this role
+        return User::role($role->name)->get()->toArray();
     }
 }
 

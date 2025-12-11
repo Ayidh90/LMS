@@ -1,5 +1,6 @@
 <template>
-    <AdminLayout :page-title="t('admin.sections_management')">
+    <AdminLayout :page-title="t('admin.sections_management') || 'Sections Management'">
+        <Head :title="t('admin.sections_management') || 'Sections Management'" />
         <div class="space-y-6">
             <!-- Page Header -->
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -226,7 +227,7 @@ import { ref } from 'vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
-import { Link, useForm, router } from '@inertiajs/vue3';
+import { Head, Link, useForm, router } from '@inertiajs/vue3';
 
 const props = defineProps({
     course: Object,

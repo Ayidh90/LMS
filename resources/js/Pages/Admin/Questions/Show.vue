@@ -1,5 +1,6 @@
 <template>
-    <AdminLayout :page-title="t('questions.view')">
+    <AdminLayout :page-title="t('questions.view') || 'Question Details'">
+        <Head :title="t('questions.view') || 'Question Details'" />
         <div class="max-w-4xl mx-auto">
             <!-- Page Header -->
             <div class="mb-8">
@@ -98,7 +99,7 @@
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
-import { Link } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 
 defineProps({
     course: Object,

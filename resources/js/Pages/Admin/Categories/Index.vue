@@ -1,5 +1,6 @@
 <template>
-    <AdminLayout :page-title="t('categories.title')">
+    <AdminLayout :page-title="t('categories.title') || 'Categories'">
+        <Head :title="t('categories.title') || 'Categories'" />
         <div class="space-y-6">
             <!-- Page Header -->
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -19,7 +20,7 @@
             </div>
 
             <!-- Categories Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div v-if="categories?.data && categories.data.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div
                     v-for="category in categories.data"
                     :key="category.id"
@@ -83,32 +84,30 @@
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- Empty State -->
-                <div v-if="categories.data.length === 0" class="col-span-full">
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
-                        <div class="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                            </svg>
-                        </div>
-                        <h3 class="text-lg font-medium text-gray-900 mb-2">{{ t('categories.no_categories') || 'No categories found' }}</h3>
-                        <p class="text-gray-500 mb-6">{{ t('categories.no_categories_description') || 'Get started by creating your first category' }}</p>
-                        <Link
-                            :href="route('admin.categories.create')"
-                            class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium transition-colors"
-                        >
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
-                            {{ t('categories.create') || 'Create Category' }}
-                        </Link>
-                    </div>
+            <!-- Empty State -->
+            <div v-else class="bg-white rounded-xl shadow-sm border border-gray-100 p-12 text-center">
+                <div class="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
                 </div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">{{ t('categories.no_categories') || 'No categories found' }}</h3>
+                <p class="text-gray-500 mb-6">{{ t('categories.no_categories_description') || 'Get started by creating your first category' }}</p>
+                <Link
+                    :href="route('admin.categories.create')"
+                    class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium transition-colors"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    {{ t('categories.create') || 'Create Category' }}
+                </Link>
             </div>
 
             <!-- Pagination -->
-            <div v-if="categories.links && categories.links.length > 3" class="bg-white rounded-xl shadow-sm border border-gray-100 px-6 py-4">
+            <div v-if="categories?.links && categories.links.length > 3" class="bg-white rounded-xl shadow-sm border border-gray-100 px-6 py-4">
                 <nav class="flex items-center justify-between">
                     <div class="text-sm text-gray-600">
                         {{ t('common.showing') }} <span class="font-medium">{{ categories.from }}</span> {{ t('common.to') }} <span class="font-medium">{{ categories.to }}</span> {{ t('common.of') }} <span class="font-medium">{{ categories.total }}</span>
@@ -187,7 +186,7 @@ import { ref } from 'vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
-import { Link, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 
 defineProps({
     categories: Object,

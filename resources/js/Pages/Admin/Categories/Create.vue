@@ -1,5 +1,6 @@
 <template>
-    <AdminLayout :page-title="t('categories.create')">
+    <AdminLayout :page-title="t('categories.create') || 'Create Category'">
+        <Head :title="t('categories.create') || 'Create Category'" />
         <div class="max-w-3xl mx-auto space-y-6">
             <!-- Page Header -->
             <div class="flex items-center gap-4">
@@ -169,7 +170,7 @@
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
-import { Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 
 const { t } = useTranslation();
 const { route } = useRoute();

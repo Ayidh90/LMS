@@ -1,5 +1,6 @@
 <template>
-    <AdminLayout :page-title="t('admin.activity_logs')">
+    <AdminLayout :page-title="t('admin.activity_logs') || 'Activity Logs'">
+        <Head :title="t('admin.activity_logs') || 'Activity Logs'" />
         <div class="space-y-6">
             <!-- Page Header -->
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -108,7 +109,7 @@ import { ref } from 'vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
-import { router } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 
 defineProps({
     activities: {

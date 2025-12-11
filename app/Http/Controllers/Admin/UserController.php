@@ -6,11 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreUserRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Models\User;
+use Modules\Roles\Services\RoleService;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
+    public function __construct(
+        private RoleService $roleService
+    ) {}
+
     public function index()
     {
         $users = User::with('roles')
@@ -24,7 +29,11 @@ class UserController extends Controller
 
     public function create()
     {
-        return Inertia::render('Admin/Users/Create');
+        $roles = $this->roleService->getAllRoles();
+
+        return Inertia::render('Admin/Users/Create', [
+            'roles' => $roles ? $roles->toArray() : [],
+        ]);
     }
 
     public function store(StoreUserRequest $request)
@@ -36,10 +45,24 @@ class UserController extends Controller
             'email' => $validated['email'],
             'national_id' => $validated['national_id'] ?? null,
             'password' => Hash::make($validated['password']),
-            'role' => $validated['role'],
-            'is_admin' => $validated['is_admin'] ?? in_array($validated['role'], ['admin', 'super_admin']),
-            'is_active' => true,
+            'role' => $validated['role'], // Keep for backward compatibility
+            'is_admin' => $validated['is_admin'] ?? false,
+            'is_active' => $validated['is_active'] ?? true,
         ]);
+
+        // Assign role using Spatie Permission
+        if (!empty($validated['role_id'])) {
+            $role = $this->roleService->getRoleById($validated['role_id']);
+            $this->roleService->assignRoleToUser($user, $role);
+        } elseif (!empty($validated['role'])) {
+            // Fallback: try to find role by name or slug
+            $role = \Modules\Roles\Models\Role::where('name', $validated['role'])
+                ->orWhere('slug', $validated['role'])
+                ->first();
+            if ($role) {
+                $this->roleService->assignRoleToUser($user, $role);
+            }
+        }
 
         return redirect()->route('admin.users.index')
             ->with('success', __('messages.users.created_successfully'));
@@ -47,8 +70,14 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
+        $roles = $this->roleService->getAllRoles();
+        
+        // Load user roles for display
+        $user->load('roles');
+
         return Inertia::render('Admin/Users/Edit', [
             'user' => $user,
+            'roles' => $roles ? $roles->toArray() : [],
         ]);
     }
 
@@ -59,9 +88,9 @@ class UserController extends Controller
         $updateData = [
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'national_id' => $validated['national_id'] ?? $user->national_id,
-            'role' => $validated['role'],
-            'is_admin' => $validated['is_admin'] ?? in_array($validated['role'], ['admin', 'super_admin']),
+            'national_id' => $validated['national_id'] ?? null, // Allow clearing national_id
+            'role' => $validated['role'] ?? $user->role, // Keep for backward compatibility
+            'is_admin' => $validated['is_admin'] ?? $user->is_admin,
             'is_active' => $validated['is_active'] ?? $user->is_active,
         ];
 
@@ -70,6 +99,20 @@ class UserController extends Controller
         }
 
         $user->update($updateData);
+
+        // Update role using Spatie Permission
+        if (!empty($validated['role_id'])) {
+            $role = $this->roleService->getRoleById($validated['role_id']);
+            $user->syncRoles([$role]);
+        } elseif (!empty($validated['role'])) {
+            // Fallback: try to find role by name or slug
+            $role = \Modules\Roles\Models\Role::where('name', $validated['role'])
+                ->orWhere('slug', $validated['role'])
+                ->first();
+            if ($role) {
+                $user->syncRoles([$role]);
+            }
+        }
 
         return redirect()->route('admin.users.index')
             ->with('success', __('messages.users.updated_successfully'));

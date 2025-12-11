@@ -27,6 +27,7 @@ return [
     'next' => 'Next',
     'previous' => 'Previous',
     'search' => 'Search',
+    'search_placeholder' => 'Search courses...',
     'filter' => 'Filter',
     'actions' => 'Actions',
     'status' => 'Status',
@@ -43,5 +44,12 @@ return [
     'select' => 'Select',
     'login_required' => 'Please login to continue',
     'confirm_delete' => 'Are you sure you want to delete this item?',
+    'refresh' => 'Refresh',
+    'export' => 'Export',
+    'showing' => 'Showing',
+    'to' => 'to',
+    'of' => 'of',
+    'hours' => 'hours',
+    'hour' => 'hour',
 ];
 

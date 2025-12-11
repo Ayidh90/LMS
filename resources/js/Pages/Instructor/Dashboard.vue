@@ -1,5 +1,6 @@
 <template>
     <AuthenticatedLayout>
+        <Head :title="t('instructor.dashboard') || 'Instructor Dashboard'" />
         <div class="min-h-screen bg-gray-50" :dir="direction">
             <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
                 <div class="px-4 py-6 sm:px-0">
@@ -97,7 +98,7 @@ import { useDirection } from '@/composables/useDirection';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
 import { usePermissions } from '@/composables/usePermissions';
-import { Link, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { onMounted } from 'vue';
 
 defineProps({

@@ -19,7 +19,8 @@ class StoreUserRequest extends FormRequest
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'national_id' => ['nullable', 'string', 'max:255', 'unique:users,national_id'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'role' => ['required', 'string', 'in:admin,super_admin,instructor,student'],
+            'role_id' => ['required', 'exists:roles,id'],
+            'role' => ['nullable', 'string'], // Keep for backward compatibility, will be set from role_id
             'is_admin' => ['nullable', 'boolean'],
             'is_active' => ['nullable', 'boolean'],
         ];

@@ -1,5 +1,6 @@
 <template>
-    <AdminLayout :page-title="t('roles.edit')" :dir="direction">
+    <AdminLayout :page-title="t('roles.edit') || 'Edit Role'" :dir="direction">
+        <Head :title="t('roles.edit') || 'Edit Role'" />
         <div class="space-y-6 min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 pb-8">
             <!-- Page Header -->
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl p-6 shadow-xl">
@@ -218,7 +219,7 @@
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
-import { Link, useForm, usePage } from '@inertiajs/vue3';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
 const props = defineProps({

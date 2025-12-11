@@ -1,80 +1,68 @@
 <template>
     <div
         id="kt_app_sidebar"
-        class="app-sidebar flex flex-col fixed top-0 right-0 h-full bg-white z-50 transition-all duration-300"
+        class="app-sidebar d-flex flex-column position-fixed top-0 h-100 bg-white"
         :class="{ 
-            'w-[260px]': !minimized, 
-            'w-[75px]': minimized, 
-            'translate-x-full': !mobileOpen, 
-            'translate-x-0': mobileOpen,
-            'lg:translate-x-0': true,
-            'lg:flex': true,
-            'flex': mobileOpen
+            'sidebar-expanded': !minimized, 
+            'sidebar-minimized': minimized, 
+            'sidebar-hidden': !mobileOpen, 
+            'sidebar-visible': mobileOpen
         }"
+        :style="{ width: minimized ? '75px' : '260px' }"
     >
-        <!-- Header Section -->
-        <div class="app-sidebar-header px-4 py-4 border-b border-gray-100 relative">
-            <!-- Toggle Button (Top Left) -->
+        <!-- Header Section - Bootstrap Style -->
+        <div class="app-sidebar-header p-3 border-bottom position-relative bg-white">
+            <!-- Sidebar Title -->
+            <div v-if="!minimized" class="sidebar-title-wrapper mb-3 position-relative">
+                <h5 class="sidebar-title text-dark fw-bold mb-0 d-flex align-items-center gap-2">
+                   
+                    <span class="sidebar-title-text">{{ websiteName }}</span>
+                </h5>
+            </div>
+            
+            <!-- Toggle Button -->
             <button
                 id="kt_app_sidebar_toggle"
                 @click.stop="handleToggleMinimize"
                 @keydown.enter.prevent.stop="handleToggleMinimize"
                 @keydown.space.prevent.stop="handleToggleMinimize"
                 type="button"
-                class="app-sidebar-toggle h-8 w-8 absolute top-2 left-2 cursor-pointer hidden lg:flex items-center justify-center rounded-lg bg-gray-50 border border-gray-200 shadow-sm hover:bg-gray-100 hover:border-gray-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 z-50"
+                class="btn btn-sm position-absolute sidebar-toggle-btn d-none d-lg-flex align-items-center justify-content-center"
                 :class="{ 
-                    'rotate-180': minimized,
-                    'opacity-0 pointer-events-none': typeof window !== 'undefined' && window.innerWidth < 1024
+                    'sidebar-toggle-minimized': minimized,
+                    'sidebar-toggle-expanded': !minimized
                 }"
                 :title="minimized ? t('common.expand') : t('common.collapse')"
                 :aria-label="minimized ? t('common.expand') : t('common.collapse')"
                 :aria-expanded="!minimized"
-                :disabled="false"
+                style="width: 32px; height: 32px; z-index: 50; transition: all 0.3s ease;"
             >
-                <svg 
-                    class="w-4 h-4 text-gray-600 transition-transform duration-200" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24" 
-                    aria-hidden="true"
-                >
-                    <path 
-                        stroke-linecap="round" 
-                        stroke-linejoin="round" 
-                        stroke-width="2.5" 
-                        d="M9 5l7 7-7 7" 
-                    />
-                </svg>
+                <i class="bi sidebar-toggle-icon text-secondary" :class="minimized ? 'bi-chevron-left' : 'bi-chevron-right'"></i>
             </button>
             
-            <!-- Title -->
-            <!-- <h2 v-if="!minimized" class="text-lg font-bold text-gray-900 mb-4 pr-10">
-                {{ t('admin.dashboard') || 'لوحة تحكم المسؤول' }}
-            </h2> -->
-            
-            <!-- User Info Card -->
-            <div v-if="!minimized" class="user-info-card bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-                <div class="flex items-center gap-3">
-                    <div class="relative flex-shrink-0">
-                        <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md">
+            <!-- User Info Card - Bootstrap Style -->
+            <div v-if="!minimized" class="user-info-card">
+                <div class="d-flex align-items-center gap-3 p-2 rounded">
+                    <div class="position-relative flex-shrink-0">
+                        <div class="bg-primary bg-gradient rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm" style="width: 48px; height: 48px; font-size: 1rem;">
                             {{ getUserInitials() }}
                         </div>
-                        <span class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full"></span>
+                        <span class="position-absolute bottom-0 end-0 translate-middle bg-success border-2 border-white rounded-circle" style="width: 14px; height: 14px;"></span>
                     </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-sm text-gray-500 mb-1">{{ t('admin.welcome_back') }}</p>
-                        <p class="text-sm font-semibold text-gray-900 truncate">{{ userName }}</p>
+                    <div class="flex-grow-1 min-w-0">
+                        <p class="text-muted small mb-0" style="font-size: 0.75rem;">{{ t('admin.welcome_back') }}</p>
+                        <p class="small fw-semibold text-dark text-truncate mb-0" style="font-size: 0.875rem;">{{ userName }}</p>
                     </div>
                 </div>
             </div>
             
-            <!-- Minimized Avatar -->
-            <div v-else class="flex justify-center">
-                <div class="relative">
-                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-md">
+            <!-- Minimized Avatar - Bootstrap Style -->
+            <div v-else class="d-flex justify-content-center pt-2">
+                <div class="position-relative">
+                    <div class="bg-primary bg-gradient rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm" style="width: 40px; height: 40px; font-size: 0.875rem;">
                         {{ getUserInitials() }}
                     </div>
-                    <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>
+                    <span class="position-absolute bottom-0 end-0 translate-middle bg-success border-2 border-white rounded-circle" style="width: 10px; height: 10px;"></span>
                 </div>
             </div>
         </div>
@@ -109,24 +97,21 @@
             </button>
         </div>
 
-        <!-- Sidebar Menu -->
-        <div class="app-sidebar-menu flex-1 overflow-hidden">
+        <!-- Sidebar Menu - Bootstrap Style -->
+        <div class="app-sidebar-menu flex-grow-1 overflow-hidden">
             <div
                 id="kt_app_sidebar_menu_wrapper"
-                class="app-sidebar-wrapper py-4 overflow-y-auto h-full px-3"
+                class="app-sidebar-wrapper py-3 overflow-y-auto h-100 px-2"
             >
-                <div
-                    class="menu menu-column"
-                    id="kt_app_sidebar_menu"
-                >
+                <nav class="menu" id="kt_app_sidebar_menu">
                     <template v-for="(item, index) in menuItems" :key="index">
-                        <div v-if="item" class="menu-item">
+                        <div v-if="item">
                             <!-- Section Label -->
                             <div
                                 v-if="item && item.title && !item.icon && !item.route && hasPermission(item)"
-                                class="menu-section-label px-4 py-3"
+                                class="menu-section-label px-3 py-2"
                             >
-                                <span v-if="!minimized" class="text-gray-500 text-xs font-semibold uppercase tracking-wider">
+                                <span v-if="!minimized" class="text-muted small fw-semibold text-uppercase">
                                     {{ item.title }}
                                 </span>
                             </div>
@@ -136,7 +121,7 @@
                                 v-else-if="item.icon === 'separator' && shouldShowSeparator(index)"
                                 class="menu-separator my-2"
                             >
-                                <div class="h-px bg-gray-100"></div>
+                                <hr class="my-0">
                             </div>
 
                             <!-- Main menu items -->
@@ -152,30 +137,26 @@
                                 <a
                                     v-if="hasChildren(item)"
                                     href="#"
-                                    class="menu-link flex items-center px-4 py-3 text-gray-700 rounded-lg transition-all duration-200 cursor-pointer group mb-1"
+                                    class="menu-link d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1"
                                     :class="{
-                                        'bg-blue-50 text-blue-600': checkRoute(item),
-                                        'hover:bg-gray-50': !checkRoute(item),
+                                        'bg-primary bg-opacity-10 text-primary': checkRoute(item),
+                                        'text-dark': !checkRoute(item),
                                     }"
                                     @click.prevent="toggleSubmenu(index)"
                                 >
-                                    <span class="menu-icon mr-3 flex-shrink-0 flex items-center justify-center w-5 h-5">
-                                        <svg v-if="item.icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" :d="getIconPath(item.icon)" />
-                                        </svg>
+                                    <span class="menu-icon me-3 flex-shrink-0 d-flex align-items-center justify-content-center" style="width: 20px; height: 20px;">
+                                        <i v-if="item.icon" :class="getBootstrapIcon(item.icon)" class="fs-6"></i>
                                     </span>
-                                    <span v-if="!minimized" class="menu-title font-medium text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">
+                                    <span v-if="!minimized" class="menu-title fw-medium small flex-grow-1 text-nowrap text-truncate">
                                         {{ item.title }}
                                     </span>
-                                    <span v-if="item.count && !minimized" class="menu-badge ml-2">
-                                        <span class="bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full font-medium">
+                                    <span v-if="item.count && !minimized" class="menu-badge ms-2">
+                                        <span class="badge bg-primary">
                                             {{ item.count }}
                                         </span>
                                     </span>
-                                    <span v-if="hasChildren(item) && !minimized" class="menu-arrow ml-2">
-                                        <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': openSubmenus[index] }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                        </svg>
+                                    <span v-if="hasChildren(item) && !minimized" class="menu-arrow ms-2">
+                                        <i class="bi bi-chevron-down small" :class="{ 'rotate-180': openSubmenus[index] }"></i>
                                     </span>
                                 </a>
                                 
@@ -183,23 +164,21 @@
                                 <Link
                                     v-else-if="item?.route"
                                     :href="safeRoute(item.route, item.routeParams || {})"
-                                    class="menu-link flex items-center px-4 py-3 text-gray-700 rounded-lg transition-all duration-200 cursor-pointer group mb-1"
+                                    class="menu-link d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1"
                                     :class="{
-                                        'bg-blue-50 text-blue-600': checkRoute(item),
-                                        'hover:bg-gray-50': !checkRoute(item),
+                                        'bg-primary bg-opacity-10 text-primary': checkRoute(item),
+                                        'text-dark': !checkRoute(item),
                                     }"
                                     @click="handleMenuItemClick"
                                 >
-                                    <span class="menu-icon mr-3 flex-shrink-0 flex items-center justify-center w-5 h-5">
-                                        <svg v-if="item.icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round" :d="getIconPath(item.icon)" />
-                                        </svg>
+                                    <span class="menu-icon me-3 flex-shrink-0 d-flex align-items-center justify-content-center" style="width: 20px; height: 20px;">
+                                        <i v-if="item.icon" :class="getBootstrapIcon(item.icon)" class="fs-6"></i>
                                     </span>
-                                    <span v-if="!minimized" class="menu-title font-medium text-sm flex-1 whitespace-nowrap overflow-hidden text-ellipsis">
+                                    <span v-if="!minimized" class="menu-title fw-medium small flex-grow-1 text-nowrap text-truncate">
                                         {{ item.title }}
                                     </span>
-                                    <span v-if="item.count && !minimized" class="menu-badge ml-2">
-                                        <span class="bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full font-medium">
+                                    <span v-if="item.count && !minimized" class="menu-badge ms-2">
+                                        <span class="badge bg-primary">
                                             {{ item.count }}
                                         </span>
                                     </span>
@@ -208,37 +187,38 @@
                                 <!-- Submenu -->
                                 <div
                                     v-if="hasChildren(item) && (openSubmenus[index] || item.show || checkRoute(item))"
-                                    class="menu-sub mt-1 mr-4"
+                                    class="menu-sub mt-1 ms-4"
                                 >
                                     <template v-for="(subItem, subIndex) in item.children" :key="subIndex">
                                         <div v-if="hasPermission(subItem)" class="menu-item">
                                             <Link
                                                 v-if="subItem && subItem.route"
-                                                class="menu-link flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200"
+                                                class="menu-link d-flex align-items-center px-3 py-2 small text-decoration-none rounded"
                                                 :class="{
-                                                    'bg-blue-50 text-blue-600': safeRouteCurrent(subItem.route, subItem.routeParams || {}),
-                                                    'text-gray-600 hover:bg-gray-50': !safeRouteCurrent(subItem.route, subItem.routeParams || {}),
+                                                    'bg-primary bg-opacity-10 text-primary': safeRouteCurrent(subItem.route, subItem.routeParams || {}),
+                                                    'text-muted': !safeRouteCurrent(subItem.route, subItem.routeParams || {}),
                                                 }"
                                                 :href="subItem?.route ? safeRoute(subItem.route, subItem.routeParams || {}) : '#'"
                                                 @click="typeof window !== 'undefined' && window.innerWidth < 1024 ? closeMobile() : null"
                                             >
-                                                <span class="menu-bullet mr-3 flex items-center justify-center">
-                                                    <span class="w-1.5 h-1.5 bg-gray-400 rounded-full"></span>
+                                                <span class="menu-bullet me-3 d-flex align-items-center justify-content-center">
+                                                    <i class="bi bi-circle-fill" style="font-size: 0.375rem;"></i>
                                                 </span>
-                                                <span class="menu-title font-medium flex-1">
+                                                <span class="menu-title fw-medium flex-grow-1">
                                                     {{ subItem.title }}
                                                 </span>
                                                 <span
                                                     v-if="subItem.count || subItem.count === null"
-                                                    class="menu-badge ml-2"
+                                                    class="menu-badge ms-2"
                                                 >
                                                     <span
                                                         v-if="subItem.count === null"
-                                                        class="w-2 h-2 bg-blue-600 rounded-full animate-pulse"
+                                                        class="badge bg-primary rounded-pill"
+                                                        style="width: 8px; height: 8px; padding: 0;"
                                                     ></span>
                                                     <span
                                                         v-else
-                                                        class="bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full font-medium"
+                                                        class="badge bg-primary"
                                                     >{{ subItem.count }}</span>
                                                 </span>
                                             </Link>
@@ -248,16 +228,17 @@
                             </div>
                         </div>
                     </template>
-                </div>
+                </nav>
             </div>
         </div>
     </div>
 
-    <!-- Mobile Overlay -->
+    <!-- Mobile Overlay - Bootstrap Style -->
     <div
         v-if="mobileOpen"
         @click="closeMobile"
-        class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden transition-opacity duration-300"
+        class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 z-40 d-lg-none"
+        style="transition: opacity 0.3s;"
     ></div>
 </template>
 
@@ -330,6 +311,11 @@ const getUserInitials = () => {
     if (!name) return 'AU';
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 };
+
+// Website name from settings
+const websiteName = computed(() => {
+    return page.props?.settings?.website?.name || t('admin.dashboard') || 'لوحة تحكم المسؤول';
+});
 
 // Get injected values from AdminLayout (with fallback)
 const sidebarMinimized = inject('sidebarMinimized', ref(false));
@@ -408,27 +394,27 @@ const handleLogoError = (event) => {
     event.target.style.display = 'none';
 };
 
-// Icon paths mapping
-const iconPaths = {
-    'chart-simple-3': 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
-    'plus-circle': 'M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z',
-    'briefcase': 'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
-    'people': 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z',
-    'file-up': 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
-    'shield-cross': 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',
-    'file-down': 'M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
-    'abstract-30': 'M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z',
-    'setting-4': 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z',
-    'map': 'M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7',
-    'document': 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
-    'category': 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10',
-    'key-square': 'M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z',
-    'text-circle': 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
-    'check-circle': 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
+// Bootstrap Icons mapping
+const bootstrapIcons = {
+    'chart-simple-3': 'bi-graph-up',
+    'plus-circle': 'bi-plus-circle',
+    'briefcase': 'bi-briefcase',
+    'people': 'bi-people',
+    'file-up': 'bi-file-earmark-arrow-up',
+    'shield-cross': 'bi-shield-check',
+    'file-down': 'bi-file-earmark-arrow-down',
+    'abstract-30': 'bi-grid-3x3',
+    'setting-4': 'bi-gear',
+    'map': 'bi-map',
+    'document': 'bi-file-earmark-text',
+    'category': 'bi-folder',
+    'key-square': 'bi-key',
+    'text-circle': 'bi-file-text',
+    'check-circle': 'bi-check-circle',
 };
 
-const getIconPath = (iconName) => {
-    return iconPaths[iconName] || iconPaths['chart-simple-3'];
+const getBootstrapIcon = (iconName) => {
+    return bootstrapIcons[iconName] || bootstrapIcons['chart-simple-3'];
 };
 
 const menuItems = computed(() => {
@@ -751,10 +737,13 @@ watch(() => page.url, () => {
 });
 
 // Handle window resize to ensure toggle button works correctly
+const isMobile = ref(false);
+
 const handleResize = () => {
     if (typeof window !== 'undefined') {
+        isMobile.value = window.innerWidth < 1024;
         // On mobile, ensure sidebar is closed if window resizes to mobile size
-        if (window.innerWidth < 1024 && mobileSidebarOpen && typeof mobileSidebarOpen.value !== 'undefined') {
+        if (isMobile.value && mobileSidebarOpen && typeof mobileSidebarOpen.value !== 'undefined') {
             mobileSidebarOpen.value = false;
             document.body.style.overflow = '';
         }
@@ -775,6 +764,7 @@ onMounted(() => {
     document.addEventListener('click', handleClickOutside);
     // Handle window resize
     if (typeof window !== 'undefined') {
+        isMobile.value = window.innerWidth < 1024;
         window.addEventListener('resize', handleResize);
     }
     // Close sidebar on escape key
@@ -795,41 +785,30 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* Font Family */
-.app-sidebar,
-.app-sidebar * {
-    font-family: 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-}
-
 .app-sidebar {
     transition: width 0.3s ease, transform 0.3s ease;
     background: #ffffff;
-    border-left: 1px solid #e5e7eb;
-    box-shadow: -1px 0 3px rgba(0, 0, 0, 0.05);
     height: 100vh;
     overflow-y: auto;
     overflow-x: hidden;
+    z-index: 1040;
+}
+
+.sidebar-expanded {
+    width: 260px;
+}
+
+.sidebar-minimized {
+    width: 75px;
 }
 
 /* Mobile Styles */
-@media (max-width: 1023px) {
+@media (max-width: 991px) {
     .app-sidebar {
         width: 280px !important;
         max-width: 85vw;
         box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
         z-index: 50;
-    }
-    
-    .app-sidebar.translate-x-full {
-        transform: translateX(100%);
-    }
-    
-    .app-sidebar.translate-x-0 {
-        transform: translateX(0);
-    }
-    
-    .app-sidebar-logo {
-        padding: 1rem;
     }
     
     .menu-link {
@@ -841,12 +820,6 @@ onUnmounted(() => {
     .menu-icon {
         width: 1.5rem;
         height: 1.5rem;
-        flex-shrink: 0;
-    }
-    
-    .menu-icon svg {
-        width: 1.25rem;
-        height: 1.25rem;
     }
     
     .menu-title {
@@ -859,27 +832,9 @@ onUnmounted(() => {
     }
 }
 
-/* Tablet Styles */
-@media (min-width: 768px) and (max-width: 1023px) {
-    .app-sidebar {
-        width: 240px !important;
-    }
-}
-
-/* Desktop Styles */
-@media (min-width: 1024px) {
-    .app-sidebar {
-        width: 260px;
-    }
-    
-    .app-sidebar.w-\[75px\] {
-        width: 75px;
-    }
-}
-
 .app-sidebar-header {
     background: #ffffff;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid #dee2e6;
 }
 
 .user-info-card {
@@ -887,76 +842,101 @@ onUnmounted(() => {
 }
 
 .user-info-card:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
 }
 
-.app-sidebar-logo {
-    background: #ffffff;
-    border-bottom: 1px solid #e5e7eb;
+.sidebar-toggle-btn {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid #e9ecef;
+    background: #f8f9fa;
+    color: #6c757d;
+    padding: 0;
 }
 
-.app-sidebar-toggle {
-    background: #ffffff;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-    font-family: 'Figtree', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    position: absolute;
-    top: 0.5rem;
-    left: 0.5rem;
-    z-index: 50;
-}
-
-.app-sidebar-toggle:hover {
-    background: #f9fafb;
-    border-color: #d1d5db;
+.sidebar-toggle-btn:hover {
+    background: #e9ecef;
+    border-color: #dee2e6;
+    color: #495057;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-toggle-expanded:hover {
     transform: scale(1.05);
 }
 
-.app-sidebar-toggle:active {
-    transform: scale(0.95);
-}
-
-.app-sidebar-toggle:focus {
-    outline: none;
-    ring: 2px;
-    ring-color: #2563eb;
-    ring-offset: 2px;
-}
-
-.app-sidebar-toggle:focus-visible {
-    outline: 2px solid #2563eb;
-    outline-offset: 2px;
-}
-
-.app-sidebar-toggle:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    pointer-events: none;
-}
-
-.app-sidebar-toggle svg {
-    pointer-events: none;
-    transition: transform 0.2s ease;
-}
-
-.app-sidebar-toggle.rotate-180 svg {
-    transform: rotate(180deg);
-}
-
-/* Minimized state - toggle button centered */
-.app-sidebar.w-\[75px\] .app-sidebar-toggle {
-    left: 50%;
-    transform: translateX(-50%);
-    top: 0.5rem;
-}
-
-.app-sidebar.w-\[75px\] .app-sidebar-toggle:hover {
+.sidebar-toggle-minimized:hover {
     transform: translateX(-50%) scale(1.05);
 }
 
-.app-sidebar.w-\[75px\] .app-sidebar-toggle:active {
+.sidebar-toggle-btn:active {
+    background: #dee2e6;
+}
+
+.sidebar-toggle-expanded:active {
+    transform: scale(0.95);
+}
+
+.sidebar-toggle-minimized:active {
     transform: translateX(-50%) scale(0.95);
+}
+
+.sidebar-toggle-btn:focus {
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    outline: none;
+}
+
+.sidebar-toggle-expanded {
+    top: 0.5rem;
+    left: 0.5rem;
+}
+
+.sidebar-toggle-minimized {
+    top: 0.5rem;
+    left: 50% !important;
+    transform: translateX(-50%);
+}
+
+.sidebar-toggle-icon {
+    transition: transform 0.3s ease;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.sidebar-title-wrapper {
+    padding-right: 40px;
+}
+
+.sidebar-title {
+    font-size: 0.95rem;
+    line-height: 1.4;
+    transition: all 0.2s ease;
+}
+
+.sidebar-title-icon {
+    color: #0d6efd;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    transition: transform 0.2s ease;
+}
+
+.sidebar-title-wrapper:hover .sidebar-title-icon {
+    transform: scale(1.1);
+}
+
+.sidebar-title-text {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.user-info-card {
+    transition: all 0.2s ease;
+}
+
+.user-info-card:hover {
+    background-color: #f8f9fa;
 }
 
 .menu-link {
@@ -965,37 +945,37 @@ onUnmounted(() => {
 }
 
 .menu-link:hover {
-    background: #f3f4f6;
+    background-color: #f8f9fa !important;
 }
 
-.menu-link.bg-blue-50 {
-    background: #eff6ff !important;
-    color: #2563eb !important;
+.menu-link.bg-primary {
+    background-color: rgba(13, 110, 253, 0.1) !important;
+    color: #0d6efd !important;
     font-weight: 500;
 }
 
-.menu-link.bg-blue-50::before {
+.menu-link.bg-primary::before {
     content: '';
     position: absolute;
     right: 0;
     top: 0;
     bottom: 0;
     width: 3px;
-    background: #2563eb;
+    background: #0d6efd;
     border-radius: 0 3px 3px 0;
 }
 
 .menu-icon {
     transition: color 0.2s ease;
-    color: #6b7280;
+    color: #6c757d;
 }
 
 .menu-link:hover .menu-icon {
-    color: #2563eb;
+    color: #0d6efd;
 }
 
-.menu-link.bg-blue-50 .menu-icon {
-    color: #2563eb;
+.menu-link.bg-primary .menu-icon {
+    color: #0d6efd;
 }
 
 .menu-title {
@@ -1031,19 +1011,17 @@ onUnmounted(() => {
     }
 }
 
-.menu-sub .menu-link {
-    position: relative;
-}
-
-.menu-sub .menu-link.bg-blue-50 .menu-bullet span {
-    background: #2563eb;
-    width: 6px;
-    height: 6px;
+.menu-sub .menu-link.bg-primary .menu-bullet i {
+    color: #0d6efd;
 }
 
 .menu-arrow {
     transition: transform 0.2s ease;
     flex-shrink: 0;
+}
+
+.menu-arrow.rotate-180 {
+    transform: rotate(180deg);
 }
 
 .app-sidebar-wrapper {
@@ -1069,58 +1047,35 @@ onUnmounted(() => {
 }
 
 /* Minimized state */
-.app-sidebar.w-\[75px\] .menu-link {
-    justify-content: center;
+.sidebar-minimized .menu-link {
+    justify-content: center !important;
     padding: 0.75rem !important;
 }
 
-.app-sidebar.w-\[75px\] .menu-title,
-.app-sidebar.w-\[75px\] .menu-badge,
-.app-sidebar.w-\[75px\] .menu-arrow,
-.app-sidebar.w-\[75px\] .menu-section-label span {
+.sidebar-minimized .menu-title,
+.sidebar-minimized .menu-badge,
+.sidebar-minimized .menu-arrow,
+.sidebar-minimized .menu-section-label span {
     display: none !important;
 }
 
-.app-sidebar.w-\[75px\] .menu-icon {
+.sidebar-minimized .menu-icon {
     margin-right: 0 !important;
 }
 
-.app-sidebar.w-\[75px\] .menu-sub {
+.sidebar-minimized .menu-sub {
     display: none !important;
 }
 
-.app-sidebar.w-\[75px\] .app-sidebar-logo {
-    padding: 1rem 0.5rem;
-    justify-content: center;
-}
-
-.app-sidebar.w-\[75px\] .app-sidebar-logo img {
-    margin: 0 auto;
-}
-
-.app-sidebar.w-\[75px\] .menu-separator {
+.sidebar-minimized .menu-separator {
     margin: 0.25rem 0;
 }
 
-/* Active route indicator */
-.menu-link.bg-blue-50 {
-    position: relative;
-}
-
-/* Mobile overlay enhancement */
-.fixed.inset-0.bg-black {
-    backdrop-filter: blur(2px);
-}
-
 /* Small Mobile Styles */
-@media (max-width: 640px) {
+@media (max-width: 575px) {
     .app-sidebar {
         width: 260px !important;
         max-width: 90vw;
-    }
-    
-    .app-sidebar-logo {
-        padding: 0.75rem 1rem;
     }
     
     .menu-link {
@@ -1134,11 +1089,6 @@ onUnmounted(() => {
         height: 1.25rem;
     }
     
-    .menu-icon svg {
-        width: 1rem;
-        height: 1rem;
-    }
-    
     .menu-title {
         font-size: 0.875rem;
     }
@@ -1147,11 +1097,6 @@ onUnmounted(() => {
         padding: 0.625rem 0.75rem !important;
         font-size: 0.8125rem;
         min-height: 40px;
-    }
-    
-    .menu-content span.text-gray-500 {
-        font-size: 0.625rem;
-        padding: 0.375rem 0;
     }
 }
 

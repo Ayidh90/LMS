@@ -1,6 +1,6 @@
 <template>
-    <AdminLayout :page-title="role?.name || t('roles.title')">
-        <Head :title="role?.name || t('roles.title')" />
+    <AdminLayout :page-title="role?.name || t('roles.title') || 'Role Details'">
+        <Head :title="role?.name || t('roles.title') || 'Role Details'" />
         
         <div class="space-y-6 min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 pb-8" :dir="direction">
             <!-- Page Header -->

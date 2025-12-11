@@ -1,5 +1,6 @@
 <template>
-    <AdminLayout :page-title="lesson.title">
+    <AdminLayout :page-title="lesson.translated_title || lesson.title || 'Lesson Details'">
+        <Head :title="lesson.translated_title || lesson.title || 'Lesson Details'" />
         <div class="max-w-6xl mx-auto">
             <!-- Page Header -->
             <div class="mb-8">
@@ -10,8 +11,8 @@
                         </svg>
                     </Link>
                     <div class="flex-1">
-                        <h1 class="text-2xl font-bold text-gray-900">{{ lesson.title }}</h1>
-                        <p class="text-sm text-gray-500">{{ course.title }}</p>
+                        <h1 class="text-2xl font-bold text-gray-900">{{ lesson.translated_title || lesson.title }}</h1>
+                        <p class="text-sm text-gray-500">{{ course.translated_title || course.title }}</p>
                     </div>
                     <Link
                         :href="route('admin.courses.lessons.edit', [course.slug || course.id, lesson.id])"
@@ -105,7 +106,7 @@
                                     </div>
                                     <div>
                                         <span class="text-gray-500">{{ t('lessons.fields.section') || 'Section' }}</span>
-                                        <p class="font-semibold text-gray-900">{{ lesson.section?.title || '-' }}</p>
+                                        <p class="font-semibold text-gray-900">{{ lesson.section?.translated_title || lesson.section?.title || '-' }}</p>
                                     </div>
                                     <div>
                                         <span class="text-gray-500">{{ t('questions.title') || 'Questions' }}</span>
@@ -116,9 +117,9 @@
                         </div>
                     </div>
                     
-                    <div v-if="lesson.description" class="px-6 py-4 border-t border-gray-100 bg-gray-50/50">
+                    <div v-if="lesson.translated_description || lesson.description" class="px-6 py-4 border-t border-gray-100 bg-gray-50/50">
                         <h4 class="text-sm font-medium text-gray-700 mb-2">{{ t('lessons.fields.description') || 'Description' }}</h4>
-                        <p class="text-gray-600">{{ lesson.description }}</p>
+                        <p class="text-gray-600">{{ lesson.translated_description || lesson.description }}</p>
                     </div>
                     
                     <div v-if="lesson.video_url" class="px-6 py-4 border-t border-gray-100">
@@ -315,7 +316,7 @@
                                         </span>
                                         <span class="text-xs text-gray-500">{{ question.points }} {{ t('questions.points') || 'pts' }}</span>
                                     </div>
-                                    <p class="text-gray-900">{{ question.question }}</p>
+                                    <p class="text-gray-900">{{ question.translated_question || question.question }}</p>
                                 </div>
                                 <Link
                                     :href="route('admin.courses.lessons.questions.edit', [course.slug || course.id, lesson.id, question.id])"
@@ -348,7 +349,7 @@ import { ref, computed, onMounted } from 'vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
-import { Link, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 
 const props = defineProps({
     course: Object,

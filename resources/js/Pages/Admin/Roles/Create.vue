@@ -1,5 +1,6 @@
 <template>
-    <AdminLayout :page-title="t('roles.create')">
+    <AdminLayout :page-title="t('roles.create') || 'Create Role'">
+        <Head :title="t('roles.create') || 'Create Role'" />
         <div class="max-w-4xl mx-auto space-y-6">
             <!-- Page Header -->
             <div class="flex items-center gap-4">
@@ -170,7 +171,7 @@
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
-import { Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 
 defineProps({
     permissions: Array,

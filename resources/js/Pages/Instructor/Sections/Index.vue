@@ -1,5 +1,6 @@
 <template>
     <AuthenticatedLayout>
+        <Head :title="t('sections.title') || 'Course Sections'" />
         <div class="min-h-screen bg-gray-50" :dir="direction">
             <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
                 <div class="px-4 py-6 sm:px-0">
@@ -231,7 +232,7 @@ import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
 import { useAlert } from '@/composables/useAlert';
 import { usePermissions } from '@/composables/usePermissions';
-import { Link, usePage, router } from '@inertiajs/vue3';
+import { Head, Link, usePage, router } from '@inertiajs/vue3';
 
 const props = defineProps({
     course: Object,

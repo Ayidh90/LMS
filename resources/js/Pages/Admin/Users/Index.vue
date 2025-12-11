@@ -1,5 +1,6 @@
 <template>
-    <AdminLayout :page-title="t('admin.users')">
+    <AdminLayout :page-title="t('admin.users') || 'Users'">
+        <Head :title="t('admin.users') || 'Users'" />
         <div class="space-y-6">
             <!-- Page Header -->
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -216,7 +217,7 @@ import { ref } from 'vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
-import { Link, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 
 defineProps({
     users: Object,

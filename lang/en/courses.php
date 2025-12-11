@@ -28,6 +28,8 @@ return [
         'advanced' => 'Advanced',
     ],
     
+    'all_levels' => 'All Levels',
+    
     'validation' => [
         'title_required' => 'Course title is required',
         'level_required' => 'Course level is required',
@@ -53,9 +55,19 @@ return [
     ],
     
     'status' => [
+        'title' => 'Status',
         'published' => 'Published',
         'draft' => 'Draft',
     ],
+    
+    'all_status' => 'All Status',
+    
+    'no_courses' => 'No courses found',
+    'no_courses_description' => 'Get started by creating your first course',
+    
+    'confirm_delete' => 'Are you sure you want to delete this course? This action cannot be undone.',
+    'delete_title' => 'Delete Course',
+    'delete_error' => 'Failed to delete course',
     
     'instructor' => 'Instructor',
     'instructor_dashboard' => 'Instructor Dashboard',

@@ -83,6 +83,13 @@ class CourseRepository
 
         // Instructor filter - already handled above
 
+        // Add enrollments count through batches using subquery
+        $query->addSelect([
+            'enrollments_count' => \App\Models\Enrollment::selectRaw('COALESCE(COUNT(*), 0)')
+                ->join('batches', 'enrollments.batch_id', '=', 'batches.id')
+                ->whereColumn('batches.course_id', 'courses.id')
+        ]);
+
         // Sort
         $sortBy = $filters['sort'] ?? 'newest';
         switch ($sortBy) {

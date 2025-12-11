@@ -1,5 +1,6 @@
 <template>
-    <AdminLayout :page-title="t('admin.create_lesson')">
+    <AdminLayout :page-title="t('admin.create_lesson') || 'Create Lesson'">
+        <Head :title="t('admin.create_lesson') || 'Create Lesson'" />
         <div class="max-w-4xl mx-auto">
             <!-- Page Header -->
             <div class="mb-8">
@@ -11,7 +12,7 @@
                     </Link>
                     <h1 class="text-2xl font-bold text-gray-900">{{ t('admin.create_lesson') || 'Create Lesson' }}</h1>
                 </div>
-                <p class="text-gray-500">{{ course.title }}</p>
+                <p class="text-gray-500">{{ course.translated_title || course.title }}</p>
             </div>
 
             <!-- Form Card -->
@@ -87,7 +88,7 @@
                                 >
                                     <option value="">{{ t('lessons.no_section') || 'No Section' }}</option>
                                     <option v-for="section in sections" :key="section.id" :value="section.id">
-                                        {{ section.title }}
+                                        {{ section.translated_title || section.title }}
                                     </option>
                                 </select>
                             </div>
@@ -232,7 +233,7 @@
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
-import { Link, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 
 const props = defineProps({
     course: Object,

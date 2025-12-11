@@ -1,5 +1,6 @@
 <template>
     <component :is="layout">
+        <Head :title="lesson?.translated_title || lesson?.title || course?.translated_title || course?.title || t('courses.player') || 'Course Player'" />
         <div class="min-h-screen bg-slate-100" :dir="direction">
             <!-- Top Bar -->
             <div class="bg-slate-800 text-white py-2 text-sm">
@@ -837,7 +838,7 @@ import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
 import { useAlert } from '@/composables/useAlert';
 import { usePermissions } from '@/composables/usePermissions';
-import { Link, usePage, router } from '@inertiajs/vue3';
+import { Head, Link, usePage, router } from '@inertiajs/vue3';
 
 const props = defineProps({
     course: Object,

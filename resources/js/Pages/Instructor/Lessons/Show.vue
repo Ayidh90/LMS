@@ -1,5 +1,6 @@
 <template>
     <AuthenticatedLayout>
+        <Head :title="lesson.translated_title || lesson.title || t('lessons.title') || 'Lesson Details'" />
         <div class="min-h-screen bg-gray-50" :dir="direction">
             <!-- Hero Section -->
             <div class="relative bg-gradient-to-r from-slate-700 to-slate-800 py-16 overflow-hidden">
@@ -476,7 +477,7 @@ import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
 import { useAlert } from '@/composables/useAlert';
 import { usePermissions } from '@/composables/usePermissions';
-import { Link, usePage, router } from '@inertiajs/vue3';
+import { Head, Link, usePage, router } from '@inertiajs/vue3';
 
 const props = defineProps({
     course: Object,

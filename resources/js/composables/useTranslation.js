@@ -36,6 +36,7 @@ const translations = {
                 intermediate: 'Intermediate',
                 advanced: 'Advanced',
             },
+            all_levels: 'All Levels',
             actions: {
                 view: 'View',
                 edit: 'Edit',
@@ -51,10 +52,7 @@ const translations = {
                 to_view: 'to View',
             },
             batches: 'Batches',
-            status: {
-                published: 'Published',
-                draft: 'Draft',
-            },
+            all_status: 'All Status',
             filters: {
                 upcoming: 'Upcoming',
                 free: 'Free',
@@ -307,7 +305,7 @@ const translations = {
                 update: 'Update',
                 cancel: 'Cancel',
                 back: 'Back to Course',
-                manage: 'Manage Sections',
+                manage: 'Manage Chapters',
             },
             no_sections: 'No sections yet.',
             no_lessons: 'No lessons in this section',
@@ -587,20 +585,27 @@ const translations = {
             save_website_settings: 'Save Website Settings',
             course_details: 'Course Details',
             course_full_details: 'View complete course information and statistics',
+            edit_course: 'Edit Course',
             total_students: 'Total Students',
             total_lessons: 'Total Lessons',
             total_batches: 'Total Batches',
+            total_questions: 'Total Questions',
             course_content: 'Course Content',
-            manage_sections: 'Manage Sections',
+            course_content_description: 'Manage sections, lessons, and questions',
+            manage_course_content_description: 'Manage course content and structure',
+            manage_sections: 'Manage Chapters',
             lessons: 'lessons',
             no_sections: 'No sections added yet',
             quick_actions: 'Quick Actions',
             add_section: 'Add Section',
             add_lesson: 'Add Lesson',
+            add_question: 'Add Question',
+            view_questions: 'View Questions',
+            manage_lessons: 'Manage Lessons',
             manage_batches: 'Manage Batches',
             batches: 'Batches',
             instructor: 'Instructor',
-            quick_actions: 'Quick Actions',
+            enrollments: 'Enrollments',
             currency: 'SAR',
             hours: 'hours',
             batches_management: 'Batches Management',
@@ -635,7 +640,7 @@ const translations = {
             back_to_course: 'Back to Course',
             create_section: 'Create Section',
             create_section_description: 'Create a new section for this course',
-            sections_management: 'Sections Management',
+            sections_management: 'Chapters Management',
             basic_information: 'Basic Information',
             description: 'Description',
             students: 'students',
@@ -797,6 +802,7 @@ const translations = {
             actions: 'Actions',
             language_english: 'English',
             language_arabic: 'العربية',
+            current_language: 'Current Language',
             choose_thumbnail: 'Choose thumbnail',
         },
     },
@@ -808,6 +814,8 @@ const translations = {
             edit: 'تعديل الدورة',
             free: 'مجاني',
             hours: 'ساعات',
+            no_courses: 'لم يتم العثور على دورات',
+            all_status: 'جميع الحالات',
             fields: {
                 title: 'العنوان',
                 title_ar: 'العنوان (عربي)',
@@ -827,6 +835,7 @@ const translations = {
                 intermediate: 'متوسط',
                 advanced: 'متقدم',
             },
+            all_levels: 'جميع المستويات',
             actions: {
                 view: 'عرض',
                 edit: 'تعديل',
@@ -844,6 +853,7 @@ const translations = {
             batches: 'الدفعات',
             my_courses: 'دوراتي',
             status: {
+                title: 'الحالة',
                 published: 'منشور',
                 draft: 'مسودة',
             },
@@ -1088,7 +1098,7 @@ const translations = {
                 update: 'تحديث',
                 cancel: 'إلغاء',
                 back: 'رجوع للدورة',
-                manage: 'إدارة الأقسام',
+                manage: 'إدارة الفصول',
             },
             no_sections: 'لا توجد أقسام بعد.',
             no_lessons: 'لا توجد دروس في هذا القسم',
@@ -1138,6 +1148,7 @@ const translations = {
             search_placeholder: 'البحث في الدورات...',
             language_english: 'English',
             language_arabic: 'العربية',
+            current_language: 'اللغة الحالية',
             choose_thumbnail: 'اختر صورة مصغرة',
         },
         auth: {
@@ -1285,6 +1296,7 @@ const translations = {
         admin: {
             dashboard: 'لوحة تحكم المسؤول',
             courses_management: 'إدارة الدورات',
+            courses_description: 'إدارة جميع الدورات في النظام',
             create_course: 'إنشاء دورة',
             view_courses: 'عرض الدورات',
             users_management: 'إدارة المستخدمين',
@@ -1367,20 +1379,30 @@ const translations = {
             allow_create_questions: 'السماح بإنشاء الأسئلة',
             allow_create_questions_description: 'يمكن للمدربين إنشاء وإدارة أسئلة الدرس',
             course_details: 'تفاصيل الدورة',
+            course_details: 'تفاصيل الدورة',
             course_full_details: 'عرض معلومات وإحصائيات الدورة الكاملة',
+            edit_course: 'تعديل الدورة',
             total_students: 'إجمالي الطلاب',
             total_lessons: 'إجمالي الدروس',
             total_batches: 'إجمالي الدفعات',
+            total_questions: 'إجمالي الأسئلة',
             course_content: 'محتوى الدورة',
-            manage_sections: 'إدارة الأقسام',
+            course_content_description: 'إدارة الأقسام والدروس والأسئلة',
+            manage_course_content_description: 'إدارة محتوى وهيكل الدورة',
+            manage_sections: 'إدارة الفصول',
             lessons: 'دروس',
             no_sections: 'لم تتم إضافة أقسام بعد',
             quick_actions: 'إجراءات سريعة',
             add_section: 'إضافة قسم',
             add_lesson: 'إضافة درس',
+            add_question: 'إضافة سؤال',
+            view_questions: 'عرض الأسئلة',
+            manage_lessons: 'إدارة الدروس',
             manage_batches: 'إدارة الدفعات',
             batches: 'الدفعات',
+            batches_description: 'إدارة دفعات الدورة وتسجيلات الطلاب',
             instructor: 'المدرب',
+            enrollments: 'التسجيلات',
             currency: 'ريال',
             hours: 'ساعات',
             days: {
@@ -1461,18 +1483,25 @@ export function useTranslation() {
         const keys = key.split('.');
         let value = translations[locale.value];
         
+        if (!value) {
+            return undefined;
+        }
+        
         for (const k of keys) {
-            value = value?.[k];
+            if (value && typeof value === 'object' && k in value) {
+                value = value[k];
+            } else {
+                return undefined;
+            }
         }
 
-        if (!value) {
-            return key;
+        // If translation not found or not a string, return undefined so fallback can be used
+        if (!value || typeof value !== 'string') {
+            return undefined;
         }
 
         // Replace parameters
-        return typeof value === 'string' 
-            ? value.replace(/\{(\w+)\}/g, (match, param) => params[param] || match)
-            : value;
+        return value.replace(/\{(\w+)\}/g, (match, param) => params[param] || match);
     };
 
     const setLocale = (newLocale) => {

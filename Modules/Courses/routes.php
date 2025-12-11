@@ -33,7 +33,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/courses', [AdminCourseController::class, 'index'])->middleware('permission:courses.view-all')->name('courses.index');
     Route::get('/courses/create', [AdminCourseController::class, 'create'])->middleware('permission:courses.create')->name('courses.create');
     Route::post('/courses', [AdminCourseController::class, 'store'])->middleware('permission:courses.create')->name('courses.store');
-    Route::get('/courses/{course}', [AdminCourseController::class, 'show'])->middleware('permission:courses.view-all')->name('courses.show');
     Route::get('/courses/{course}/edit', [AdminCourseController::class, 'edit'])->middleware('permission:courses.edit')->name('courses.edit');
     Route::put('/courses/{course}', [AdminCourseController::class, 'update'])->middleware('permission:courses.edit')->name('courses.update');
     Route::delete('/courses/{course}', [AdminCourseController::class, 'destroy'])->middleware('permission:courses.delete')->name('courses.destroy');
@@ -85,6 +84,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
             Route::post('/questions/reorder', [AdminQuestionController::class, 'reorder'])->middleware('permission:questions.edit')->name('questions.reorder');
         });
     });
+    
+    // Show route must be after nested routes to avoid conflicts
+    Route::get('/courses/{course}', [AdminCourseController::class, 'show'])->middleware('permission:courses.view-all')->name('courses.show');
 });
 
 // ============================================

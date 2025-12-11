@@ -28,6 +28,8 @@ return [
         'advanced' => 'متقدم',
     ],
     
+    'all_levels' => 'جميع المستويات',
+    
     'validation' => [
         'title_required' => 'عنوان الدورة مطلوب',
         'level_required' => 'مستوى الدورة مطلوب',
@@ -53,9 +55,19 @@ return [
     ],
     
     'status' => [
+        'title' => 'الحالة',
         'published' => 'منشور',
         'draft' => 'مسودة',
     ],
+    
+    'all_status' => 'جميع الحالات',
+    
+    'no_courses' => 'لم يتم العثور على دورات',
+    'no_courses_description' => 'ابدأ بإنشاء دورتك الأولى',
+    
+    'confirm_delete' => 'هل أنت متأكد أنك تريد حذف هذه الدورة؟ لا يمكن التراجع عن هذا الإجراء.',
+    'delete_title' => 'حذف الدورة',
+    'delete_error' => 'فشل في حذف الدورة',
     
     'instructor' => 'المدرب',
     'instructor_dashboard' => 'لوحة تحكم المدرب',

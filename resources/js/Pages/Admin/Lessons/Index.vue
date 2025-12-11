@@ -1,5 +1,6 @@
 <template>
-    <AdminLayout :page-title="t('admin.lessons_management')">
+    <AdminLayout :page-title="t('admin.lessons_management') || 'Lessons Management'">
+        <Head :title="t('admin.lessons_management') || 'Lessons Management'" />
         <div class="space-y-6">
             <!-- Page Header -->
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -11,7 +12,7 @@
                     </Link>
                     <div>
                         <h1 class="text-2xl font-bold text-gray-900">{{ t('admin.lessons_management') || 'Lessons' }}</h1>
-                        <p class="text-sm text-gray-500">{{ course.title }}</p>
+                        <p class="text-sm text-gray-500">{{ course.translated_title || course.title }}</p>
                     </div>
                 </div>
                 <Link
@@ -34,7 +35,7 @@
                 >
                     <option value="">{{ t('lessons.all_sections') || 'All Sections' }}</option>
                     <option v-for="section in sections" :key="section.id" :value="section.id">
-                        {{ section.title }}
+                        {{ section.translated_title || section.title }}
                     </option>
                 </select>
             </div>
@@ -84,7 +85,7 @@
                                             </svg>
                                         </div>
                                         <div>
-                                            <div class="text-sm font-semibold text-gray-900">{{ lesson.title }}</div>
+                                            <div class="text-sm font-semibold text-gray-900">{{ lesson.translated_title || lesson.title }}</div>
                                             <div v-if="lesson.is_free" class="text-xs text-emerald-600 font-medium">{{ t('lessons.free') || 'Free' }}</div>
                                         </div>
                                     </div>
@@ -95,7 +96,7 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                                    {{ lesson.section?.title || '-' }}
+                                    {{ lesson.section?.translated_title || lesson.section?.title || '-' }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                                     {{ lesson.duration_minutes ? `${lesson.duration_minutes} ${t('common.minutes') || 'min'}` : '-' }}
@@ -189,7 +190,7 @@ import { ref, computed } from 'vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
-import { Link, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 
 const props = defineProps({
     course: Object,

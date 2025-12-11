@@ -75,7 +75,7 @@ class RoleController extends Controller
 
         return Inertia::render('Admin/Roles/Show', [
             'role' => $role ? $role->toArray() : null,
-            'users' => $users,
+            'users' => $users ?: [],
             'permissions' => $permissions ? $permissions->toArray() : [],
         ]);
     }
