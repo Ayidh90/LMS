@@ -22,6 +22,8 @@ class Lesson extends Model
         'content',
         'content_ar',
         'video_url',
+        'live_meeting_date',
+        'live_meeting_link',
         'order',
         'duration_minutes',
         'is_free',
@@ -39,6 +41,7 @@ class Lesson extends Model
             'order' => 'integer',
             'duration_minutes' => 'integer',
             'is_free' => 'boolean',
+            'live_meeting_date' => 'datetime',
         ];
     }
 

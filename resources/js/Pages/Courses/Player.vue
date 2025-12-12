@@ -36,7 +36,7 @@
                         </nav>
 
                         <!-- Video Player (only show if lesson has video) -->
-                        <div v-if="lesson?.video_url" class="bg-black rounded-xl overflow-hidden mb-6" style="aspect-ratio: 16/9;">
+                        <div v-if="lesson?.video_url && lesson?.type !== 'live'" class="bg-black rounded-xl overflow-hidden mb-6" style="aspect-ratio: 16/9;">
                             <div v-if="isUploadedVideo" class="w-full h-full">
                                 <!-- Uploaded video file -->
                                 <video
@@ -58,6 +58,53 @@
                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                     allowfullscreen
                                 ></iframe>
+                            </div>
+                        </div>
+                        
+                        <!-- Live Meeting Section -->
+                        <div v-if="lesson && lesson.type === 'live'" class="bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-xl p-6 mb-6 shadow-lg">
+                            <div class="flex items-start gap-4">
+                                <div class="flex-shrink-0">
+                                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center shadow-md">
+                                        <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div class="flex-1">
+                                    <h3 class="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                                        <i class="bi bi-camera-video text-red-600"></i>
+                                        {{ t('lessons.types.live') || 'Live Meeting' }}
+                                    </h3>
+                                    <div v-if="lesson.live_meeting_date" class="mb-4">
+                                        <p class="text-sm text-gray-600 mb-1 flex items-center gap-2">
+                                            <i class="bi bi-calendar-event"></i>
+                                            {{ t('lessons.live.meeting_date') || 'Meeting Date & Time' }}:
+                                        </p>
+                                        <p class="text-lg font-semibold text-gray-900">
+                                            {{ formatDateTime(lesson.live_meeting_date) }}
+                                        </p>
+                                    </div>
+                                    <div v-if="lesson.live_meeting_link" class="mt-4">
+                                        <a
+                                            :href="lesson.live_meeting_link"
+                                            target="_blank"
+                                            @click="handleLiveMeetingClick"
+                                            class="inline-flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 font-semibold transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+                                        >
+                                            <i class="bi bi-camera-video me-2"></i>
+                                            {{ t('lessons.live.join_meeting') || 'Join Live Meeting' }}
+                                            <i class="bi bi-box-arrow-up-right ms-2"></i>
+                                        </a>
+                                        <p class="text-xs text-gray-500 mt-2 break-all">{{ lesson.live_meeting_link }}</p>
+                                    </div>
+                                    <div v-else class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                        <p class="text-sm text-yellow-800 flex items-center gap-2">
+                                            <i class="bi bi-info-circle"></i>
+                                            {{ t('lessons.live.meeting_link_generated') || 'Meeting link will be generated automatically' }}
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         
@@ -1036,6 +1083,67 @@ const formatDate = (date) => {
     return new Date(date).toLocaleString();
 };
 
+const formatDateTime = (dateTime) => {
+    if (!dateTime) return '';
+    
+    try {
+        const dateString = String(dateTime);
+        let date;
+        
+        // Check if the date string has timezone info (Z, +, or - after position 10)
+        const hasTimezone = dateString.includes('Z') || 
+                           dateString.match(/[+-]\d{2}:\d{2}$/) ||
+                           (dateString.includes('T') && dateString.length > 16);
+        
+        if (hasTimezone) {
+            // Laravel returns dates in UTC format (e.g., "2025-12-12T15:15:00.000000Z")
+            // The database stores the time correctly, but Laravel serializes it as UTC
+            // We need to parse it and display the UTC time directly (not convert to local)
+            // This matches what was stored in the database
+            const utcDate = new Date(dateString);
+            
+            // Use UTC methods to get the time that matches the database
+            // This prevents adding timezone offset
+            const year = utcDate.getUTCFullYear();
+            const month = utcDate.getUTCMonth();
+            const day = utcDate.getUTCDate();
+            const hours = utcDate.getUTCHours();
+            const minutes = utcDate.getUTCMinutes();
+            
+            // Create a date object with UTC values but display as local format
+            // This ensures we show the same time as stored in database
+            date = new Date(year, month, day, hours, minutes);
+        } else {
+            // No timezone info - treat as local time (what was stored)
+            // Parse date components directly
+            const match = dateString.match(/^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2})(?::(\d{2}))?)?/);
+            if (match) {
+                const [, year, month, day, hour = '00', minute = '00'] = match;
+                // Create date in local timezone (no UTC conversion)
+                date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hour), parseInt(minute));
+            } else {
+                date = new Date(dateString);
+            }
+        }
+        
+        if (isNaN(date.getTime())) {
+            return '';
+        }
+        
+        // Format the date in local time
+    return date.toLocaleString(undefined, {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+    } catch (e) {
+        console.error('Error formatting date:', e);
+        return '';
+    }
+};
+
 const getAnswerClass = (answer, question) => {
     if (!question.user_answer) {
         return 'border-gray-200 bg-gray-50';
@@ -1397,6 +1505,47 @@ const onVideoTimeUpdate = () => {
         if ((!props.lesson?.questions || props.lesson.questions.length === 0) && !props.lesson?.completed) {
             markLessonCompleted();
         }
+    }
+};
+
+// Handle live meeting link click - mark attendance
+const handleLiveMeetingClick = async (event) => {
+    if (!isStudent.value || !props.lesson || props.lesson.type !== 'live') {
+        return; // Let the link open normally
+    }
+    
+    // Prevent default to handle the click first
+    event.preventDefault();
+    
+    try {
+        const response = await fetch(route('lessons.complete', {
+            course: props.course.slug || props.course.id,
+            lesson: props.lesson.id,
+        }), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+            },
+            body: JSON.stringify({}),
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Open the meeting link in a new tab
+            window.open(props.lesson.live_meeting_link, '_blank');
+            
+            // Reload to update progress and attendance
+            router.reload({ only: ['lesson', 'course', 'lessons', 'sections', 'studentProgress', 'studentAttendance'] });
+        } else {
+            // If marking failed, still open the link
+            window.open(props.lesson.live_meeting_link, '_blank');
+        }
+    } catch (error) {
+        console.error('Error marking live lesson attendance:', error);
+        // If error, still open the link
+        window.open(props.lesson.live_meeting_link, '_blank');
     }
 };
 

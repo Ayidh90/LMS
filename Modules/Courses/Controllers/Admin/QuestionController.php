@@ -60,12 +60,7 @@ class QuestionController extends Controller
             'order' => $data['order'] ?? null,
         ], $data['answers'] ?? []);
 
-        // If request wants to stay on same page (from modal), return back to course show
-        if ($request->header('X-Inertia')) {
-            return redirect()->route('admin.courses.show', $course)
-                ->with('success', __('Question created successfully.'));
-        }
-
+        // Always redirect back to questions index page to stay on same page
         return redirect()->route('admin.courses.lessons.questions.index', [$course, $lesson])
             ->with('success', __('Question created successfully.'));
     }
@@ -118,12 +113,7 @@ class QuestionController extends Controller
             'order' => $data['order'] ?? $question->order,
         ], $data['answers'] ?? []);
 
-        // If request wants to stay on same page (from modal), return back to course show
-        if ($request->header('X-Inertia')) {
-            return redirect()->route('admin.courses.show', $course)
-                ->with('success', __('Question updated successfully.'));
-        }
-
+        // Always redirect back to questions index page to stay on same page
         return redirect()->route('admin.courses.lessons.questions.index', [$course, $lesson])
             ->with('success', __('Question updated successfully.'));
     }

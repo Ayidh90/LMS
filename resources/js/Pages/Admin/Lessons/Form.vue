@@ -1,10 +1,10 @@
 <template>
     <Teleport to="body">
-        <div v-if="show" class="fixed inset-0 z-50 overflow-y-auto">
+        <div v-if="show" class="fixed inset-0 z-50 overflow-y-auto" :dir="direction">
             <div class="flex min-h-screen items-center justify-center p-4">
                 <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" @click="$emit('close')"></div>
                 <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-4xl p-6 transform transition-all max-h-[90vh] overflow-y-auto">
-                    <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center justify-between mb-6" :class="direction === 'rtl' ? 'flex-row-reverse' : ''">
                         <h3 class="text-2xl font-bold text-gray-900">
                             {{ isEdit ? (t('admin.edit_lesson') || 'Edit Lesson') : (t('admin.add_lesson') || 'Add Lesson') }}
                         </h3>
@@ -47,6 +47,7 @@
                                     v-model="formData.type"
                                     class="form-select"
                                     :class="{ 'border-red-500': errors.type }"
+                                    @change="handleTypeChange"
                                 >
                                     <option value="">{{ t('common.select') || 'Select' }}</option>
                                     <option v-for="type in lessonTypes" :key="type.value" :value="type.value">
@@ -65,7 +66,7 @@
                                 >
                                     <option :value="null">{{ t('lessons.no_section') || 'No Section' }}</option>
                                     <option v-for="section in sections" :key="section.id" :value="section.id">
-                                        {{ section.title }}
+                                        {{ section.translated_title || section.title }}
                                     </option>
                                 </select>
                             </div>
@@ -91,6 +92,7 @@
                                     type="number"
                                     min="0"
                                     class="form-input"
+                                    @blur="formData.duration_minutes = formData.duration_minutes || 0"
                                 />
                             </div>
                         </div>
@@ -104,6 +106,71 @@
                                 class="form-input"
                                 :placeholder="t('lessons.placeholders.video_url') || 'https://...'"
                             />
+                        </div>
+                        <div v-if="formData.type === 'live'" class="space-y-5">
+                            <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4" :dir="direction">
+                                <div class="flex items-start gap-3" :class="direction === 'rtl' ? 'flex-row-reverse' : ''">
+                                    <i class="bi bi-info-circle text-blue-600 text-xl mt-0.5 flex-shrink-0"></i>
+                                    <div class="flex-1">
+                                        <p class="text-sm font-semibold text-blue-900 mb-1">
+                                            {{ t('lessons.live.info_title') || 'Live Lesson Requirements' }}
+                                        </p>
+                                        <p class="text-xs text-blue-700">
+                                            {{ t('lessons.live.info_message') || 'Please provide the meeting date and time. A meeting link will be auto-generated if not provided.' }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                        {{ t('lessons.live.meeting_date') || t('lessons.fields.live_meeting_date') || 'Meeting Date & Time' }} <span class="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        ref="liveMeetingDateInput"
+                                        v-model="formData.live_meeting_date"
+                                        type="datetime-local"
+                                        class="form-input"
+                                        :class="{ 'border-red-500': errors.live_meeting_date }"
+                                        required
+                                        @focus="hasInteractedWithDate = true"
+                                        @blur="hasInteractedWithDate = true"
+                                        @input="hasInteractedWithDate = true"
+                                    />
+                                    <p v-if="errors.live_meeting_date" class="form-error">{{ errors.live_meeting_date }}</p>
+                                    <p v-if="showDateWarning" class="mt-1 text-xs text-gray-600" :dir="direction">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        {{ t('lessons.live.date_required_warning') || 'Live lecture date and time is required for live lessons.' }}
+                                    </p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                        {{ t('lessons.live.meeting_link') || t('lessons.fields.live_meeting_link') || 'Meeting Link' }}
+                                    </label>
+                                    <div class="flex items-center gap-2">
+                                        <input
+                                            v-model="formData.live_meeting_link"
+                                            type="url"
+                                            class="form-input flex-1"
+                                            :class="{ 'border-red-500': errors.live_meeting_link }"
+                                            :placeholder="t('lessons.placeholders.meeting_link') || 'https://meet.jit.si/... or enter your own link'"
+                                        />
+                                        <a
+                                            v-if="formData.live_meeting_link"
+                                            :href="formData.live_meeting_link"
+                                            target="_blank"
+                                            class="btn-secondary px-4 py-3 whitespace-nowrap"
+                                            :title="t('lessons.live.join_meeting') || 'Join Meeting'"
+                                        >
+                                            <i class="bi bi-box-arrow-up-right"></i>
+                                        </a>
+                                    </div>
+                                    <p v-if="errors.live_meeting_link" class="form-error">{{ errors.live_meeting_link }}</p>
+                                    <p class="mt-2 text-xs text-gray-500">
+                                        {{ t('lessons.live.meeting_link_hint') || 'Leave empty to auto-generate a Jitsi Meet link, or enter your own Google Meet/Zoom/Teams link' }}
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">
@@ -151,7 +218,7 @@
                                 :placeholder="'أدخل محتوى الدرس'"
                             ></textarea>
                         </div>
-                        <div class="flex items-center justify-end gap-3 pt-4">
+                        <div class="flex items-center gap-3 pt-4" :class="direction === 'rtl' ? 'flex-row-reverse justify-start' : 'justify-end'">
                             <button type="button" @click="$emit('close')" class="btn-secondary">
                                 {{ t('common.cancel') || 'Cancel' }}
                             </button>
@@ -167,9 +234,10 @@
 </template>
 
 <script setup>
-import { computed, watch } from 'vue';
+import { computed, watch, ref, nextTick } from 'vue';
 import { useTranslation } from '@/composables/useTranslation';
 import { useModal } from '@/composables/useModal';
+import { usePage } from '@inertiajs/vue3';
 
 const props = defineProps({
     show: {
@@ -202,17 +270,72 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['close', 'submit']);
+const emit = defineEmits(['close', 'submit', 'type-change']);
 
 const { t } = useTranslation();
 const { setModalOpen } = useModal();
+const page = usePage();
 
 const isEdit = computed(() => !!props.lesson);
+const liveMeetingDateInput = ref(null);
+const direction = computed(() => page.props.direction || 'ltr');
+
+// Track if user has interacted with the date field
+const hasInteractedWithDate = ref(false);
+
+// Check if live meeting date is empty
+const isLiveMeetingDateEmpty = computed(() => {
+    const date = props.formData.live_meeting_date;
+    return !date || date === '' || date === null || (typeof date === 'string' && date.trim() === '');
+});
+
+// Check if should show warning message (only show if user has interacted with the date field)
+const showDateWarning = computed(() => {
+    // Don't show warning if there's already a backend validation error (it will show the error instead)
+    if (props.errors.live_meeting_date) {
+        return false;
+    }
+    
+    // Only show warning if:
+    // 1. Type is 'live'
+    // 2. Date is empty
+    // 3. User has interacted with the date field (focused, blurred, or input)
+    // This prevents showing the warning immediately when selecting 'live' type
+    return props.formData.type === 'live' && 
+           isLiveMeetingDateEmpty.value && 
+           hasInteractedWithDate.value;
+});
 
 // Update modal state when show prop changes
 watch(() => props.show, (isOpen) => {
     setModalOpen(isOpen);
+    // Reset interaction flag when modal closes
+    if (!isOpen) {
+        hasInteractedWithDate.value = false;
+    }
 }, { immediate: true });
+
+// Watch for type changes to handle live lesson specific behavior
+watch(() => props.formData.type, async (newType, oldType) => {
+    // Reset interaction flag when switching types
+    hasInteractedWithDate.value = false;
+    
+    // When switching to 'live', focus on the date input after a short delay
+    if (newType === 'live' && oldType !== 'live') {
+        await nextTick();
+        if (liveMeetingDateInput.value) {
+            // Small delay to ensure the input is rendered
+            setTimeout(() => {
+                liveMeetingDateInput.value?.focus();
+            }, 100);
+        }
+    }
+});
+
+const handleTypeChange = () => {
+    // Emit type change event for parent component handling
+    emit('type-change', props.formData.type);
+};
 
 const submit = () => {
     emit('submit', props.formData);

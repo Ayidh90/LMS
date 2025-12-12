@@ -2,6 +2,14 @@
     <AdminLayout :page-title="t('admin.questions_management') || 'Questions Management'">
         <Head :title="t('admin.questions_management') || 'Questions Management'" />
         <div class="space-y-6">
+            <!-- Success Message from Backend Redirect -->
+            <div v-if="page.props.flash?.success" class="bg-green-50 border border-green-200 rounded-xl p-4 flex items-center gap-3 shadow-sm">
+                <svg class="w-5 h-5 text-green-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+                <p class="text-green-800 font-medium">{{ page.props.flash.success }}</p>
+            </div>
+            
             <!-- Page Header -->
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div class="flex items-center gap-3">
@@ -136,7 +144,7 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
 import { useAlert } from '@/composables/useAlert';
-import { Head, Link, router, useForm } from '@inertiajs/vue3';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import QuestionForm from '@/Pages/Admin/Questions/Form.vue';
 
 const props = defineProps({
@@ -149,6 +157,7 @@ const props = defineProps({
 const { t } = useTranslation();
 const { route } = useRoute();
 const { showSuccess, showError } = useAlert();
+const page = usePage();
 
 // Modal state
 const showQuestionModal = ref(false);
@@ -170,23 +179,33 @@ const questionForm = useForm({
 });
 
 // Watch for type changes to initialize answers
-watch(() => questionForm.type, (newType) => {
+watch(() => questionForm.type, (newType, oldType) => {
+    // Only reset answers if type actually changed
+    if (newType === oldType) return;
+    
     if (newType === 'true_false') {
         questionForm.answers = [
             { answer: 'True', answer_ar: 'صحيح', is_correct: false, order: 0 },
             { answer: 'False', answer_ar: 'خطأ', is_correct: false, order: 1 },
         ];
-    } else if (newType === 'multiple_choice' && questionForm.answers.length < 2) {
-        questionForm.answers = [
-            { answer: '', answer_ar: '', is_correct: false, order: 0 },
-            { answer: '', answer_ar: '', is_correct: false, order: 1 },
-        ];
+    } else if (newType === 'multiple_choice') {
+        // Ensure at least 2 answers for multiple choice
+        if (!questionForm.answers || questionForm.answers.length < 2) {
+            questionForm.answers = [
+                { answer: '', answer_ar: '', is_correct: false, order: 0 },
+                { answer: '', answer_ar: '', is_correct: false, order: 1 },
+            ];
+        }
+    } else if (['short_answer', 'essay'].includes(newType)) {
+        // No answers needed for these types
+        questionForm.answers = [];
     }
 });
 
 const openQuestionModal = (question = null) => {
     editingQuestion.value = question;
     questionForm.reset();
+    questionForm.clearErrors();
     
     if (question) {
         // Load question data - need to fetch full question with answers
@@ -212,26 +231,40 @@ const openQuestionModal = (question = null) => {
                         id: answer.id || null,
                         answer: answer.answer || '',
                         answer_ar: answer.answer_ar || '',
-                        is_correct: answer.is_correct || false,
+                        is_correct: Boolean(answer.is_correct),
                         order: answer.order !== undefined ? answer.order : index,
                     }));
                 } else {
+                    // Initialize answers based on type
                     if (fullQuestion.type === 'true_false') {
                         questionForm.answers = [
                             { answer: 'True', answer_ar: 'صحيح', is_correct: false, order: 0 },
                             { answer: 'False', answer_ar: 'خطأ', is_correct: false, order: 1 },
                         ];
-                    } else {
+                    } else if (fullQuestion.type === 'multiple_choice') {
                         questionForm.answers = [
                             { answer: '', answer_ar: '', is_correct: false, order: 0 },
                             { answer: '', answer_ar: '', is_correct: false, order: 1 },
                         ];
+                    } else {
+                        questionForm.answers = [];
                     }
                 }
                 showQuestionModal.value = true;
             },
+            onError: () => {
+                showError(t('common.error_loading') || 'Error loading question', t('common.error') || 'Error');
+            },
         });
     } else {
+        // Initialize for new question
+        questionForm.type = '';
+        questionForm.question = '';
+        questionForm.question_ar = '';
+        questionForm.explanation = '';
+        questionForm.explanation_ar = '';
+        questionForm.points = 1;
+        questionForm.order = 0;
         questionForm.answers = [
             { answer: '', answer_ar: '', is_correct: false, order: 0 },
             { answer: '', answer_ar: '', is_correct: false, order: 1 },
@@ -253,15 +286,32 @@ const handleQuestionTypeChange = (type) => {
             { answer: 'True', answer_ar: 'صحيح', is_correct: false, order: 0 },
             { answer: 'False', answer_ar: 'خطأ', is_correct: false, order: 1 },
         ];
-    } else if (type === 'multiple_choice' && questionForm.answers.length < 2) {
-        questionForm.answers = [
-            { answer: '', answer_ar: '', is_correct: false, order: 0 },
-            { answer: '', answer_ar: '', is_correct: false, order: 1 },
-        ];
+    } else if (type === 'multiple_choice') {
+        // Ensure at least 2 answers for multiple choice
+        if (questionForm.answers.length < 2) {
+            questionForm.answers = [
+                { answer: '', answer_ar: '', is_correct: false, order: 0 },
+                { answer: '', answer_ar: '', is_correct: false, order: 1 },
+            ];
+        }
+    } else if (['short_answer', 'essay'].includes(type)) {
+        // No answers needed for short_answer and essay
+        questionForm.answers = [];
     }
 };
 
 const submitQuestion = (formData) => {
+    // Validate required fields
+    if (!questionForm.type) {
+        showError(t('questions.type_required') || 'Please select a question type', t('common.error') || 'Error');
+        return;
+    }
+    
+    if (!questionForm.question || questionForm.question.trim() === '') {
+        showError(t('questions.question_required') || 'Please enter a question', t('common.error') || 'Error');
+        return;
+    }
+    
     // Prepare form data - convert empty strings to null for nullable fields
     ['question_ar', 'explanation', 'explanation_ar'].forEach(field => {
         if (questionForm[field] === '') {
@@ -270,26 +320,51 @@ const submitQuestion = (formData) => {
     });
     
     // Ensure points and order are integers
-    if (questionForm.points === '' || questionForm.points === null) {
+    if (questionForm.points === '' || questionForm.points === null || questionForm.points === undefined) {
         questionForm.points = 1;
     } else {
         questionForm.points = parseInt(questionForm.points) || 1;
     }
     
-    if (questionForm.order === '' || questionForm.order === null) {
-        questionForm.order = 0;
+    if (questionForm.order === '' || questionForm.order === null || questionForm.order === undefined) {
+        questionForm.order = null; // Let backend set the order
     } else {
-        questionForm.order = parseInt(questionForm.order) || 0;
+        questionForm.order = parseInt(questionForm.order) || null;
     }
     
-    // Clean up answers - remove empty answers and ensure order is set
-    if (questionForm.answers && Array.isArray(questionForm.answers)) {
-        questionForm.answers = questionForm.answers
-            .filter(answer => answer.answer && answer.answer.trim() !== '')
+    // Handle answers based on question type
+    if (['multiple_choice', 'true_false'].includes(questionForm.type)) {
+        if (!questionForm.answers || !Array.isArray(questionForm.answers)) {
+            questionForm.answers = [];
+        }
+        
+        // Filter out empty answers but keep at least 2 for validation
+        const validAnswers = questionForm.answers
+            .filter(answer => answer && answer.answer && answer.answer.trim() !== '')
             .map((answer, index) => ({
-                ...answer,
+                answer: answer.answer.trim(),
+                answer_ar: answer.answer_ar && answer.answer_ar.trim() !== '' ? answer.answer_ar.trim() : null,
+                is_correct: Boolean(answer.is_correct),
                 order: index,
             }));
+        
+        // Ensure at least 2 answers for multiple_choice and true_false
+        if (validAnswers.length < 2) {
+            showError(t('questions.min_answers_required') || 'Please provide at least 2 answer options', t('common.error') || 'Error');
+            return;
+        }
+        
+        // Check if at least one answer is marked as correct
+        const hasCorrectAnswer = validAnswers.some(answer => answer.is_correct === true);
+        if (!hasCorrectAnswer) {
+            showError(t('questions.correct_answer_required') || 'At least one answer must be marked as correct', t('common.error') || 'Error');
+            return;
+        }
+        
+        questionForm.answers = validAnswers;
+    } else {
+        // For short_answer and essay, no answers needed
+        questionForm.answers = [];
     }
     
     if (editingQuestion.value) {
@@ -300,13 +375,19 @@ const submitQuestion = (formData) => {
             editingQuestion.value.id
         ]), {
             preserveScroll: true,
+            preserveState: false, // Force page reload to get updated data
             onSuccess: () => {
                 showSuccess(t('questions.updated_successfully') || 'Question updated successfully!', t('common.success') || 'Success');
                 closeQuestionModal();
+                // Page will reload automatically due to redirect from backend
             },
             onError: (errors) => {
+                console.error('Question update errors:', errors);
                 if (errors.message) {
                     showError(errors.message, t('common.error') || 'Error');
+                } else if (Object.keys(errors).length > 0) {
+                    const firstError = Object.values(errors)[0];
+                    showError(Array.isArray(firstError) ? firstError[0] : firstError, t('common.error') || 'Error');
                 }
             },
         });
@@ -317,13 +398,19 @@ const submitQuestion = (formData) => {
             props.lesson.id
         ]), {
             preserveScroll: true,
+            preserveState: false, // Force page reload to get updated data
             onSuccess: () => {
                 showSuccess(t('questions.created_successfully') || 'Question created successfully!', t('common.success') || 'Success');
                 closeQuestionModal();
+                // Page will reload automatically due to redirect from backend
             },
             onError: (errors) => {
+                console.error('Question create errors:', errors);
                 if (errors.message) {
                     showError(errors.message, t('common.error') || 'Error');
+                } else if (Object.keys(errors).length > 0) {
+                    const firstError = Object.values(errors)[0];
+                    showError(Array.isArray(firstError) ? firstError[0] : firstError, t('common.error') || 'Error');
                 }
             },
         });
@@ -346,8 +433,27 @@ const formatQuestionType = (type) => {
 
 const confirmDelete = (question) => {
     if (confirm(t('questions.confirm_delete') || 'Are you sure you want to delete this question?')) {
-        router.delete(route('admin.courses.lessons.questions.destroy', [props.course.slug || props.course.id, props.lesson.id, question.id]));
+        router.delete(route('admin.courses.lessons.questions.destroy', [props.course.slug || props.course.id, props.lesson.id, question.id]), {
+            preserveScroll: true,
+            preserveState: false, // Force reload to refresh questions list
+            onSuccess: () => {
+                showSuccess(
+                    t('questions.deleted_successfully') || page.props.flash?.success || 'Question deleted successfully!',
+                    t('common.success') || 'Success'
+                );
+            },
+            onError: () => {
+                showError(t('common.error') || 'Error', t('common.error') || 'Error');
+            },
+        });
     }
 };
+
+// Watch for flash messages from backend redirects
+watch(() => page.props.flash?.success, (success) => {
+    if (success) {
+        showSuccess(success, t('common.success') || 'Success');
+    }
+});
 </script>
 

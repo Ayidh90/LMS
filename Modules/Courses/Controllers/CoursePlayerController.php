@@ -104,6 +104,15 @@ class CoursePlayerController extends Controller
 
         $lesson->load('questions');
         
+        // Handle live lessons separately - mark attendance when link is clicked
+        if ($lesson->type === 'live') {
+            $this->attendanceService->markAttendanceForLiveLesson($student, $course, $lesson);
+            return response()->json([
+                'message' => __('Attendance marked successfully for live meeting.'),
+                'success' => true,
+            ]);
+        }
+        
         $validation = $this->validateCompletionRequirements($lesson, $student, $request);
         if (!$validation['success']) {
             return response()->json($validation, 400);

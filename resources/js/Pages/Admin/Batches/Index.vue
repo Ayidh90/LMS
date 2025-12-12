@@ -4,9 +4,9 @@
         
         <div class="container-fluid px-3 px-md-4 px-lg-5 py-4">
             <!-- Page Header - Bootstrap Style -->
-            <div class="card border-0 shadow-lg mb-4 bg-gradient header-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <div class="card border-0 shadow-lg mb-4 header-card">
                 <div class="card-body p-4 p-md-5 position-relative overflow-hidden">
-                    <div class="position-absolute top-0 end-0 w-100 h-100 opacity-10" style="background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);"></div>
+                    <div class="position-absolute top-0 end-0 w-100 h-100 opacity-10 header-overlay"></div>
                     <div class="row align-items-center position-relative">
                         <div class="col-12 col-md-8 mb-3 mb-md-0">
                             <nav aria-label="breadcrumb" class="mb-3">
@@ -26,15 +26,14 @@
                                     <li class="breadcrumb-item active text-white fw-semibold" aria-current="page">{{ t('admin.batches') || 'Batches' }}</li>
                                 </ol>
                             </nav>
-                            <h1 class="h2 fw-bold text-white mb-2" style="font-size: 2rem; text-shadow: 0 2px 4px rgba(0,0,0,0.1);">{{ t('admin.batches_management') || 'Batches Management' }}</h1>
-                            <p class="text-white mb-0 opacity-90" style="font-size: 1rem;">{{ t('admin.batches_description') || 'Manage course batches and student enrollments' }}</p>
+                            <h1 class="h2 fw-bold text-white mb-2 header-title">{{ t('admin.batches_management') || 'Batches Management' }}</h1>
+                            <p class="text-white mb-0 opacity-90 header-description">{{ t('admin.batches_description') || 'Manage course batches and student enrollments' }}</p>
                         </div>
                         <div class="col-12 col-md-4 text-md-end">
                             <button 
                                 type="button"
                                 @click="openBatchModal(null)"
                                 class="btn btn-light btn-lg shadow-sm fw-semibold create-batch-btn"
-                                style="font-size: 1rem; padding: 0.75rem 1.5rem;"
                             >
                                 <i class="bi bi-plus-circle me-2"></i>
                                 {{ t('admin.create_batch') || 'Create Batch' }}
@@ -114,20 +113,10 @@
                             </div>
 
                             <!-- Actions -->
-                            <div class="d-flex gap-2 border-top pt-3" @click.stop>
-                                <button 
-                                    type="button"
-                                    @click.stop="openBatchModal(batch)"
-                                    class="btn btn-outline-primary btn-sm flex-fill fw-semibold"
-                                    style="font-size: 0.875rem; padding: 0.5rem 1rem;"
-                                >
-                                    <i class="bi bi-pencil me-2"></i>
-                                    {{ t('common.edit') || 'Edit' }}
-                                </button>
+                            <div class="border-top pt-3" @click.stop>
                                 <Link 
                                     :href="route('admin.courses.batches.show', [course.slug || course.id, batch.id])"
-                                    class="btn btn-outline-secondary btn-sm flex-fill fw-semibold"
-                                    style="font-size: 0.875rem; padding: 0.5rem 1rem;"
+                                    class="btn btn-outline-primary w-100 fw-semibold"
                                 >
                                     <i class="bi bi-eye me-2"></i>
                                     {{ t('common.view') || 'View' }}
@@ -335,11 +324,17 @@ const submitBatch = (formData) => {
 .header-card {
     border-radius: 1rem !important;
     overflow: hidden;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
 }
 
 .header-card .card-body {
     position: relative;
     z-index: 1;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+.header-overlay {
+    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%) !important;
 }
 
 .header-card .breadcrumb {
@@ -360,24 +355,39 @@ const submitBatch = (formData) => {
     opacity: 1 !important;
 }
 
+.header-title {
+    font-size: 2rem;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.header-description {
+    font-size: 1rem;
+}
+
 .create-batch-btn {
     transition: all 0.3s ease;
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    background: rgba(255, 255, 255, 0.95);
-    color: #667eea;
+    border: 2px solid rgba(255, 255, 255, 0.3) !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    color: #667eea !important;
     font-weight: 600;
+    font-size: 1rem;
+    padding: 0.75rem 1.5rem;
 }
 
 .create-batch-btn:hover {
-    background: #ffffff;
-    border-color: rgba(255, 255, 255, 0.5);
+    background: #ffffff !important;
+    border-color: rgba(255, 255, 255, 0.5) !important;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-    color: #764ba2;
+    color: #764ba2 !important;
 }
 
 .create-batch-btn:active {
     transform: translateY(0);
+}
+
+.create-batch-btn:focus {
+    box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.5) !important;
 }
 
 /* RTL Support for Header */

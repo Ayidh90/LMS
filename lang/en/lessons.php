@@ -17,6 +17,8 @@ return [
         'content' => 'Content',
         'content_ar' => 'Content (Arabic)',
         'video_url' => 'Video URL',
+        'live_meeting_date' => 'Live Meeting Date & Time',
+        'live_meeting_link' => 'Live Meeting Link',
         'order' => 'Order',
         'duration_minutes' => 'Duration (Minutes)',
         'is_free' => 'Free Lesson',
@@ -68,10 +70,32 @@ return [
         'embed_frame' => 'Embed Frame',
         'assignment' => 'Assignment',
         'test' => 'Test/Quiz',
+        'live' => 'Live Meeting',
         'multiple_choice' => 'Multiple Choice',
         'true_false' => 'True/False',
         'short_answer' => 'Short Answer',
         'essay' => 'Essay',
+    ],
+    
+    'live' => [
+        'meeting_date' => 'Meeting Date & Time',
+        'meeting_link' => 'Meeting Link',
+        'join_meeting' => 'Join Live Meeting',
+        'meeting_scheduled' => 'Live meeting scheduled',
+        'meeting_link_generated' => 'Meeting link will be generated automatically',
+        'meeting_link_hint' => 'Leave empty to auto-generate a Jitsi Meet link, or enter your own Google Meet/Zoom/Teams link',
+        'info_title' => 'Live Lesson Requirements',
+        'info_message' => 'Please provide the meeting date and time. A meeting link will be auto-generated if not provided.',
+        'date_required_warning' => 'Live lecture date and time is required for live lessons.',
+    ],
+    
+    'validation' => [
+        'live_meeting_date_required' => 'The live meeting date is required for live lessons.',
+        'live_meeting_date_invalid' => 'The live meeting date must be a valid date.',
+        'live_meeting_link_invalid' => 'The live meeting link must be a valid URL.',
+    ],
+    'placeholders' => [
+        'meeting_link' => 'https://meet.jit.si/... or enter your own link',
     ],
     
     'actions' => [

@@ -3,6 +3,8 @@
 namespace Modules\Courses\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\StoreBatchRequest;
+use App\Http\Requests\Admin\UpdateBatchRequest;
 use App\Models\Batch;
 use App\Models\User;
 use App\Models\Enrollment;
@@ -30,15 +32,44 @@ class BatchController extends Controller
 
     public function create(Course $course)
     {
+        // Check if there's an existing batch that hasn't ended yet
+        $existingBatch = Batch::where('course_id', $course->id)
+            ->where(function($query) {
+                $query->whereNull('end_date')
+                    ->orWhere('end_date', '>', now()->toDateString());
+            })
+            ->first();
+        
         return Inertia::render('Admin/Batches/Create', [
             'course' => $this->formatCourse($course),
             'instructors' => $this->getInstructors(),
+            'existingBatch' => $existingBatch ? [
+                'id' => $existingBatch->id,
+                'name' => $existingBatch->translated_name,
+                'end_date' => $existingBatch->end_date,
+            ] : null,
         ]);
     }
 
-    public function store(Request $request, Course $course)
+    public function store(StoreBatchRequest $request, Course $course)
     {
-        $validated = $this->validateBatch($request);
+        // Check if there's an existing batch that hasn't ended yet
+        $existingBatch = Batch::where('course_id', $course->id)
+            ->where(function($query) {
+                $query->whereNull('end_date')
+                    ->orWhere('end_date', '>', now()->toDateString());
+            })
+            ->first();
+        
+        if ($existingBatch) {
+            return redirect()->back()
+                ->withErrors([
+                    'start_date' => __('Cannot create a new batch. The previous batch (') . $existingBatch->translated_name . __(') has not ended yet. Please wait until ') . ($existingBatch->end_date ? \Carbon\Carbon::parse($existingBatch->end_date)->format('Y-m-d') : __('the batch ends')) . __(' before creating a new one.'),
+                ])
+                ->withInput();
+        }
+        
+        $validated = $request->validated();
         $course->batches()->create($validated);
 
         // If request wants to stay on same page (from modal), return back to course show
@@ -118,9 +149,9 @@ class BatchController extends Controller
         ]);
     }
 
-    public function update(Request $request, Course $course, Batch $batch)
+    public function update(UpdateBatchRequest $request, Course $course, Batch $batch)
     {
-        $validated = $this->validateBatch($request);
+        $validated = $request->validated();
         $batch->update($validated);
 
         // If request wants to stay on same page (from modal), return back to course show

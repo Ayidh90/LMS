@@ -112,6 +112,8 @@ class LessonController extends Controller
             'content' => $lesson->translated_content ?? $lesson->content,
             'content_ar' => $lesson->content_ar,
             'video_url' => $lesson->video_url,
+            'live_meeting_date' => $lesson->live_meeting_date,
+            'live_meeting_link' => $lesson->live_meeting_link,
             'order' => $lesson->order,
             'duration_minutes' => $lesson->duration_minutes,
             'is_free' => $lesson->is_free,

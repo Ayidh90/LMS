@@ -91,7 +91,7 @@
                                             {{ (batch?.is_active === true || batch?.is_active === 1) ? t('common.active') : t('common.inactive') }}
                                         </span>
                                 </div>
-                                    <p class="text-muted mb-0 small fw-semibold">{{ t('admin.status') || 'Status' }}</p>
+                                    <p class="text-muted mb-0 small fw-semibold">{{ t('common.status') || 'Status' }}</p>
                             </div>
                                 <div 
                                     class="rounded-3 p-3 shadow"

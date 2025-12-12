@@ -17,6 +17,8 @@ return [
         'content' => 'المحتوى',
         'content_ar' => 'المحتوى (عربي)',
         'video_url' => 'رابط الفيديو',
+        'live_meeting_date' => 'تاريخ ووقت المحاضرة المباشرة',
+        'live_meeting_link' => 'رابط المحاضرة المباشرة',
         'order' => 'الترتيب',
         'duration_minutes' => 'المدة (دقائق)',
         'is_free' => 'درس مجاني',
@@ -68,10 +70,32 @@ return [
         'embed_frame' => 'إطار مدمج',
         'assignment' => 'واجب',
         'test' => 'اختبار/امتحان',
+        'live' => 'محاضرة لايف',
         'multiple_choice' => 'اختيار متعدد',
         'true_false' => 'صحيح/خطأ',
         'short_answer' => 'إجابة قصيرة',
         'essay' => 'مقال',
+    ],
+    
+    'live' => [
+        'meeting_date' => 'تاريخ ووقت المحاضرة',
+        'meeting_link' => 'رابط المحاضرة',
+        'join_meeting' => 'انضم للمحاضرة المباشرة',
+        'meeting_scheduled' => 'تم جدولة المحاضرة المباشرة',
+        'meeting_link_generated' => 'سيتم توليد رابط المحاضرة تلقائياً',
+        'meeting_link_hint' => 'اتركه فارغاً لتوليد رابط Jitsi Meet تلقائياً، أو أدخل رابط Google Meet/Zoom/Teams الخاص بك',
+        'info_title' => 'متطلبات الدرس المباشر',
+        'info_message' => 'يرجى تقديم تاريخ ووقت المحاضرة. سيتم توليد رابط المحاضرة تلقائياً إذا لم يتم توفيره.',
+        'date_required_warning' => 'تاريخ ووقت المحاضرة المباشرة مطلوب للدروس المباشرة.',
+    ],
+    
+    'validation' => [
+        'live_meeting_date_required' => 'تاريخ ووقت المحاضرة المباشرة مطلوب للدروس المباشرة.',
+        'live_meeting_date_invalid' => 'تاريخ ووقت المحاضرة المباشرة يجب أن يكون تاريخاً صحيحاً.',
+        'live_meeting_link_invalid' => 'رابط المحاضرة المباشرة يجب أن يكون رابطاً صحيحاً.',
+    ],
+    'placeholders' => [
+        'meeting_link' => 'https://meet.jit.si/... أو أدخل رابطك الخاص',
     ],
     
     'actions' => [

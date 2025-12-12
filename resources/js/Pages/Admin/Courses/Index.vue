@@ -86,7 +86,7 @@
                                 <th class="text-center" style="width: 50px;">#</th>
                                 <th>{{ t('courses.fields.title') || 'Title' }}</th>
                                 <th class="text-center">{{ t('courses.fields.level') || 'Level' }}</th>
-                                <th class="text-center">{{ t('courses.status.title') || 'Status' }}</th>
+                                <th class="text-center">{{ t('courses.status.title') || t('common.status') || 'Status' }}</th>
                                 <th class="text-center">{{ t('courses.students') || 'Students' }}</th>
                                 <th class="text-center" style="width: 140px;">{{ t('common.actions') || 'Actions' }}</th>
                                 </tr>
@@ -245,8 +245,8 @@ const levelFilter = ref(props.filters?.level || '');
 // Helper function to get status translation
 const getStatusLabel = (isPublished) => {
     return isPublished 
-        ? (t('courses.status.published') || 'منشورة')
-        : (t('courses.status.draft') || 'مؤرشفه');
+        ? (t('courses.status.published') || 'Published')
+        : (t('courses.status.draft') || 'Draft');
 };
 
 // Helper function to get course show URL

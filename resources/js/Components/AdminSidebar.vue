@@ -544,12 +544,18 @@ const getBootstrapIcon = (iconName) => {
   return bootstrapIcons[iconName] || bootstrapIcons["chart-simple-3"];
 };
 
-// Check if we're on a course show page
+// Check if we're on a course show page (exclude create and edit pages)
 const isCourseShowPage = computed(() => {
-  const currentUrl = page.url;
-  // Check if URL matches pattern: /admin/courses/{slug or id}
+  const currentUrl = page.url.split("?")[0];
+  
+  // Exclude create and edit pages
+  if (currentUrl === "/admin/courses/create" || currentUrl.endsWith("/edit")) {
+    return false;
+  }
+  
+  // Check if URL matches pattern: /admin/courses/{slug or id} (but not create/edit)
   const courseShowPattern = /^\/admin\/courses\/[^\/]+$/;
-  return courseShowPattern.test(currentUrl.split("?")[0]);
+  return courseShowPattern.test(currentUrl);
 });
 
 // Get course identifier from URL

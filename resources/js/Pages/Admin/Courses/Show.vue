@@ -211,17 +211,26 @@
                                 <div class="accordion" id="sectionsAccordion">
                                     <div v-for="section in course.sections" :key="section.id" class="accordion-item mb-3">
                                         <h2 class="accordion-header" :id="`heading-${section.id}`">
-                                            <button 
-                                                class="accordion-button" 
-                                                :class="{ collapsed: !isSectionExpanded(section.id) }"
-                                                type="button" 
-                                                @click="toggleSection(section.id)"
-                                                :aria-expanded="isSectionExpanded(section.id) ? 'true' : 'false'"
-                                                :aria-controls="`section-${section.id}`"
-                                            >
-                                                <span class="badge bg-info me-2">{{ section.lessons?.length || 0 }}</span>
-                                                {{ section.translated_title || section.title }}
-                                            </button>
+                                            <div class="d-flex align-items-center w-100 pe-3">
+                                                <button 
+                                                    class="accordion-button flex-grow-1" 
+                                                    :class="{ collapsed: !isSectionExpanded(section.id) }"
+                                                    type="button" 
+                                                    @click="toggleSection(section.id)"
+                                                    :aria-expanded="isSectionExpanded(section.id) ? 'true' : 'false'"
+                                                    :aria-controls="`section-${section.id}`"
+                                                >
+                                                    <span class="badge bg-info me-2">{{ section.lessons?.length || 0 }}</span>
+                                                    {{ section.translated_title || section.title }}
+                                                </button>
+                                                <button
+                                                    @click.stop="openSectionModal(section)"
+                                                    class="btn btn-sm btn-outline-warning ms-2"
+                                                    :title="t('common.edit') || 'Edit Section'"
+                                                >
+                                                    <i class="bi bi-pencil"></i>
+                                                </button>
+                                            </div>
                                         </h2>
                                         <div 
                                             :id="`section-${section.id}`" 
@@ -244,6 +253,14 @@
                                                                 </small>
                                                             </div>
                                                             <div class="d-flex gap-2 align-items-center flex-wrap" @click.stop>
+                                                                <button 
+                                                                    @click.stop="openLessonModal({ ...lesson, section_id: lesson.section_id || section.id })"
+                                                                    class="btn btn-sm btn-outline-warning"
+                                                                    :title="t('common.edit') || 'Edit Lesson'"
+                                                                >
+                                                                    <i class="bi bi-pencil me-1"></i>
+                                                                    <span class="d-none d-sm-inline">{{ t('common.edit') || 'Edit' }}</span>
+                                                                </button>
                                                                 <button 
                                                                     @click.stop="openQuestionModal(lesson.id)"
                                                                     class="btn btn-sm lesson-action-btn-add"
@@ -293,6 +310,15 @@
                                                 <div v-else class="text-center py-3 text-muted">
                                                     <i class="bi bi-book me-2"></i>
                                                     {{ t('lessons.no_lessons') || 'No lessons in this section' }}
+                                                    <div class="mt-3">
+                                                        <button 
+                                                            @click.stop="openLessonModal(section.id)"
+                                                            class="btn btn-sm btn-primary"
+                                                        >
+                                                            <i class="bi bi-plus-circle me-1"></i>
+                                                            {{ t('admin.add_lesson') || 'Add Lesson' }}
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -371,7 +397,7 @@
                                     <i class="bi bi-list me-1"></i>
                                     <span class="d-none d-sm-inline">{{ t('admin.manage_batches') || 'Manage' }}</span>
                                 </Link>
-                                <button @click="openBatchModal()" class="btn btn-sm btn-success" :title="t('admin.create_batch') || 'Create Batch'">
+                                <button @click="openBatchModal()" class="btn btn-sm btn-primary" :title="t('admin.create_batch') || 'Create Batch'">
                                     <i class="bi bi-plus me-1"></i>
                                     <span class="d-none d-sm-inline">{{ t('admin.create_batch') || 'Create' }}</span>
                                 </button>
@@ -448,6 +474,7 @@
             :lesson-types="lessonTypes"
             @close="closeLessonModal"
             @submit="submitLesson"
+            @type-change="handleLessonTypeChange"
         />
 
         <!-- Question Form Modal -->
@@ -496,6 +523,7 @@ const props = defineProps({
     instructors: Array,
     lessonTypes: Array,
     questionTypes: Array,
+    existingBatch: Object,
 });
 
 const { t } = useTranslation();
@@ -582,6 +610,8 @@ const lessonForm = useForm({
     content: '',
     content_ar: '',
     video_url: '',
+    live_meeting_date: '',
+    live_meeting_link: '',
 });
 
 const questionForm = useForm({
@@ -671,11 +701,96 @@ const submitSection = (formData) => {
 };
 
 // Lesson Modal Functions
-const openLessonModal = (sectionId = null) => {
-    editingLesson.value = null;
-    selectedSectionIdForLesson.value = sectionId;
-    lessonForm.reset();
-    lessonForm.section_id = sectionId || null;
+const openLessonModal = (lessonOrSectionId = null) => {
+    // Clear any existing errors first
+    lessonForm.clearErrors();
+    
+    // Check if it's a lesson object or section ID
+    if (lessonOrSectionId && typeof lessonOrSectionId === 'object' && lessonOrSectionId.id) {
+        // It's a lesson object - edit mode
+        editingLesson.value = lessonOrSectionId;
+        // Get section_id from lesson - it might be in section.id or section_id property
+        const sectionId = lessonOrSectionId.section?.id || lessonOrSectionId.section_id || null;
+        selectedSectionIdForLesson.value = sectionId;
+        lessonForm.title = lessonOrSectionId.title || '';
+        lessonForm.title_ar = lessonOrSectionId.title_ar || '';
+        lessonForm.type = lessonOrSectionId.type || '';
+        lessonForm.section_id = sectionId;
+        lessonForm.order = lessonOrSectionId.order || 1;
+        lessonForm.duration_minutes = lessonOrSectionId.duration_minutes || 0;
+        lessonForm.description = lessonOrSectionId.description || '';
+        lessonForm.description_ar = lessonOrSectionId.description_ar || '';
+        lessonForm.content = lessonOrSectionId.content || '';
+        lessonForm.content_ar = lessonOrSectionId.content_ar || '';
+        lessonForm.video_url = lessonOrSectionId.video_url || '';
+        // Format live_meeting_date for datetime-local input (YYYY-MM-DDTHH:mm)
+        // Parse the date string directly without timezone conversion to preserve the stored time
+        if (lessonOrSectionId.live_meeting_date) {
+            try {
+                const dateString = String(lessonOrSectionId.live_meeting_date);
+                let year, month, day, hours, minutes;
+                
+                // Check if date string has timezone info
+                const hasTimezone = dateString.includes('Z') || 
+                                   dateString.match(/[+-]\d{2}:\d{2}$/) ||
+                                   (dateString.includes('T') && dateString.length > 16);
+                
+                if (hasTimezone) {
+                    // Has timezone - extract UTC components to get the stored time
+                    const utcDate = new Date(dateString);
+                    year = utcDate.getUTCFullYear();
+                    month = String(utcDate.getUTCMonth() + 1).padStart(2, '0');
+                    day = String(utcDate.getUTCDate()).padStart(2, '0');
+                    hours = String(utcDate.getUTCHours()).padStart(2, '0');
+                    minutes = String(utcDate.getUTCMinutes()).padStart(2, '0');
+                } else {
+                    // No timezone - parse directly from string (format: YYYY-MM-DD HH:mm:ss or YYYY-MM-DDTHH:mm:ss)
+                    const match = dateString.match(/^(\d{4})-(\d{2})-(\d{2})(?:[\sT](\d{2}):(\d{2})(?::(\d{2}))?)?/);
+                    if (match) {
+                        [, year, month, day, hours = '00', minutes = '00'] = match;
+                        year = parseInt(year);
+                        month = String(parseInt(month)).padStart(2, '0');
+                        day = String(parseInt(day)).padStart(2, '0');
+                        hours = String(parseInt(hours)).padStart(2, '0');
+                        minutes = String(parseInt(minutes)).padStart(2, '0');
+                    } else {
+                        // Fallback to Date parsing
+                        const date = new Date(dateString);
+                        if (!isNaN(date.getTime())) {
+                            year = date.getFullYear();
+                            month = String(date.getMonth() + 1).padStart(2, '0');
+                            day = String(date.getDate()).padStart(2, '0');
+                            hours = String(date.getHours()).padStart(2, '0');
+                            minutes = String(date.getMinutes()).padStart(2, '0');
+                        } else {
+                            lessonForm.live_meeting_date = '';
+                            return;
+                        }
+                    }
+                }
+                
+            lessonForm.live_meeting_date = `${year}-${month}-${day}T${hours}:${minutes}`;
+            } catch (e) {
+                console.error('Error parsing date:', e);
+                lessonForm.live_meeting_date = '';
+            }
+        } else {
+            lessonForm.live_meeting_date = '';
+        }
+        lessonForm.live_meeting_link = lessonOrSectionId.live_meeting_link || '';
+    } else {
+        // It's a section ID or null - create mode
+        editingLesson.value = null;
+        selectedSectionIdForLesson.value = lessonOrSectionId;
+        lessonForm.reset();
+        lessonForm.clearErrors();
+        lessonForm.section_id = lessonOrSectionId || null;
+        lessonForm.order = 1;
+        lessonForm.duration_minutes = 0;
+        lessonForm.live_meeting_date = '';
+        lessonForm.live_meeting_link = '';
+        lessonForm.type = ''; // Reset type for new lessons
+    }
     showLessonModal.value = true;
 };
 
@@ -685,7 +800,61 @@ const closeLessonModal = () => {
     selectedSectionIdForLesson.value = null;
     lessonForm.reset();
     lessonForm.clearErrors();
+    // Reset form defaults
+    lessonForm.order = 1;
+    lessonForm.duration_minutes = 0;
+    lessonForm.live_meeting_date = '';
+    lessonForm.live_meeting_link = '';
 };
+
+// Handle lesson type changes
+const handleLessonTypeChange = (newType) => {
+    // This is called when the type changes in the form
+    // The watcher below will handle the actual field clearing/initialization
+};
+
+// Watch for live_meeting_date changes to clear errors when date is filled
+watch(() => lessonForm.live_meeting_date, (newDate, oldDate) => {
+    // Clear error if date is now filled and valid
+    if (newDate && newDate.trim() !== '' && newDate !== oldDate) {
+        // Check if the date is in valid format
+        const isValidFormat = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(newDate.trim());
+        if (isValidFormat && lessonForm.errors.live_meeting_date) {
+            lessonForm.clearErrors('live_meeting_date');
+        }
+    }
+});
+
+// Watch for lesson type changes to handle live lesson fields
+watch(() => lessonForm.type, (newType, oldType) => {
+    // When switching away from 'live', clear live-specific fields
+    if (oldType === 'live' && newType !== 'live') {
+        lessonForm.live_meeting_date = '';
+        lessonForm.live_meeting_link = '';
+        // Clear any errors related to live fields
+        if (lessonForm.errors.live_meeting_date) {
+            lessonForm.clearErrors('live_meeting_date');
+        }
+        if (lessonForm.errors.live_meeting_link) {
+            lessonForm.clearErrors('live_meeting_link');
+        }
+    }
+    // When switching to 'live', ensure fields are initialized
+    if (newType === 'live' && oldType !== 'live') {
+        // If live_meeting_date is not set, keep it empty (user needs to fill it)
+        // But ensure it's a string, not null
+        if (lessonForm.live_meeting_date === null) {
+            lessonForm.live_meeting_date = '';
+        }
+        if (lessonForm.live_meeting_link === null) {
+            lessonForm.live_meeting_link = '';
+        }
+        // Clear any existing errors when switching to live type
+        if (lessonForm.errors.live_meeting_date) {
+            lessonForm.clearErrors('live_meeting_date');
+        }
+    }
+});
 
 const submitLesson = (formData) => {
     // Convert empty strings to null for nullable fields
@@ -696,37 +865,109 @@ const submitLesson = (formData) => {
     }
     
     // Convert empty strings to null for other nullable fields
-    ['description', 'description_ar', 'content', 'content_ar', 'video_url', 'title_ar'].forEach(field => {
+    // But keep live_meeting_date if lesson type is 'live' and it has a value
+    ['description', 'description_ar', 'content', 'content_ar', 'video_url', 'title_ar', 'live_meeting_link'].forEach(field => {
         if (lessonForm[field] === '') {
             lessonForm[field] = null;
         }
     });
     
-    // Ensure order and duration_minutes are integers or null
+    // Handle live_meeting_date separately - format for live lessons
+    if (lessonForm.type === 'live') {
+        // For live lessons, send the date as-is without timezone conversion
+        // This ensures the database stores exactly what the user selected
+        if (lessonForm.live_meeting_date && lessonForm.live_meeting_date.trim() !== '') {
+            const dateValue = lessonForm.live_meeting_date.trim();
+            
+            // Validate format matches YYYY-MM-DDTHH:mm
+            if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(dateValue)) {
+                // Convert from datetime-local format (YYYY-MM-DDTHH:mm) to MySQL format (YYYY-MM-DD HH:mm:ss)
+                // This preserves the exact time the user selected without timezone conversion
+                const [datePart, timePart] = dateValue.split('T');
+                lessonForm.live_meeting_date = `${datePart} ${timePart}:00`;
+            } else {
+                // Invalid format, try to parse and format
+                try {
+                    const date = new Date(dateValue);
+                    if (!isNaN(date.getTime())) {
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        const hours = String(date.getHours()).padStart(2, '0');
+                        const minutes = String(date.getMinutes()).padStart(2, '0');
+                        lessonForm.live_meeting_date = `${year}-${month}-${day} ${hours}:${minutes}:00`;
+                    } else {
+                        lessonForm.live_meeting_date = null;
+                    }
+                } catch (e) {
+                    lessonForm.live_meeting_date = null;
+                }
+            }
+        } else {
+            // Empty date for live lesson - will be validated by backend
+            lessonForm.live_meeting_date = null;
+        }
+    } else {
+        // For non-live lessons, convert empty to null
+        if (lessonForm.live_meeting_date === '' || !lessonForm.live_meeting_date) {
+            lessonForm.live_meeting_date = null;
+        }
+    }
+    
+    // Ensure order is integer or null
     if (lessonForm.order === '' || lessonForm.order === null) {
         lessonForm.order = null;
     } else {
         lessonForm.order = parseInt(lessonForm.order) || null;
     }
     
-    if (lessonForm.duration_minutes === '' || lessonForm.duration_minutes === null) {
-        lessonForm.duration_minutes = null;
+    // Ensure duration_minutes is integer (default to 0, not null, as DB doesn't allow null)
+    if (lessonForm.duration_minutes === '' || lessonForm.duration_minutes === null || lessonForm.duration_minutes === undefined) {
+        lessonForm.duration_minutes = 0;
     } else {
-        lessonForm.duration_minutes = parseInt(lessonForm.duration_minutes) || null;
+        const parsed = parseInt(lessonForm.duration_minutes);
+        lessonForm.duration_minutes = isNaN(parsed) ? 0 : parsed;
     }
     
-    lessonForm.post(route('admin.courses.lessons.store', props.course.slug || props.course.id), {
-        preserveScroll: true,
-        onSuccess: () => {
-            showSuccess(t('lessons.created_successfully') || 'Lesson created successfully!', t('common.success') || 'Success');
-            closeLessonModal();
-        },
-        onError: (errors) => {
-            if (errors.message) {
-                showError(errors.message, t('common.error') || 'Error');
-            }
-        },
-    });
+    if (editingLesson.value) {
+        // Update existing lesson
+        lessonForm.put(route('admin.courses.lessons.update', [props.course.slug || props.course.id, editingLesson.value.id]), {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                showSuccess(t('lessons.updated_successfully') || 'Lesson updated successfully!', t('common.success') || 'Success');
+                closeLessonModal();
+                // Refresh the page data to show updated lesson
+                router.reload({ only: ['course'] });
+            },
+            onError: (errors) => {
+                // Errors are automatically handled by Inertia form
+                // The form will display validation errors
+                if (errors.message) {
+                    showError(errors.message, t('common.error') || 'Error');
+                }
+            },
+        });
+    } else {
+        // Create new lesson
+        lessonForm.post(route('admin.courses.lessons.store', props.course.slug || props.course.id), {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                showSuccess(t('lessons.created_successfully') || 'Lesson created successfully!', t('common.success') || 'Success');
+                closeLessonModal();
+                // Refresh the page data to show new lesson
+                router.reload({ only: ['course'] });
+            },
+            onError: (errors) => {
+                // Errors are automatically handled by Inertia form
+                // The form will display validation errors
+                if (errors.message) {
+                    showError(errors.message, t('common.error') || 'Error');
+                }
+            },
+        });
+    }
 };
 
 // Question Modal Functions
@@ -908,6 +1149,17 @@ const openBatchModal = (batch = null) => {
         batchForm.is_active = batch.is_active !== undefined ? batch.is_active : true;
     } else {
         batchForm.reset();
+        // Show warning if there's an existing batch that hasn't ended
+        if (props.existingBatch) {
+            const endDate = props.existingBatch.end_date 
+                ? new Date(props.existingBatch.end_date).toLocaleDateString() 
+                : t('admin.batch_has_no_end_date') || 'no end date';
+            showError(
+                t('admin.cannot_create_batch_existing_not_ended') || 
+                `Cannot create a new batch. The previous batch (${props.existingBatch.name}) has not ended yet. Please wait until ${endDate} before creating a new one.`,
+                t('common.warning') || 'Warning'
+            );
+        }
     }
     showBatchModal.value = true;
 };

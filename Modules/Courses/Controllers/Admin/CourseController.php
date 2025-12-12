@@ -83,14 +83,23 @@ class CourseController extends Controller
             // Get sections for modals
             $sections = $this->sectionService->getByCourse($course->id)->map(fn($s) => [
                 'id' => $s->id,
-                'title' => $s->translated_title ?? $s->title,
+                'title' => $s->title,
                 'title_ar' => $s->title_ar,
+                'translated_title' => $s->translated_title ?? $s->title,
             ]);
             
             // Get instructors for batch modals
             $instructors = User::where('role', 'instructor')
                 ->orderBy('name')
                 ->get(['id', 'name', 'email']);
+            
+            // Check if there's an existing batch that hasn't ended yet
+            $existingBatch = \App\Models\Batch::where('course_id', $course->id)
+                ->where(function($query) {
+                    $query->whereNull('end_date')
+                        ->orWhere('end_date', '>', now()->toDateString());
+                })
+                ->first();
 
             return Inertia::render('Admin/Courses/Show', [
                 'course' => $course,
@@ -99,6 +108,11 @@ class CourseController extends Controller
                 'instructors' => $instructors,
                 'lessonTypes' => $this->getLessonTypes(),
                 'questionTypes' => $this->getQuestionTypes(),
+                'existingBatch' => $existingBatch ? [
+                    'id' => $existingBatch->id,
+                    'name' => $existingBatch->translated_name,
+                    'end_date' => $existingBatch->end_date,
+                ] : null,
             ]);
         } catch (\Exception $e) {
             Log::error('Error in CourseController@show: ' . $e->getMessage(), [
@@ -125,6 +139,7 @@ class CourseController extends Controller
             ['value' => 'embed_frame', 'label' => __('lessons.types.embed_frame')],
             ['value' => 'assignment', 'label' => __('lessons.types.assignment')],
             ['value' => 'test', 'label' => __('lessons.types.test')],
+            ['value' => 'live', 'label' => __('lessons.types.live')],
         ];
     }
     
@@ -210,8 +225,8 @@ class CourseController extends Controller
     {
         $course->load([
             'sections' => fn($query) => $query->orderBy('order'),
-            'sections.lessons' => fn($query) => $query->orderBy('order')->with(['questions.answers']),
-            'lessons' => fn($query) => $query->orderBy('order')->with(['questions.answers']),
+            'sections.lessons' => fn($query) => $query->orderBy('order')->with(['section:id,title,title_ar', 'questions.answers']),
+            'lessons' => fn($query) => $query->orderBy('order')->with(['section:id,title,title_ar', 'questions.answers']),
             'batches' => fn($query) => $query->with('instructor:id,name,email'),
         ]);
     }

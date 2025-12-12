@@ -14,15 +14,15 @@
                         <h1 class="text-2xl font-bold text-gray-900">{{ lesson.translated_title || lesson.title }}</h1>
                         <p class="text-sm text-gray-500">{{ course.translated_title || course.title }}</p>
                     </div>
-                    <Link
-                        :href="route('admin.courses.lessons.edit', [course.slug || course.id, lesson.id])"
+                    <button
+                        @click="openLessonModal(lesson)"
                         class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 text-gray-700 font-medium transition-all"
                     >
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                         {{ t('common.edit') }}
-                    </Link>
+                    </button>
                 </div>
             </div>
 
@@ -39,7 +39,7 @@
                                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                             ]"
                         >
-                            {{ t('lessons.details') || 'Details' }}
+                            {{ t('lessons.details') || t('common.details') || 'Details' }}
                         </button>
                         <button
                             @click="activeTab = 'attendance'"
@@ -50,7 +50,7 @@
                                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                             ]"
                         >
-                            {{ t('attendance.title') || 'Attendance' }}
+                            {{ t('lessons.attendance') || t('attendance.title') || 'Attendance' }}
                             <span v-if="attendanceStats" class="px-2 py-0.5 bg-gray-100 rounded-full text-xs">
                                 {{ attendanceStats.attendance_rate }}%
                             </span>
@@ -64,12 +64,50 @@
                                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                             ]"
                         >
-                            {{ t('questions.title') || 'Questions' }}
+                            {{ t('lessons.questions') || t('questions.title') || 'Questions' }}
                             <span v-if="lesson.questions?.length" class="px-2 py-0.5 bg-gray-100 rounded-full text-xs">
                                 {{ lesson.questions.length }}
                             </span>
                         </button>
                     </nav>
+                </div>
+            </div>
+
+            <!-- Live Meeting Banner (always visible when lesson is live) -->
+            <div v-if="lesson.type === 'live'" class="mb-6 bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-xl p-6">
+                <div class="flex items-start gap-4">
+                    <div class="flex-shrink-0">
+                        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                            <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                            <i class="bi bi-camera-video text-red-600"></i>
+                            {{ t('lessons.types.live') || 'Live Meeting' }}
+                        </h3>
+                        <div v-if="lesson.live_meeting_date" class="mb-3">
+                            <p class="text-sm text-gray-600 mb-1">{{ t('lessons.live.meeting_date') || 'Meeting Date & Time' }}:</p>
+                            <p class="text-lg font-semibold text-gray-900">{{ formatDateTime(lesson.live_meeting_date) }}</p>
+                        </div>
+                        <div v-if="lesson.live_meeting_link" class="mt-3">
+                            <a
+                                :href="lesson.live_meeting_link"
+                                target="_blank"
+                                class="inline-flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 font-semibold transition-all shadow-lg hover:shadow-xl"
+                            >
+                                <i class="bi bi-camera-video me-2"></i>
+                                {{ t('lessons.live.join_meeting') || 'Join Live Meeting' }}
+                                <i class="bi bi-box-arrow-up-right ms-2"></i>
+                            </a>
+                            <p class="text-xs text-gray-500 mt-2 break-all">{{ lesson.live_meeting_link }}</p>
+                        </div>
+                        <p v-else class="text-sm text-gray-500 mt-2">
+                            {{ t('lessons.live.meeting_link_generated') || 'Meeting link will be generated automatically' }}
+                        </p>
+                    </div>
                 </div>
             </div>
 
@@ -122,9 +160,28 @@
                         <p class="text-gray-600">{{ lesson.translated_description || lesson.description }}</p>
                     </div>
                     
-                    <div v-if="lesson.video_url" class="px-6 py-4 border-t border-gray-100">
+                    <div v-if="lesson.video_url && lesson.type !== 'live'" class="px-6 py-4 border-t border-gray-100">
                         <h4 class="text-sm font-medium text-gray-700 mb-2">{{ t('lessons.fields.video_url') || 'Video URL' }}</h4>
                         <a :href="lesson.video_url" target="_blank" class="text-blue-600 hover:text-blue-700 break-all">{{ lesson.video_url }}</a>
+                    </div>
+                    <div v-if="lesson.type === 'live'" class="px-6 py-4 border-t border-gray-100 bg-gradient-to-r from-red-50 to-orange-50">
+                        <h4 class="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                            <i class="bi bi-camera-video text-red-600"></i>
+                            {{ t('lessons.types.live') || 'Live Meeting' }}
+                        </h4>
+                        <div v-if="lesson.live_meeting_date" class="mb-3">
+                            <p class="text-sm text-gray-600 mb-1">{{ t('lessons.live.meeting_date') || 'Meeting Date & Time' }}:</p>
+                            <p class="text-lg font-semibold text-gray-900">{{ formatDateTime(lesson.live_meeting_date) }}</p>
+                        </div>
+                        <div v-if="lesson.live_meeting_link" class="mt-3">
+                            <p class="text-sm text-gray-600 mb-2">{{ t('lessons.live.meeting_link') || 'Meeting Link' }}:</p>
+                            <a :href="lesson.live_meeting_link" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all">
+                                {{ t('lessons.live.join_meeting') || 'Join Live Meeting' }}
+                                <i class="bi bi-box-arrow-up-right"></i>
+                            </a>
+                            <p class="text-xs text-gray-500 mt-2 break-all">{{ lesson.live_meeting_link }}</p>
+                        </div>
+                        <p v-else class="text-sm text-gray-500">{{ t('lessons.live.meeting_link_generated') || 'Meeting link will be generated automatically' }}</p>
                     </div>
                 </div>
             </div>
@@ -135,27 +192,27 @@
                 <div v-if="attendanceStats" class="grid grid-cols-2 md:grid-cols-6 gap-4">
                     <div class="bg-white rounded-xl border border-gray-100 p-4 text-center">
                         <div class="text-2xl font-bold text-gray-900">{{ attendanceStats.total }}</div>
-                        <div class="text-sm text-gray-500">{{ t('attendance.total') || 'Total' }}</div>
+                        <div class="text-sm text-gray-500">{{ t('lessons.total_students') || t('attendance.total') || t('common.total') || 'Total' }}</div>
                     </div>
                     <div class="bg-emerald-50 rounded-xl border border-emerald-100 p-4 text-center">
                         <div class="text-2xl font-bold text-emerald-600">{{ attendanceStats.present }}</div>
-                        <div class="text-sm text-emerald-600">{{ t('attendance.present') || 'Present' }}</div>
+                        <div class="text-sm text-emerald-600">{{ formatAttendanceStatus('present') }}</div>
                     </div>
                     <div class="bg-amber-50 rounded-xl border border-amber-100 p-4 text-center">
                         <div class="text-2xl font-bold text-amber-600">{{ attendanceStats.late }}</div>
-                        <div class="text-sm text-amber-600">{{ t('attendance.late') || 'Late' }}</div>
+                        <div class="text-sm text-amber-600">{{ formatAttendanceStatus('late') }}</div>
                     </div>
                     <div class="bg-red-50 rounded-xl border border-red-100 p-4 text-center">
                         <div class="text-2xl font-bold text-red-600">{{ attendanceStats.absent }}</div>
-                        <div class="text-sm text-red-600">{{ t('attendance.absent') || 'Absent' }}</div>
+                        <div class="text-sm text-red-600">{{ formatAttendanceStatus('absent') }}</div>
                     </div>
                     <div class="bg-blue-50 rounded-xl border border-blue-100 p-4 text-center">
                         <div class="text-2xl font-bold text-blue-600">{{ attendanceStats.excused }}</div>
-                        <div class="text-sm text-blue-600">{{ t('attendance.excused') || 'Excused' }}</div>
+                        <div class="text-sm text-blue-600">{{ formatAttendanceStatus('excused') }}</div>
                     </div>
                     <div class="bg-gray-50 rounded-xl border border-gray-200 p-4 text-center">
                         <div class="text-2xl font-bold text-gray-600">{{ attendanceStats.not_marked }}</div>
-                        <div class="text-sm text-gray-500">{{ t('attendance.not_marked') || 'Not Marked' }}</div>
+                        <div class="text-sm text-gray-500">{{ formatAttendanceStatus('not_marked') }}</div>
                     </div>
                 </div>
 
@@ -165,7 +222,7 @@
                         v-model="selectedBatch"
                         class="px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white min-w-[200px]"
                     >
-                        <option value="">{{ t('attendance.all_batches') || 'All Batches' }}</option>
+                        <option value="">{{ t('lessons.all_batches') || t('attendance.all_batches') || t('common.all_batches') || 'All Batches' }}</option>
                         <option v-for="batch in batches" :key="batch.id" :value="batch.id">
                             {{ batch.name }} ({{ batch.students_count }})
                         </option>
@@ -180,7 +237,7 @@
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                         </svg>
-                        {{ t('attendance.save') || 'Save Attendance' }}
+                        {{ t('lessons.mark_attendance') || t('attendance.save') || t('common.save') || 'Save Attendance' }}
                     </button>
                 </div>
 
@@ -194,19 +251,19 @@
                                         {{ t('attendance.student') || 'Student' }}
                                     </th>
                                     <th class="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                        {{ t('attendance.batch') || 'Batch' }}
+                                        {{ t('lessons.batch') || t('attendance.batch') || t('common.batch') || 'Batch' }}
                                     </th>
                                     <th class="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                        {{ t('attendance.status') || 'Status' }}
+                                        {{ t('lessons.status') || t('attendance.status') || t('common.status') || 'Status' }}
                                     </th>
                                     <th class="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                         {{ t('attendance.marked_by') || 'Marked By' }}
                                     </th>
                                     <th class="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                        {{ t('attendance.progress') || 'Progress' }}
+                                        {{ t('lessons.progress') || t('attendance.progress') || t('common.progress') || 'Progress' }}
                                     </th>
                                     <th class="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                        {{ t('attendance.completed') || 'Completed' }}
+                                        {{ t('lessons.completed') || t('attendance.completed') || t('common.completed') || 'Completed' }}
                                     </th>
                                 </tr>
                             </thead>
@@ -233,17 +290,17 @@
                                             class="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                                             :class="getStatusClass(attendanceChanges[`${student.id}-${student.batch_id}`])"
                                         >
-                                            <option value="">{{ t('attendance.not_marked') || 'Not Marked' }}</option>
-                                            <option value="present">{{ t('attendance.present') || 'Present' }}</option>
-                                            <option value="late">{{ t('attendance.late') || 'Late' }}</option>
-                                            <option value="absent">{{ t('attendance.absent') || 'Absent' }}</option>
-                                            <option value="excused">{{ t('attendance.excused') || 'Excused' }}</option>
+                                            <option value="">{{ formatAttendanceStatus('not_marked') }}</option>
+                                            <option value="present">{{ formatAttendanceStatus('present') }}</option>
+                                            <option value="late">{{ formatAttendanceStatus('late') }}</option>
+                                            <option value="absent">{{ formatAttendanceStatus('absent') }}</option>
+                                            <option value="excused">{{ formatAttendanceStatus('excused') }}</option>
                                         </select>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span v-if="student.attendance" class="inline-flex items-center gap-1 text-sm">
                                             <span v-if="student.attendance.marked_by === 'student'" class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs">
-                                                {{ t('attendance.auto') || 'Auto' }}
+                                                {{ t('lessons.auto') || t('attendance.auto') || 'Auto' }}
                                             </span>
                                             <span v-else class="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs">
                                                 {{ t('attendance.instructor') || 'Instructor' }}
@@ -274,7 +331,7 @@
                                 </tr>
                                 <tr v-if="filteredStudents.length === 0">
                                     <td colspan="6" class="px-6 py-12 text-center text-gray-500">
-                                        {{ t('attendance.no_students') || 'No students found' }}
+                                        {{ t('lessons.no_students') || t('attendance.no_students') || t('common.no_students') || 'No students found' }}
                                     </td>
                                 </tr>
                             </tbody>
@@ -287,7 +344,7 @@
             <div v-if="activeTab === 'questions'" class="space-y-6">
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                     <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                        <h3 class="text-lg font-semibold text-gray-900">{{ t('questions.title') || 'Questions' }}</h3>
+                        <h3 class="text-lg font-semibold text-gray-900">{{ t('lessons.questions') || t('questions.title') || 'Questions' }}</h3>
                         <button
                             @click="openQuestionModal(null)"
                             class="inline-flex items-center gap-2 px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-xl font-medium transition-all"
@@ -336,7 +393,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                         </div>
-                        <p class="text-gray-500">{{ t('questions.no_questions') || 'No questions yet' }}</p>
+                        <p class="text-gray-500">{{ t('questions.no_questions') || t('lessons.no_questions') || 'No questions yet' }}</p>
                     </div>
                 </div>
             </div>
@@ -354,6 +411,19 @@
             @submit="submitQuestion"
             @type-change="handleQuestionTypeChange"
         />
+
+        <!-- Lesson Form Modal -->
+        <LessonForm
+            :show="showLessonModal"
+            :lesson="editingLesson"
+            :form-data="lessonForm"
+            :errors="lessonForm.errors"
+            :processing="lessonForm.processing"
+            :sections="sections"
+            :lesson-types="lessonTypes"
+            @close="closeLessonModal"
+            @submit="submitLesson"
+        />
     </AdminLayout>
 </template>
 
@@ -365,6 +435,7 @@ import { useRoute } from '@/composables/useRoute';
 import { useAlert } from '@/composables/useAlert';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import QuestionForm from '@/Pages/Admin/Questions/Form.vue';
+import LessonForm from '@/Pages/Admin/Lessons/Form.vue';
 
 const props = defineProps({
     course: Object,
@@ -374,6 +445,8 @@ const props = defineProps({
     attendances: Array,
     attendanceStats: Object,
     questionTypes: Array,
+    sections: Array,
+    lessonTypes: Array,
 });
 
 const { t } = useTranslation();
@@ -390,6 +463,10 @@ const changedStudents = ref(new Set());
 const showQuestionModal = ref(false);
 const editingQuestion = ref(null);
 
+// Lesson modal state
+const showLessonModal = ref(false);
+const editingLesson = ref(null);
+
 // Question form
 const questionForm = useForm({
     type: '',
@@ -405,6 +482,23 @@ const questionForm = useForm({
     ],
 });
 
+// Lesson form
+const lessonForm = useForm({
+    title: '',
+    title_ar: '',
+    type: '',
+    section_id: null,
+    order: 1,
+    duration_minutes: 0,
+    description: '',
+    description_ar: '',
+    content: '',
+    content_ar: '',
+    video_url: '',
+    live_meeting_date: '',
+    live_meeting_link: '',
+});
+
 // Watch for type changes to initialize answers
 watch(() => questionForm.type, (newType) => {
     if (newType === 'true_false') {
@@ -417,6 +511,49 @@ watch(() => questionForm.type, (newType) => {
             { answer: '', answer_ar: '', is_correct: false, order: 0 },
             { answer: '', answer_ar: '', is_correct: false, order: 1 },
         ];
+    }
+});
+
+// Watch for live_meeting_date changes to clear errors when date is filled
+watch(() => lessonForm.live_meeting_date, (newDate, oldDate) => {
+    // Clear error if date is now filled and valid
+    if (newDate && newDate.trim() !== '' && newDate !== oldDate) {
+        // Check if the date is in valid format
+        const isValidFormat = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(newDate.trim());
+        if (isValidFormat && lessonForm.errors.live_meeting_date) {
+            lessonForm.clearErrors('live_meeting_date');
+        }
+    }
+});
+
+// Watch for lesson type changes to handle live lesson fields
+watch(() => lessonForm.type, (newType, oldType) => {
+    // When switching away from 'live', clear live-specific fields
+    if (oldType === 'live' && newType !== 'live') {
+        lessonForm.live_meeting_date = '';
+        lessonForm.live_meeting_link = '';
+        // Clear any errors related to live fields
+        if (lessonForm.errors.live_meeting_date) {
+            lessonForm.clearErrors('live_meeting_date');
+        }
+        if (lessonForm.errors.live_meeting_link) {
+            lessonForm.clearErrors('live_meeting_link');
+        }
+    }
+    // When switching to 'live', ensure fields are initialized
+    if (newType === 'live' && oldType !== 'live') {
+        // If live_meeting_date is not set, keep it empty (user needs to fill it)
+        // But ensure it's a string, not null
+        if (lessonForm.live_meeting_date === null) {
+            lessonForm.live_meeting_date = '';
+        }
+        if (lessonForm.live_meeting_link === null) {
+            lessonForm.live_meeting_link = '';
+        }
+        // Clear any existing errors when switching to live type
+        if (lessonForm.errors.live_meeting_date) {
+            lessonForm.clearErrors('live_meeting_date');
+        }
     }
 });
 
@@ -568,6 +705,216 @@ const submitQuestion = (formData) => {
     }
 };
 
+// Lesson Modal Functions
+const openLessonModal = (lesson = null) => {
+    // Clear any existing errors first
+    lessonForm.clearErrors();
+    
+    editingLesson.value = lesson;
+    if (lesson) {
+        // Get section_id from lesson - check both section relationship and direct section_id property
+        const sectionId = lesson.section?.id || lesson.section_id || null;
+        lessonForm.title = lesson.title || '';
+        lessonForm.title_ar = lesson.title_ar || '';
+        lessonForm.type = lesson.type || '';
+        lessonForm.section_id = sectionId;
+        lessonForm.order = lesson.order || 1;
+        lessonForm.duration_minutes = lesson.duration_minutes || 0;
+        lessonForm.description = lesson.description || '';
+        lessonForm.description_ar = lesson.description_ar || '';
+        lessonForm.content = lesson.content || '';
+        lessonForm.content_ar = lesson.content_ar || '';
+        lessonForm.video_url = lesson.video_url || '';
+        
+        // Format live_meeting_date for datetime-local input (YYYY-MM-DDTHH:mm)
+        // Parse the date string directly without timezone conversion to preserve the stored time
+        if (lesson.live_meeting_date) {
+            try {
+                const dateString = String(lesson.live_meeting_date);
+                let year, month, day, hours, minutes;
+                
+                // Check if date string has timezone info
+                const hasTimezone = dateString.includes('Z') || 
+                                   dateString.match(/[+-]\d{2}:\d{2}$/) ||
+                                   (dateString.includes('T') && dateString.length > 16);
+                
+                if (hasTimezone) {
+                    // Has timezone - extract UTC components to get the stored time
+                    const utcDate = new Date(dateString);
+                    year = utcDate.getUTCFullYear();
+                    month = String(utcDate.getUTCMonth() + 1).padStart(2, '0');
+                    day = String(utcDate.getUTCDate()).padStart(2, '0');
+                    hours = String(utcDate.getUTCHours()).padStart(2, '0');
+                    minutes = String(utcDate.getUTCMinutes()).padStart(2, '0');
+                } else {
+                    // No timezone - parse directly from string (format: YYYY-MM-DD HH:mm:ss or YYYY-MM-DDTHH:mm:ss)
+                    const match = dateString.match(/^(\d{4})-(\d{2})-(\d{2})(?:[\sT](\d{2}):(\d{2})(?::(\d{2}))?)?/);
+                    if (match) {
+                        [, year, month, day, hours = '00', minutes = '00'] = match;
+                        year = parseInt(year);
+                        month = String(parseInt(month)).padStart(2, '0');
+                        day = String(parseInt(day)).padStart(2, '0');
+                        hours = String(parseInt(hours)).padStart(2, '0');
+                        minutes = String(parseInt(minutes)).padStart(2, '0');
+                    } else {
+                        // Fallback to Date parsing
+                        const date = new Date(dateString);
+                        if (!isNaN(date.getTime())) {
+                            year = date.getFullYear();
+                            month = String(date.getMonth() + 1).padStart(2, '0');
+                            day = String(date.getDate()).padStart(2, '0');
+                            hours = String(date.getHours()).padStart(2, '0');
+                            minutes = String(date.getMinutes()).padStart(2, '0');
+                        } else {
+                            lessonForm.live_meeting_date = '';
+                            return;
+                        }
+                    }
+                }
+                
+                lessonForm.live_meeting_date = `${year}-${month}-${day}T${hours}:${minutes}`;
+            } catch (e) {
+                console.error('Error parsing date:', e);
+                lessonForm.live_meeting_date = '';
+            }
+        } else {
+            lessonForm.live_meeting_date = '';
+        }
+        lessonForm.live_meeting_link = lesson.live_meeting_link || '';
+    } else {
+        // It's a new lesson - create mode
+        lessonForm.reset();
+        lessonForm.clearErrors();
+        lessonForm.order = 1;
+        lessonForm.duration_minutes = 0;
+        lessonForm.live_meeting_date = '';
+        lessonForm.live_meeting_link = '';
+        lessonForm.type = ''; // Reset type for new lessons
+    }
+    showLessonModal.value = true;
+};
+
+const closeLessonModal = () => {
+    showLessonModal.value = false;
+    editingLesson.value = null;
+    lessonForm.reset();
+    lessonForm.clearErrors();
+    // Reset form defaults
+    lessonForm.order = 1;
+    lessonForm.duration_minutes = 0;
+    lessonForm.live_meeting_date = '';
+    lessonForm.live_meeting_link = '';
+};
+
+const submitLesson = (formData) => {
+    // Convert empty strings to null for nullable fields
+    if (lessonForm.section_id === '' || lessonForm.section_id === null) {
+        lessonForm.section_id = null;
+    } else if (lessonForm.section_id) {
+        lessonForm.section_id = parseInt(lessonForm.section_id);
+    }
+    
+    // Convert empty strings to null for other nullable fields
+    ['description', 'description_ar', 'content', 'content_ar', 'video_url', 'title_ar', 'live_meeting_link'].forEach(field => {
+        if (lessonForm[field] === '') {
+            lessonForm[field] = null;
+        }
+    });
+    
+    // Handle live_meeting_date separately - format and validate for live lessons
+    if (lessonForm.type === 'live') {
+        // For live lessons, send the date as-is without timezone conversion
+        // This ensures the database stores exactly what the user selected
+        if (lessonForm.live_meeting_date && lessonForm.live_meeting_date.trim() !== '') {
+            // datetime-local input provides local time in format YYYY-MM-DDTHH:mm (no timezone)
+            // We need to convert this local time to UTC/ISO format for the backend
+            const dateValue = lessonForm.live_meeting_date.trim();
+            
+            // Validate format matches YYYY-MM-DDTHH:mm
+            if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(dateValue)) {
+                // Convert from datetime-local format (YYYY-MM-DDTHH:mm) to MySQL format (YYYY-MM-DD HH:mm:ss)
+                // This preserves the exact time the user selected without timezone conversion
+                const [datePart, timePart] = dateValue.split('T');
+                lessonForm.live_meeting_date = `${datePart} ${timePart}:00`;
+            } else {
+                // Invalid format, try to parse as-is
+                try {
+                    const date = new Date(dateValue);
+                    if (!isNaN(date.getTime())) {
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        const hours = String(date.getHours()).padStart(2, '0');
+                        const minutes = String(date.getMinutes()).padStart(2, '0');
+                        lessonForm.live_meeting_date = `${year}-${month}-${day} ${hours}:${minutes}:00`;
+                    } else {
+                        lessonForm.live_meeting_date = null;
+                    }
+                } catch (e) {
+                    lessonForm.live_meeting_date = null;
+                }
+            }
+        } else {
+            // Empty date for live lesson - will be validated by backend
+            lessonForm.live_meeting_date = null;
+        }
+    } else {
+        // For non-live lessons, convert empty to null
+        if (lessonForm.live_meeting_date === '' || !lessonForm.live_meeting_date) {
+            lessonForm.live_meeting_date = null;
+        }
+    }
+    
+    // Ensure order is integer or null
+    if (lessonForm.order === '' || lessonForm.order === null) {
+        lessonForm.order = null;
+    } else {
+        lessonForm.order = parseInt(lessonForm.order) || null;
+    }
+    
+    // Ensure duration_minutes is integer (default to 0, not null, as DB doesn't allow null)
+    if (lessonForm.duration_minutes === '' || lessonForm.duration_minutes === null || lessonForm.duration_minutes === undefined) {
+        lessonForm.duration_minutes = 0;
+    } else {
+        const parsed = parseInt(lessonForm.duration_minutes);
+        lessonForm.duration_minutes = isNaN(parsed) ? 0 : parsed;
+    }
+    
+    if (editingLesson.value) {
+        // Update existing lesson
+        lessonForm.put(route('admin.courses.lessons.update', [props.course.slug || props.course.id, editingLesson.value.id]), {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                showSuccess(t('lessons.updated_successfully') || 'Lesson updated successfully!', t('common.success') || 'Success');
+                closeLessonModal();
+                router.reload({ only: ['lesson'] });
+            },
+            onError: (errors) => {
+                if (errors.message) {
+                    showError(errors.message, t('common.error') || 'Error');
+                }
+            },
+        });
+    } else {
+        // Create new lesson
+        lessonForm.post(route('admin.courses.lessons.store', props.course.slug || props.course.id), {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                showSuccess(t('lessons.created_successfully') || 'Lesson created successfully!', t('common.success') || 'Success');
+                closeLessonModal();
+                router.reload({ only: ['lesson'] });
+            },
+            onError: (errors) => {
+                if (errors.message) {
+                    showError(errors.message, t('common.error') || 'Error');
+                }
+            },
+        });
+    }
+};
+
 // Initialize attendance changes from existing data
 onMounted(() => {
     props.students?.forEach(student => {
@@ -646,6 +993,7 @@ const getLessonTypeIcon = (type) => {
         embed_frame: { bg: 'bg-cyan-100', text: 'text-cyan-600', path: 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4' },
         assignment: { bg: 'bg-indigo-100', text: 'text-indigo-600', path: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01' },
         test: { bg: 'bg-rose-100', text: 'text-rose-600', path: 'M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
+        live: { bg: 'bg-red-100', text: 'text-red-600', path: 'M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z' },
     };
     return icons[type] || icons.text;
 };
@@ -657,5 +1005,74 @@ const formatLessonType = (type) => {
 
 const formatQuestionType = (type) => {
     return t(`lessons.types.${type}`) || type;
+};
+
+const formatAttendanceStatus = (status) => {
+    if (!status || status === '') {
+        return t('lessons.not_marked') || 'Not Marked';
+    }
+    
+    const statusMap = {
+        present: t('lessons.present') || 'Present',
+        absent: t('lessons.absent') || 'Absent',
+        late: t('lessons.late') || 'Late',
+        excused: t('lessons.excused') || 'Excused',
+        not_marked: t('lessons.not_marked') || 'Not Marked',
+    };
+    
+    return statusMap[status] || status;
+};
+
+const formatDateTime = (dateTime) => {
+    if (!dateTime) return '';
+    
+    try {
+        const dateString = String(dateTime);
+        let date;
+        
+        // Check if the date string has timezone info (Z, +, or - after position 10)
+        const hasTimezone = dateString.includes('Z') || 
+                           dateString.match(/[+-]\d{2}:\d{2}$/) ||
+                           (dateString.includes('T') && dateString.length > 16);
+        
+        if (hasTimezone) {
+            // Date has timezone info - extract UTC components to preserve the stored time
+            const utcDate = new Date(dateString);
+            const year = utcDate.getUTCFullYear();
+            const month = utcDate.getUTCMonth();
+            const day = utcDate.getUTCDate();
+            const hours = utcDate.getUTCHours();
+            const minutes = utcDate.getUTCMinutes();
+            
+            // Create a date object with UTC values but display as local format
+            date = new Date(year, month, day, hours, minutes);
+        } else {
+            // No timezone info - parse date components directly (what was stored)
+            const match = dateString.match(/^(\d{4})-(\d{2})-(\d{2})(?:\s+(\d{2}):(\d{2})(?::(\d{2}))?)?/);
+            if (match) {
+                const [, year, month, day, hour = '00', minute = '00'] = match;
+                // Create date in local timezone (no UTC conversion)
+                date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hour), parseInt(minute));
+            } else {
+                date = new Date(dateString);
+            }
+        }
+        
+        if (isNaN(date.getTime())) {
+            return '';
+        }
+        
+        // Format the date in local time
+    return date.toLocaleString(undefined, {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    });
+    } catch (e) {
+        console.error('Error formatting date:', e);
+        return '';
+    }
 };
 </script>

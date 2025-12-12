@@ -215,45 +215,79 @@
                         <p class="text-gray-500 text-sm mt-1">{{ t('profile.my_courses_description') || 'Your enrolled courses will appear here. Contact admin to enroll in new courses.' }}</p>
                     </div>
                     
-                    <div v-if="myBatches && myBatches.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div v-for="batch in myBatches" :key="batch.id" class="bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all">
-                            <div class="flex items-start justify-between mb-4">
-                                <div class="flex-1">
-                                    <h3 class="font-bold text-gray-900 mb-2 line-clamp-2">{{ batch.course?.translated_title || batch.course?.title || 'N/A' }}</h3>
-                                    <p class="text-sm text-gray-500 mb-1">{{ batch.translated_name || batch.name }}</p>
-                                    <p v-if="batch.instructor" class="text-sm text-gray-400">{{ t('courses.instructor') }}: {{ batch.instructor.name }}</p>
-                                </div>
-                                <div class="w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden ml-3">
-                                    <img :src="getCourseImage(batch.course || {})" :alt="batch.course?.translated_title || batch.course?.title" class="w-full h-full object-cover" @error="handleImageError($event)" />
+                    <div v-if="myBatches && myBatches.length > 0" class="row g-3">
+                        <div v-for="courseGroup in myBatches" :key="courseGroup.course?.id" class="col-12 col-md-6 col-lg-4">
+                            <Link 
+                                v-if="courseGroup.course?.slug"
+                                :href="route('courses.play', courseGroup.course.slug)"
+                                class="text-decoration-none"
+                            >
+                                <div class="card h-100 shadow-sm border-0 hover-shadow transition-all cursor-pointer">
+                                    <div class="card-body d-flex flex-column p-3">
+                                    <div class="d-flex align-items-start gap-2 mb-3">
+                                        <div class="flex-shrink-0">
+                                            <img 
+                                                :src="getCourseImage(courseGroup.course || {})" 
+                                                :alt="courseGroup.course?.translated_title || courseGroup.course?.title" 
+                                                class="rounded" 
+                                                style="width: 48px; height: 48px; object-fit: cover;"
+                                                @error="handleImageError($event)" 
+                                            />
+                                        </div>
+                                        <div class="flex-grow-1 min-w-0">
+                                            <h6 class="card-title mb-0 fw-semibold text-truncate" style="font-size: 0.875rem; line-height: 1.3;">
+                                                {{ courseGroup.course?.translated_title || courseGroup.course?.title || 'N/A' }}
+                                            </h6>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Batches for this course -->
+                                    <div v-if="courseGroup.batches && courseGroup.batches.length > 0" class="mb-3 flex-grow-1">
+                                        <div v-for="batch in courseGroup.batches" :key="batch.id" class="bg-light rounded p-2 mb-2 border border-light">
+                                            <div class="d-flex align-items-start justify-content-between mb-1">
+                                                <div class="flex-grow-1 min-w-0 me-2">
+                                                    <p class="mb-0 fw-medium text-truncate" style="font-size: 0.75rem;">{{ batch.translated_name || batch.name }}</p>
+                                                    <p v-if="batch.instructor" class="mb-0 text-muted text-truncate" style="font-size: 0.7rem;">{{ batch.instructor.name }}</p>
+                                                    <div v-if="batch.start_date || batch.end_date" class="d-flex flex-wrap gap-1 mt-1">
+                                                        <small v-if="batch.start_date" class="text-muted d-flex align-items-center gap-1" style="font-size: 0.7rem;">
+                                                            <i class="bi bi-calendar3" style="font-size: 0.65rem;"></i>
+                                                            {{ new Date(batch.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) }}
+                                                        </small>
+                                                        <small v-if="batch.end_date" class="text-muted d-flex align-items-center gap-1" style="font-size: 0.7rem;">
+                                                            <i class="bi bi-calendar3" style="font-size: 0.65rem;"></i>
+                                                            {{ new Date(batch.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) }}
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                                <span :class="batch.is_active ? 'badge bg-success' : 'badge bg-secondary'" class="flex-shrink-0" style="font-size: 0.65rem;">
+                                                    {{ batch.is_active ? (t('admin.active') || 'Active') : (t('admin.inactive') || 'Inactive') }}
+                                                </span>
+                                            </div>
+                                            <!-- Progress Bar for this batch -->
+                                            <div v-if="batch.progress !== undefined" class="mt-2">
+                                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                                    <small class="text-muted" style="font-size: 0.7rem;">{{ t('profile.progress') }}</small>
+                                                    <small class="fw-semibold text-muted" style="font-size: 0.7rem;">{{ batch.progress || 0 }}%</small>
+                                                </div>
+                                                <div class="progress" style="height: 6px;">
+                                                    <div class="progress-bar bg-primary" role="progressbar" :style="{ width: (batch.progress || 0) + '%' }"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="d-flex align-items-center justify-content-between pt-2 border-top mt-auto">
+                                        <small class="text-muted d-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                                            <i class="bi bi-calendar3"></i>
+                                            <span>{{ courseGroup.batches?.[0]?.enrolled_at ? new Date(courseGroup.batches[0].enrolled_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '' }}</span>
+                                        </small>
+                                        <span class="btn btn-sm btn-link text-primary p-0 text-decoration-none" style="font-size: 0.75rem;">
+                                            {{ t('courses.actions.continue') }}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
-                            
-                            <!-- Progress Bar -->
-                            <div class="mb-4">
-                                <div class="flex items-center justify-between text-sm text-gray-600 mb-2">
-                                    <span>{{ t('profile.progress') }}</span>
-                                    <span class="font-semibold">{{ batch.progress || 0 }}%</span>
-                                </div>
-                                <div class="w-full bg-gray-200 rounded-full h-2">
-                                    <div class="bg-blue-600 h-2 rounded-full transition-all" :style="{ width: (batch.progress || 0) + '%' }"></div>
-                                </div>
-                            </div>
-                            
-                            <div class="flex items-center justify-between pt-4 border-t border-gray-200">
-                                <div class="flex items-center gap-2 text-sm text-gray-600">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                    <span>{{ batch.enrolled_at ? new Date(batch.enrolled_at).toLocaleDateString() : '' }}</span>
-                                </div>
-                                <Link
-                                    v-if="batch.course?.slug"
-                                    :href="route('courses.play', batch.course.slug)"
-                                    class="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                                >
-                                    {{ t('courses.actions.continue') }}
-                                </Link>
-                            </div>
+                            </Link>
                         </div>
                     </div>
                     <div v-else class="text-center py-12">
@@ -270,33 +304,73 @@
                 <div v-show="activeTab === 'assigned'" class="bg-white rounded-xl shadow-sm p-8">
                     <h2 class="text-2xl font-bold text-gray-900 mb-6">{{ t('profile.assigned_courses') }}</h2>
                     
-                    <div v-if="assignedBatches && assignedBatches.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        <div v-for="batch in assignedBatches" :key="batch.id" class="bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all">
-                            <div class="flex items-start justify-between mb-4">
-                                <div class="flex-1">
-                                    <h3 class="font-bold text-gray-900 mb-2 line-clamp-2">{{ batch.course?.translated_title || batch.course?.title || 'N/A' }}</h3>
-                                    <p class="text-sm text-gray-500 mb-1">{{ batch.translated_name || batch.name }}</p>
-                                </div>
-                                <div class="w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden ml-3">
-                                    <img :src="getCourseImage(batch.course || {})" :alt="batch.course?.translated_title || batch.course?.title" class="w-full h-full object-cover" @error="handleImageError($event)" />
+                    <div v-if="assignedBatches && assignedBatches.length > 0" class="row g-3">
+                        <div v-for="courseGroup in assignedBatches" :key="courseGroup.course?.id" class="col-12 col-md-6 col-lg-4">
+                            <Link 
+                                v-if="courseGroup.course?.slug"
+                                :href="route('courses.show', courseGroup.course.slug)"
+                                class="text-decoration-none"
+                            >
+                                <div class="card h-100 shadow-sm border-0 hover-shadow transition-all cursor-pointer">
+                                    <div class="card-body d-flex flex-column p-3">
+                                    <div class="d-flex align-items-start gap-2 mb-3">
+                                        <div class="flex-shrink-0">
+                                            <img 
+                                                :src="getCourseImage(courseGroup.course || {})" 
+                                                :alt="courseGroup.course?.translated_title || courseGroup.course?.title" 
+                                                class="rounded" 
+                                                style="width: 48px; height: 48px; object-fit: cover;"
+                                                @error="handleImageError($event)" 
+                                            />
+                                        </div>
+                                        <div class="flex-grow-1 min-w-0">
+                                            <h6 class="card-title mb-0 fw-semibold text-truncate" style="font-size: 0.875rem; line-height: 1.3;">
+                                                {{ courseGroup.course?.translated_title || courseGroup.course?.title || 'N/A' }}
+                                            </h6>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Batches for this course -->
+                                    <div v-if="courseGroup.batches && courseGroup.batches.length > 0" class="mb-3 flex-grow-1">
+                                        <div v-for="batch in courseGroup.batches" :key="batch.id" class="bg-light rounded p-2 mb-2 border border-light">
+                                            <div class="d-flex align-items-start justify-content-between mb-1">
+                                                <div class="flex-grow-1 min-w-0 me-2">
+                                                    <p class="mb-0 fw-medium text-truncate" style="font-size: 0.75rem;">{{ batch.translated_name || batch.name }}</p>
+                                                    <div v-if="batch.start_date || batch.end_date" class="d-flex flex-wrap gap-1 mt-1">
+                                                        <small v-if="batch.start_date" class="text-muted d-flex align-items-center gap-1" style="font-size: 0.7rem;">
+                                                            <i class="bi bi-calendar3" style="font-size: 0.65rem;"></i>
+                                                            {{ new Date(batch.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) }}
+                                                        </small>
+                                                        <small v-if="batch.end_date" class="text-muted d-flex align-items-center gap-1" style="font-size: 0.7rem;">
+                                                            <i class="bi bi-calendar3" style="font-size: 0.65rem;"></i>
+                                                            {{ new Date(batch.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) }}
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                                <span :class="batch.is_active ? 'badge bg-success' : 'badge bg-secondary'" class="flex-shrink-0" style="font-size: 0.65rem;">
+                                                    {{ batch.is_active ? (t('admin.active') || 'Active') : (t('admin.inactive') || 'Inactive') }}
+                                                </span>
+                                            </div>
+                                            <div v-if="batch.enrollments_count !== undefined" class="mt-1.5">
+                                                <small class="text-muted" style="font-size: 0.7rem;">
+                                                    {{ batch.enrollments_count || 0 }} {{ t('profile.enrolled_students') || 'students' }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="d-flex align-items-center justify-content-between pt-2 border-top mt-auto">
+                                        <small class="text-muted d-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                                            <i class="bi bi-people"></i>
+                                            <span>{{ courseGroup.total_enrollments || 0 }} {{ t('profile.enrolled_students') || 'students' }}</span>
+                                        </small>
+                                        <span class="btn btn-sm btn-link text-primary p-0 text-decoration-none" style="font-size: 0.75rem;">
+                                            {{ t('courses.actions.view') }}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
-                            
-                            <div class="flex items-center justify-between pt-4 border-t border-gray-200">
-                                <div class="flex items-center gap-2 text-sm text-gray-600">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                                    </svg>
-                                    <span>{{ batch.enrollments_count || 0 }} {{ t('profile.enrolled_students') }}</span>
-                                </div>
-                                <Link
-                                    v-if="batch.course?.slug"
-                                    :href="route('courses.show', batch.course.slug)"
-                                    class="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                                >
-                                    {{ t('courses.actions.view') }}
-                                </Link>
-                            </div>
+                            </Link>
                         </div>
                     </div>
                     <div v-else class="text-center py-12">
@@ -421,4 +495,61 @@ watch(() => page.props.flash?.success, (success) => {
     }
 });
 </script>
+
+<style scoped>
+.hover-shadow {
+    transition: all 0.3s ease;
+}
+
+.hover-shadow:hover {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    transform: translateY(-2px);
+}
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
+a.text-decoration-none .card {
+    color: inherit;
+}
+
+a.text-decoration-none:hover .card {
+    color: inherit;
+}
+
+.card {
+    border-radius: 0.5rem;
+}
+
+.card-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.progress {
+    border-radius: 0.25rem;
+}
+
+.badge {
+    font-weight: 500;
+    padding: 0.25rem 0.5rem;
+}
+
+.text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.min-w-0 {
+    min-width: 0;
+}
+
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1rem !important;
+    }
+}
+</style>
 

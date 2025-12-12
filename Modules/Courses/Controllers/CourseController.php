@@ -127,6 +127,9 @@ class CourseController extends Controller
 
         // Format course data with additional information
         $formattedCourse = $this->formatCourseForShow($courseData, $course);
+        
+        // Get all students enrolled in this course with their batch information
+        $courseStudents = $this->getCourseStudents($course);
 
         return Inertia::render('Courses/Show', [
             'course' => $formattedCourse,
@@ -136,6 +139,7 @@ class CourseController extends Controller
             'isInstructor' => $isInstructor,
             'instructorData' => $instructorData,
             'batches' => $courseBatches,
+            'courseStudents' => $courseStudents,
         ]);
     }
 
@@ -209,7 +213,7 @@ class CourseController extends Controller
                 $query->where('course_id', $course->id)
                       ->where('instructor_id', $instructor->id);
             })
-            ->with('student')
+            ->with(['student', 'batch'])
             ->orderBy('enrolled_at', 'desc')
             ->get()
             ->map(fn($e) => $this->formatEnrollment($e));
@@ -275,6 +279,12 @@ class CourseController extends Controller
             'progress' => $progress,
             'status' => $enrollment->status,
             'completed_at' => $enrollment->completed_at,
+            'batch' => [
+                'id' => $enrollment->batch->id,
+                'name' => $enrollment->batch->translated_name ?? $enrollment->batch->name,
+                'start_date' => $enrollment->batch->start_date,
+                'end_date' => $enrollment->batch->end_date,
+            ],
         ];
     }
 
@@ -315,6 +325,40 @@ class CourseController extends Controller
                 'is_correct' => $a->is_correct,
             ]),
         ];
+    }
+
+    /**
+     * Get all students enrolled in course with their batch information
+     */
+    private function getCourseStudents(Course $course): array
+    {
+        $enrollments = \App\Models\Enrollment::whereHas('batch', function($query) use ($course) {
+                $query->where('course_id', $course->id);
+            })
+            ->with(['student', 'batch.instructor:id,name,email'])
+            ->orderBy('enrolled_at', 'desc')
+            ->get();
+        
+        return $enrollments->map(function($enrollment) {
+            return [
+                'id' => $enrollment->student->id,
+                'name' => $enrollment->student->name,
+                'email' => $enrollment->student->email,
+                'batch' => [
+                    'id' => $enrollment->batch->id,
+                    'name' => $enrollment->batch->translated_name ?? $enrollment->batch->name,
+                    'start_date' => $enrollment->batch->start_date,
+                    'end_date' => $enrollment->batch->end_date,
+                    'instructor' => $enrollment->batch->instructor ? [
+                        'id' => $enrollment->batch->instructor->id,
+                        'name' => $enrollment->batch->instructor->name,
+                    ] : null,
+                ],
+                'enrolled_at' => $enrollment->enrolled_at,
+                'progress' => $enrollment->progress ?? 0,
+                'status' => $enrollment->status ?? 'enrolled',
+            ];
+        })->values()->toArray();
     }
 
     /**

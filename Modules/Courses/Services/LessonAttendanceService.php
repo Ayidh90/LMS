@@ -39,6 +39,7 @@ class LessonAttendanceService
         $hasQuestions = $lesson->questions && $lesson->questions->count() > 0;
         $isUploadedVideo = $lesson->type === 'video_file';
         $isVideoLink = $hasVideo && !$isUploadedVideo;
+        $isLiveLesson = $lesson->type === 'live';
 
         foreach ($enrollments as $enrollment) {
             // Check if instructor has already marked attendance (instructor takes priority)
@@ -52,6 +53,11 @@ class LessonAttendanceService
                 continue;
             }
 
+            // Don't auto-mark live lessons - they require clicking the link
+            if ($isLiveLesson) {
+                continue;
+            }
+
             // Auto-mark for text lessons or video links without questions
             if ((!$hasVideo && !$hasQuestions) || ($isVideoLink && !$hasQuestions)) {
                 $this->createAttendanceRecord($lesson, $student, $enrollment->batch_id, 'present', 'Auto-marked: Lesson opened');
@@ -59,6 +65,40 @@ class LessonAttendanceService
                 $enrollment->load(['student', 'batch.course']);
                 $this->markLessonCompleted($lesson, $student, $enrollment, true);
             }
+        }
+    }
+    
+    /**
+     * Mark attendance when student clicks on live meeting link
+     */
+    public function markAttendanceForLiveLesson(User $student, Course $course, Lesson $lesson): void
+    {
+        if ($student->role !== 'student' || $lesson->type !== 'live') {
+            return;
+        }
+
+        $enrollments = $this->getStudentEnrollments($student, $course);
+        if ($enrollments->isEmpty()) {
+            return;
+        }
+
+        foreach ($enrollments as $enrollment) {
+            // Check if instructor has already marked attendance (instructor takes priority)
+            $existingAttendance = LessonAttendance::where('lesson_id', $lesson->id)
+                ->where('student_id', $student->id)
+                ->where('batch_id', $enrollment->batch_id)
+                ->first();
+            
+            if ($existingAttendance && $existingAttendance->marked_by !== $student->id) {
+                // Instructor has already marked, don't override
+                continue;
+            }
+
+            // Mark attendance as present when student clicks the live meeting link
+            $this->createAttendanceRecord($lesson, $student, $enrollment->batch_id, 'present', 'Auto-marked: Live meeting link clicked');
+            // Ensure enrollment relationships are loaded
+            $enrollment->load(['student', 'batch.course']);
+            $this->markLessonCompleted($lesson, $student, $enrollment, true);
         }
     }
 

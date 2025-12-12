@@ -19,36 +19,48 @@
             </div>
 
             <!-- Quick Actions - Bootstrap Style -->
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
+            <div class="card shadow-sm mb-4 border-0">
+                <div class="card-body p-4">
+                    <h5 class="card-title mb-3 fw-semibold d-flex align-items-center gap-2">
+                        <i class="bi bi-lightning-charge text-primary"></i>
+                        {{ t('admin.quick_actions') || 'Quick Actions' }}
+                    </h5>
                     <div class="d-flex flex-wrap gap-2">
                         <Link
+                            :href="route('admin.courses.batches.index', course.slug || course.id)"
+                            class="btn btn-outline-success btn-sm"
+                        >
+                            <i class="bi bi-people me-2"></i>
+                            {{ t('admin.manage_batches') || 'Manage Batches' }}
+                        </Link>
+                        <Link
                             :href="route('admin.courses.sections.index', course.slug || course.id)"
-                            class="btn btn-outline-secondary btn-sm"
+                            class="btn btn-outline-primary btn-sm"
                         >
                             <i class="bi bi-layers me-2"></i>
                             {{ t('admin.manage_sections') || 'Manage Chapters' }}
                         </Link>
                         <Link
                             :href="route('admin.courses.lessons.index', course.slug || course.id)"
-                            class="btn btn-outline-secondary btn-sm"
+                            class="btn btn-outline-info btn-sm"
                         >
                             <i class="bi bi-book me-2"></i>
                             {{ t('admin.manage_lessons') || 'Manage Lessons' }}
                         </Link>
+                      
                         <Link
-                            :href="route('admin.courses.batches.index', course.slug || course.id)"
+                            :href="route('admin.courses.show', course.slug || course.id)"
                             class="btn btn-outline-secondary btn-sm"
                         >
-                            <i class="bi bi-people me-2"></i>
-                            {{ t('admin.manage_batches') || 'Manage Batches' }}
+                            <i class="bi bi-eye me-2"></i>
+                            {{ t('common.view') || 'View Course' }}
                         </Link>
                     </div>
                 </div>
             </div>
 
             <!-- Form Card - Bootstrap Style -->
-            <form @submit.prevent="submit" class="card shadow-sm border-0">
+            <form @submit.prevent="submit" class="card shadow-sm border-0" enctype="multipart/form-data">
                 <div class="card-body p-4 p-md-5">
                     <!-- Basic Info Section -->
                     <div class="mb-5">
@@ -62,57 +74,91 @@
                         <div class="row g-4">
                             <!-- Title English -->
                             <div class="col-12 col-md-6">
-                                <label class="form-label fw-semibold">
+                                <label for="title" class="form-label fw-semibold">
                                     {{ t('courses.fields.title') }} ({{ t('common.language_english') }}) <span class="text-danger">*</span>
                                 </label>
-                                <input
-                                    v-model="form.title"
-                                    type="text"
-                                    class="form-control form-control-lg"
-                                    :class="{ 'is-invalid': form.errors.title }"
-                                />
-                                <div v-if="form.errors.title" class="invalid-feedback d-flex align-items-center gap-1">
-                                    <i class="bi bi-exclamation-circle"></i>
-                                    {{ form.errors.title }}
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-light">
+                                        <i class="bi bi-translate text-primary"></i>
+                                    </span>
+                                    <input
+                                        id="title"
+                                        v-model="form.title"
+                                        type="text"
+                                        class="form-control"
+                                        :class="{ 'is-invalid': form.errors.title }"
+                                        :placeholder="t('courses.placeholders.title') || 'Enter course title'"
+                                        required
+                                    />
+                                    <div v-if="form.errors.title" class="invalid-feedback d-block">
+                                        <i class="bi bi-exclamation-circle me-1"></i>
+                                        {{ form.errors.title }}
+                                    </div>
                                 </div>
                             </div>
                             
                             <!-- Title Arabic -->
                             <div class="col-12 col-md-6">
-                                <label class="form-label fw-semibold">
+                                <label for="title_ar" class="form-label fw-semibold">
                                     {{ t('courses.fields.title') }} ({{ t('common.language_arabic') }})
                                 </label>
-                                <input
-                                    v-model="form.title_ar"
-                                    type="text"
-                                    dir="rtl"
-                                    class="form-control form-control-lg"
-                                />
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-light">
+                                        <i class="bi bi-translate text-success"></i>
+                                    </span>
+                                    <input
+                                        id="title_ar"
+                                        v-model="form.title_ar"
+                                        type="text"
+                                        dir="rtl"
+                                        class="form-control"
+                                        :placeholder="t('courses.placeholders.title') || 'أدخل عنوان الدورة'"
+                                    />
+                                </div>
                             </div>
                             
                             <!-- Description English -->
                             <div class="col-12">
-                                <label class="form-label fw-semibold">
+                                <label for="description" class="form-label fw-semibold">
                                     {{ t('courses.fields.description') }} ({{ t('common.language_english') }})
                                 </label>
-                                <textarea
-                                    v-model="form.description"
-                                    rows="4"
-                                    class="form-control"
-                                ></textarea>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light align-items-start pt-3">
+                                        <i class="bi bi-card-text text-primary"></i>
+                                    </span>
+                                    <textarea
+                                        id="description"
+                                        v-model="form.description"
+                                        rows="4"
+                                        class="form-control"
+                                        :class="{ 'is-invalid': form.errors.description }"
+                                        :placeholder="t('courses.placeholders.description') || 'Enter course description'"
+                                    ></textarea>
+                                    <div v-if="form.errors.description" class="invalid-feedback d-block">
+                                        <i class="bi bi-exclamation-circle me-1"></i>
+                                        {{ form.errors.description }}
+                                    </div>
+                                </div>
                             </div>
                             
                             <!-- Description Arabic -->
                             <div class="col-12">
-                                <label class="form-label fw-semibold">
+                                <label for="description_ar" class="form-label fw-semibold">
                                     {{ t('courses.fields.description') }} ({{ t('common.language_arabic') }})
                                 </label>
-                                <textarea
-                                    v-model="form.description_ar"
-                                    rows="4"
-                                    dir="rtl"
-                                    class="form-control"
-                                ></textarea>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light align-items-start pt-3">
+                                        <i class="bi bi-card-text text-success"></i>
+                                    </span>
+                                    <textarea
+                                        id="description_ar"
+                                        v-model="form.description_ar"
+                                        rows="4"
+                                        dir="rtl"
+                                        class="form-control"
+                                        :placeholder="t('courses.placeholders.description') || 'أدخل وصف الدورة'"
+                                    ></textarea>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -129,30 +175,58 @@
                         <div class="row g-4">
                             <!-- Level -->
                             <div class="col-12 col-md-6">
-                                <label class="form-label fw-semibold">
+                                <label for="level" class="form-label fw-semibold">
                                     {{ t('courses.fields.level') }} <span class="text-danger">*</span>
                                 </label>
-                                <select
-                                    v-model="form.level"
-                                    class="form-select form-select-lg"
-                                >
-                                    <option value="beginner">{{ t('courses.levels.beginner') }}</option>
-                                    <option value="intermediate">{{ t('courses.levels.intermediate') }}</option>
-                                    <option value="advanced">{{ t('courses.levels.advanced') }}</option>
-                                </select>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-light">
+                                        <i class="bi bi-bar-chart text-info"></i>
+                                    </span>
+                                    <select
+                                        id="level"
+                                        v-model="form.level"
+                                        class="form-select"
+                                        :class="{ 'is-invalid': form.errors.level }"
+                                        required
+                                    >
+                                        <option value="">{{ t('common.select') || 'Select level' }}</option>
+                                        <option value="beginner">{{ t('courses.levels.beginner') }}</option>
+                                        <option value="intermediate">{{ t('courses.levels.intermediate') }}</option>
+                                        <option value="advanced">{{ t('courses.levels.advanced') }}</option>
+                                    </select>
+                                    <div v-if="form.errors.level" class="invalid-feedback d-block">
+                                        <i class="bi bi-exclamation-circle me-1"></i>
+                                        {{ form.errors.level }}
+                                    </div>
+                                </div>
                             </div>
                             
                             <!-- Duration -->
                             <div class="col-12 col-md-6">
-                                <label class="form-label fw-semibold">
+                                <label for="duration_hours" class="form-label fw-semibold">
                                     {{ t('courses.fields.duration') }} ({{ t('common.hours') }}) <span class="text-danger">*</span>
                                 </label>
-                                <input
-                                    v-model="form.duration_hours"
-                                    type="number"
-                                    min="0"
-                                    class="form-control form-control-lg"
-                                />
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-light">
+                                        <i class="bi bi-clock text-info"></i>
+                                    </span>
+                                    <input
+                                        id="duration_hours"
+                                        v-model="form.duration_hours"
+                                        type="number"
+                                        min="0"
+                                        step="1"
+                                        class="form-control"
+                                        :class="{ 'is-invalid': form.errors.duration_hours }"
+                                        placeholder="0"
+                                        required
+                                    />
+                                    <span class="input-group-text bg-light">{{ t('common.hours') || 'Hours' }}</span>
+                                    <div v-if="form.errors.duration_hours" class="invalid-feedback d-block">
+                                        <i class="bi bi-exclamation-circle me-1"></i>
+                                        {{ form.errors.duration_hours }}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -169,42 +243,77 @@
                         <div class="row g-4">
                             <!-- Preview -->
                             <div class="col-12 col-md-4">
-                                <div class="border-2 border-dashed rounded p-3 text-center bg-light d-flex align-items-center justify-content-center" style="min-height: 200px;">
-                                    <div v-if="thumbnailPreview" class="w-100">
-                                        <img :src="thumbnailPreview" class="img-fluid rounded" alt="Preview" />
-                                    </div>
-                                    <div v-else-if="course.thumbnail_url" class="w-100">
-                                        <img :src="course.thumbnail_url" class="img-fluid rounded" alt="Current thumbnail" />
-                                    </div>
-                                    <div v-else class="text-muted">
-                                        <i class="bi bi-image fs-1 d-block mb-2"></i>
-                                        <small>{{ t('common.no_image') || 'No image' }}</small>
+                                <label class="form-label fw-semibold">{{ t('common.preview') || 'Preview' }}</label>
+                                <div class="card border-2 border-dashed border-secondary-subtle">
+                                    <div class="card-body p-3 text-center bg-light d-flex align-items-center justify-content-center" style="min-height: 200px;">
+                                        <div v-if="thumbnailPreview" class="w-100 position-relative">
+                                            <img :src="thumbnailPreview" class="img-fluid rounded shadow-sm" alt="Thumbnail Preview" />
+                                            <button
+                                                type="button"
+                                                @click="removeThumbnail"
+                                                class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2 rounded-circle"
+                                                style="width: 32px; height: 32px; padding: 0;"
+                                                title="Remove new image"
+                                            >
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </div>
+                                        <div v-else-if="course.thumbnail_url" class="w-100 position-relative">
+                                            <img :src="course.thumbnail_url" class="img-fluid rounded shadow-sm" alt="Current thumbnail" />
+                                            <span class="badge bg-info position-absolute top-0 start-0 m-2">{{ t('common.current') || 'Current' }}</span>
+                                        </div>
+                                        <div v-else class="text-muted">
+                                            <i class="bi bi-image fs-1 d-block mb-2 opacity-50"></i>
+                                            <small>{{ t('common.no_image') || 'No image selected' }}</small>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             
                             <!-- Upload -->
                             <div class="col-12 col-md-8">
-                                <label class="form-label fw-semibold">{{ t('common.choose_thumbnail') || 'Choose Thumbnail' }}</label>
-                                <input
-                                    type="file"
-                                    @change="handleThumbnail"
-                                    accept="image/*"
-                                    class="form-control form-control-lg"
-                                />
-                                <div class="form-text">{{ t('courses.thumbnail_hint') || 'Recommended: 1200x800px, max 2MB' }}</div>
+                                <label for="thumbnail" class="form-label fw-semibold">
+                                    {{ t('common.choose_thumbnail') || 'Choose Thumbnail' }}
+                                </label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-light">
+                                        <i class="bi bi-upload text-success"></i>
+                                    </span>
+                                    <input
+                                        id="thumbnail"
+                                        type="file"
+                                        @change="handleThumbnail"
+                                        accept="image/*"
+                                        class="form-control"
+                                        :class="{ 'is-invalid': form.errors.thumbnail }"
+                                    />
+                                    <div v-if="form.errors.thumbnail" class="invalid-feedback d-block">
+                                        <i class="bi bi-exclamation-circle me-1"></i>
+                                        {{ form.errors.thumbnail }}
+                                    </div>
+                                </div>
+                                <div class="form-text mt-2">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    {{ t('courses.thumbnail_hint') || 'Recommended: 1200x800px, max 2MB. Supported formats: JPG, PNG, GIF' }}
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Publishing Section -->
                     <div class="mb-4 pt-5 border-top">
-                        <div class="card bg-light border-0">
-                            <div class="card-body">
+                        <div class="card bg-light border-0 shadow-sm">
+                            <div class="card-body p-4">
                                 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
-                                    <div>
-                                        <h5 class="mb-1 fw-semibold">{{ t('courses.publish_course') || 'Publish Course' }}</h5>
-                                        <p class="text-muted small mb-0">{{ t('courses.publish_hint') || 'Make this course visible to students' }}</p>
+                                    <div class="flex-grow-1">
+                                        <h5 class="mb-2 fw-semibold d-flex align-items-center gap-2">
+                                            <i class="bi bi-globe text-primary"></i>
+                                            {{ t('courses.publish_course') || 'Publish Course' }}
+                                        </h5>
+                                        <p class="text-muted small mb-0">
+                                            <i class="bi bi-info-circle me-1"></i>
+                                            {{ t('courses.publish_hint') || 'Make this course visible to students' }}
+                                        </p>
                                     </div>
                                     <div class="form-check form-switch">
                                         <input 
@@ -212,9 +321,12 @@
                                             type="checkbox" 
                                             id="publishSwitch"
                                             v-model="form.is_published"
-                                            style="width: 3rem; height: 1.5rem; cursor: pointer;"
+                                            style="width: 3.5rem; height: 1.75rem; cursor: pointer;"
                                         />
-                                        <label class="form-check-label" for="publishSwitch"></label>
+                                        <label class="form-check-label fw-semibold ms-2" for="publishSwitch">
+                                            <span v-if="form.is_published" class="text-success">{{ t('common.published') || 'Published' }}</span>
+                                            <span v-else class="text-muted">{{ t('common.draft') || 'Draft' }}</span>
+                                        </label>
                                     </div>
                                 </div>
                             </div>
@@ -223,22 +335,26 @@
                 </div>
 
                 <!-- Form Actions - Bootstrap Style -->
-                <div class="card-footer bg-light border-top d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                <div class="card-footer bg-light border-top d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 px-4 py-3">
                     <button
                         v-if="!course.is_published"
                         type="button"
                         @click="confirmDelete"
-                        class="btn btn-outline-danger"
+                        class="btn btn-outline-danger btn-lg"
                     >
                         <i class="bi bi-trash me-2"></i>
-                        {{ t('common.delete') || 'Delete' }}
+                        {{ t('common.delete') || 'Delete Course' }}
                     </button>
-                    <div v-else></div>
+                    <div v-else class="text-muted small">
+                        <i class="bi bi-info-circle me-1"></i>
+                        {{ t('courses.cannot_delete_published') || 'Published courses cannot be deleted' }}
+                    </div>
                     <div class="d-flex gap-2">
                         <Link
                             :href="route('admin.courses.index')"
                             class="btn btn-outline-secondary btn-lg"
                         >
+                            <i class="bi bi-x-circle me-2"></i>
                             {{ t('common.cancel') || 'Cancel' }}
                         </Link>
                         <button
@@ -248,7 +364,7 @@
                         >
                             <span v-if="form.processing" class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                             <i v-else class="bi bi-check-circle me-2"></i>
-                            {{ t('common.save_changes') || 'Save Changes' }}
+                            {{ form.processing ? (t('common.saving') || 'Saving...') : (t('common.save_changes') || 'Save Changes') }}
                         </button>
                     </div>
                 </div>
@@ -278,7 +394,7 @@ const form = useForm({
     title_ar: props.course.title_ar || '',
     description: props.course.description || '',
     description_ar: props.course.description_ar || '',
-    level: props.course.level || 'beginner',
+    level: props.course.level || '',
     duration_hours: props.course.duration_hours || 0,
     thumbnail: null,
     is_published: props.course.is_published || false,
@@ -289,47 +405,140 @@ const thumbnailPreview = ref(null);
 const handleThumbnail = (event) => {
     const file = event.target.files[0];
     if (file) {
+        // Validate file size (max 2MB)
+        if (file.size > 2 * 1024 * 1024) {
+            showError('File size must be less than 2MB', t('common.error') || 'Error');
+            event.target.value = '';
+            return;
+        }
+        // Validate file type
+        if (!file.type.match('image.*')) {
+            showError('Please select a valid image file', t('common.error') || 'Error');
+            event.target.value = '';
+            return;
+        }
         form.thumbnail = file;
         thumbnailPreview.value = URL.createObjectURL(file);
     }
 };
 
+const removeThumbnail = () => {
+    form.thumbnail = null;
+    thumbnailPreview.value = null;
+    // Reset file input
+    const fileInput = document.getElementById('thumbnail');
+    if (fileInput) {
+        fileInput.value = '';
+    }
+};
+
 const submit = () => {
-    // Ensure title is trimmed and not empty
-    if (!form.title || !form.title.trim()) {
+    // Clear previous errors
+    form.clearErrors();
+    
+    // Frontend validation - check actual values before transform
+    const validationErrors = [];
+    
+    // Validate title - check if it exists and has content after trimming
+    const titleValue = String(form.title || '').trim();
+    if (!titleValue || titleValue.length === 0) {
+        validationErrors.push({
+            field: 'title',
+            message: t('courses.title_required') || 'The course title is required.'
+        });
+    }
+    
+    // Validate level - check if it exists and is a valid value
+    const levelValue = String(form.level || '').trim();
+    if (!levelValue || levelValue.length === 0) {
+        validationErrors.push({
+            field: 'level',
+            message: t('courses.level_required') || 'Please select a course level.'
+        });
+    } else if (!['beginner', 'intermediate', 'advanced'].includes(levelValue)) {
+        validationErrors.push({
+            field: 'level',
+            message: t('courses.invalid_level') || 'Invalid course level selected.'
+        });
+    }
+    
+    // Validate duration_hours - check if it's a valid positive integer
+    const durationValueCheck = form.duration_hours;
+    let durationCheck;
+    if (typeof durationValueCheck === 'string') {
+        durationCheck = parseInt(durationValueCheck.trim(), 10);
+    } else if (typeof durationValueCheck === 'number') {
+        durationCheck = Math.floor(durationValueCheck);
+    } else {
+        durationCheck = NaN;
+    }
+    
+    if (isNaN(durationCheck) || durationCheck < 0) {
+        validationErrors.push({
+            field: 'duration_hours',
+            message: t('courses.duration_required') || 'The duration is required and must be a positive number.'
+        });
+    }
+    
+    // If there are frontend validation errors, show them and stop
+    if (validationErrors.length > 0) {
+        const errorMessages = validationErrors.map(err => err.message).join(' ');
         showError(
-            t('courses.title_required') || 'The course title is required.',
-            t('common.error') || 'Error'
+            errorMessages,
+            t('common.validation_error') || 'Validation Error'
         );
+        
+        // Add visual indicators to error fields
+        validationErrors.forEach(err => {
+            const fieldElement = document.getElementById(err.field);
+            if (fieldElement) {
+                fieldElement.classList.add('is-invalid');
+                // Scroll to first error field
+                if (err === validationErrors[0]) {
+                    setTimeout(() => {
+                        fieldElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        fieldElement.focus();
+                    }, 100);
+                }
+            }
+        });
         return;
     }
 
-    form.transform((data) => {
-        // Trim string fields and ensure they're properly formatted
-        const formData = { ...data };
-        
-        // Always trim and ensure title is present
-        formData.title = (formData.title || '').trim();
-        
-        // Trim optional string fields
-        formData.title_ar = formData.title_ar ? formData.title_ar.trim() : null;
-        formData.description = formData.description ? formData.description.trim() : null;
-        formData.description_ar = formData.description_ar ? formData.description_ar.trim() : null;
-        
-        // Only include thumbnail if it's a file, otherwise remove it
-        if (!formData.thumbnail || !(formData.thumbnail instanceof File)) {
-            delete formData.thumbnail;
-        }
-        
-        // Ensure boolean values are properly set
-        formData.is_published = Boolean(formData.is_published);
-        
-        // Ensure numeric values
-        formData.duration_hours = parseInt(formData.duration_hours) || 0;
-        
-        return formData;
-    }).put(route('admin.courses.update', props.course.slug || props.course.id), {
-        forceFormData: true,
+    // Prepare form data directly (don't use transform to avoid issues)
+    // Update form values with trimmed and validated data
+    form.title = String(form.title || '').trim();
+    form.level = String(form.level || '').trim();
+    form.title_ar = form.title_ar ? String(form.title_ar).trim() : '';
+    form.description = form.description ? String(form.description).trim() : '';
+    form.description_ar = form.description_ar ? String(form.description_ar).trim() : '';
+    
+    // Ensure duration_hours is a valid integer
+    const durationValue = form.duration_hours;
+    let duration;
+    if (typeof durationValue === 'string') {
+        duration = parseInt(durationValue.trim(), 10);
+    } else if (typeof durationValue === 'number') {
+        duration = Math.floor(durationValue);
+    } else {
+        duration = 0;
+    }
+    form.duration_hours = Math.max(0, isNaN(duration) ? 0 : duration);
+    
+    // Ensure boolean is properly set
+    form.is_published = Boolean(form.is_published);
+    
+    // Check if we have a thumbnail file to upload
+    const hasThumbnailFile = form.thumbnail && form.thumbnail instanceof File;
+    
+    // Remove thumbnail if it's not a file (for FormData compatibility)
+    if (!hasThumbnailFile) {
+        form.thumbnail = null;
+    }
+    
+    form.put(route('admin.courses.update', props.course.slug || props.course.id), {
+        // Use forceFormData only if we have a file, otherwise send as JSON
+        forceFormData: hasThumbnailFile,
         preserveScroll: true,
         onSuccess: () => {
             showSuccess(
@@ -338,9 +547,19 @@ const submit = () => {
             );
         },
         onError: (errors) => {
+            // Show backend validation errors
             if (errors.message) {
                 showError(errors.message, t('common.error') || 'Error');
             }
+            // Inertia automatically sets form.errors, so they'll be displayed in the template
+            // Scroll to first error field
+            setTimeout(() => {
+                const firstErrorField = document.querySelector('.is-invalid');
+                if (firstErrorField) {
+                    firstErrorField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    firstErrorField.focus();
+                }
+            }, 100);
         },
     });
 };

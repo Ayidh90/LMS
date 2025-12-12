@@ -609,9 +609,21 @@
                                         <div class="flex-1">
                                             <h3 class="font-semibold text-gray-900">{{ student.name }}</h3>
                                             <p class="text-sm text-gray-500">{{ student.email }}</p>
-                                            <p class="text-xs text-gray-400 mt-1">
-                                                {{ t('courses.enrolled_at') }}: {{ formatDate(student.enrolled_at) }}
-                                            </p>
+                                            <div class="mt-2 space-y-1">
+                                                <p class="text-xs text-gray-400">
+                                                    {{ t('courses.enrolled_at') }}: {{ formatDate(student.enrolled_at) }}
+                                                </p>
+                                                <div v-if="student.batch" class="text-xs text-gray-500">
+                                                    <span class="font-medium">{{ t('courses.batch') }}:</span> {{ student.batch.name }}
+                                                    <span v-if="student.batch.start_date || student.batch.end_date" class="ml-2">
+                                                        (
+                                                        <span v-if="student.batch.start_date">{{ formatDate(student.batch.start_date) }}</span>
+                                                        <span v-if="student.batch.start_date && student.batch.end_date"> - </span>
+                                                        <span v-if="student.batch.end_date">{{ formatDate(student.batch.end_date) }}</span>
+                                                        )
+                                                    </span>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="text-right">
@@ -1283,6 +1295,10 @@ import { computed, ref, reactive, onMounted } from 'vue';
 
 const props = defineProps({
     course: Object,
+    courseStudents: {
+        type: Array,
+        default: () => [],
+    },
     canEdit: Boolean,
     isEnrolled: Boolean,
     isFavorited: Boolean,

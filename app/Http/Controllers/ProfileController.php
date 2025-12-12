@@ -77,25 +77,74 @@ class ProfileController extends Controller
 
     private function getAssignedBatches(User $user): array
     {
-        return Batch::where('instructor_id', $user->id)
+        $batches = Batch::where('instructor_id', $user->id)
             ->with(['course', 'enrollments.student'])
             ->withCount('enrollments')
             ->latest()
-            ->get()
-            ->map(fn ($batch) => $this->formatBatchData($batch, true))
-            ->values()
-            ->toArray();
+            ->get();
+
+        // Group batches by course
+        $groupedByCourse = $batches->groupBy('course_id');
+        
+        return $groupedByCourse->map(function ($courseBatches, $courseId) {
+            $firstBatch = $courseBatches->first();
+            $course = $firstBatch->course;
+            
+            return [
+                'course' => $this->formatCourseData($course),
+                'batches' => $courseBatches->map(fn ($batch) => $this->formatBatchData($batch, true))->values()->toArray(),
+                'students' => $this->getAllStudentsFromBatches($courseBatches),
+                'total_enrollments' => $courseBatches->sum('enrollments_count'),
+            ];
+        })->values()->toArray();
     }
 
     private function getEnrolledBatches(User $user): array
     {
-        return $user->enrolledBatches()
+        $batches = $user->enrolledBatches()
             ->with(['course', 'instructor'])
             ->latest('enrollments.enrolled_at')
-            ->get()
-            ->map(fn ($batch) => $this->formatBatchData($batch, false, $user->id))
-            ->values()
-            ->toArray();
+            ->get();
+
+        // Group batches by course
+        $groupedByCourse = $batches->groupBy('course_id');
+        
+        return $groupedByCourse->map(function ($courseBatches, $courseId) use ($user) {
+            $firstBatch = $courseBatches->first();
+            $course = $firstBatch->course;
+            
+            return [
+                'course' => $this->formatCourseData($course),
+                'batches' => $courseBatches->map(fn ($batch) => $this->formatBatchData($batch, false, $user->id))->values()->toArray(),
+            ];
+        })->values()->toArray();
+    }
+
+    private function getAllStudentsFromBatches($batches): array
+    {
+        $allStudents = collect();
+        
+        foreach ($batches as $batch) {
+            if ($batch->enrollments) {
+                foreach ($batch->enrollments as $enrollment) {
+                    if ($enrollment->student) {
+                        $allStudents->push([
+                            'id' => $enrollment->student->id,
+                            'name' => $enrollment->student->name,
+                            'email' => $enrollment->student->email,
+                            'enrolled_at' => $enrollment->enrolled_at,
+                            'progress' => $enrollment->progress ?? 0,
+                            'status' => $enrollment->status ?? 'active',
+                            'batch_id' => $batch->id,
+                            'batch_name' => $batch->translated_name,
+                        ]);
+                    }
+                }
+            }
+        }
+        
+        // Remove duplicates by student ID, keeping the most recent enrollment
+        return $allStudents->unique('id')->values()->toArray();
     }
 
     private function formatBatchData($batch, bool $includeStudents, ?int $studentId = null): array
@@ -106,6 +155,9 @@ class ProfileController extends Controller
             'name_ar' => $batch->name_ar,
             'translated_name' => $batch->translated_name,
             'course' => $this->formatCourseData($batch->course),
+            'is_active' => $batch->is_active ?? true,
+            'start_date' => $batch->start_date,
+            'end_date' => $batch->end_date,
         ];
 
         if ($includeStudents) {

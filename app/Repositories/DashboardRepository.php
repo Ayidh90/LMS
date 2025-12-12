@@ -3,8 +3,13 @@
 namespace App\Repositories;
 
 use Modules\Courses\Models\Course;
+use Modules\Courses\Models\Lesson;
+use Modules\Courses\Models\Question;
 use App\Models\User;
 use App\Models\Enrollment;
+use App\Models\Batch;
+use App\Models\Category;
+use App\Models\LessonCompletion;
 use Modules\Roles\Models\Role;
 use App\Models\Permission;
 use Illuminate\Support\Facades\DB;
@@ -38,6 +43,28 @@ class DashboardRepository
             ],
             'permissions' => [
                 'total' => Permission::count(),
+            ],
+            'lessons' => [
+                'total' => Lesson::count(),
+                'today' => Lesson::whereDate('created_at', today())->count(),
+                'free' => Lesson::where('is_free', true)->count(),
+            ],
+            'batches' => [
+                'total' => Batch::count(),
+                'active' => Batch::where('is_active', true)->count(),
+                'today' => Batch::whereDate('created_at', today())->count(),
+            ],
+            'categories' => [
+                'total' => Category::count(),
+                'active' => Category::where('is_active', true)->count(),
+            ],
+            'questions' => [
+                'total' => Question::count(),
+                'today' => Question::whereDate('created_at', today())->count(),
+            ],
+            'completions' => [
+                'total' => LessonCompletion::count(),
+                'today' => LessonCompletion::whereDate('completed_at', today())->count(),
             ],
         ];
     }
@@ -74,6 +101,86 @@ class DashboardRepository
             $date = now()->subDays($i);
             $labels[] = $date->format('Y-m-d');
             $series[] = Course::whereDate('created_at', $date->format('Y-m-d'))->count();
+        }
+        
+        return [
+            'labels' => $labels,
+            'series' => $series,
+        ];
+    }
+
+    /**
+     * Get users chart data for last 7 days
+     */
+    public function getUsersChartData(): array
+    {
+        $labels = [];
+        $series = [];
+        
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i);
+            $labels[] = $date->format('Y-m-d');
+            $series[] = User::whereDate('created_at', $date->format('Y-m-d'))->count();
+        }
+        
+        return [
+            'labels' => $labels,
+            'series' => $series,
+        ];
+    }
+
+    /**
+     * Get lessons chart data for last 7 days
+     */
+    public function getLessonsChartData(): array
+    {
+        $labels = [];
+        $series = [];
+        
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i);
+            $labels[] = $date->format('Y-m-d');
+            $series[] = Lesson::whereDate('created_at', $date->format('Y-m-d'))->count();
+        }
+        
+        return [
+            'labels' => $labels,
+            'series' => $series,
+        ];
+    }
+
+    /**
+     * Get batches chart data for last 7 days
+     */
+    public function getBatchesChartData(): array
+    {
+        $labels = [];
+        $series = [];
+        
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i);
+            $labels[] = $date->format('Y-m-d');
+            $series[] = Batch::whereDate('created_at', $date->format('Y-m-d'))->count();
+        }
+        
+        return [
+            'labels' => $labels,
+            'series' => $series,
+        ];
+    }
+
+    /**
+     * Get completions chart data for last 7 days
+     */
+    public function getCompletionsChartData(): array
+    {
+        $labels = [];
+        $series = [];
+        
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i);
+            $labels[] = $date->format('Y-m-d');
+            $series[] = LessonCompletion::whereDate('completed_at', $date->format('Y-m-d'))->count();
         }
         
         return [

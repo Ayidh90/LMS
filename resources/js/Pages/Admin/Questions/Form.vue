@@ -57,10 +57,13 @@
                         </div>
                         <div v-if="['multiple_choice', 'true_false'].includes(formData.type)">
                             <label class="block text-sm font-semibold text-gray-700 mb-3">
-                                {{ t('questions.fields.answers') || 'Answers' }}
+                                {{ t('questions.fields.answers') || 'Answers' }} <span class="text-red-500">*</span>
+                                <span class="text-xs text-gray-500 font-normal ml-2">
+                                    ({{ t('questions.at_least_one_correct') || 'At least one answer must be marked as correct' }})
+                                </span>
                             </label>
                             <div class="space-y-3">
-                                <div v-for="(answer, index) in formData.answers" :key="index" class="flex items-start gap-3 p-3 border border-gray-200 rounded-xl">
+                                <div v-for="(answer, index) in (formData.answers || [])" :key="index" class="flex items-start gap-3 p-3 border border-gray-200 rounded-xl">
                                     <input
                                         v-model="answer.is_correct"
                                         type="checkbox"
@@ -72,6 +75,7 @@
                                             type="text"
                                             class="form-input mb-2"
                                             :placeholder="'Answer (English)'"
+                                            :required="formData.type === 'multiple_choice' || formData.type === 'true_false'"
                                         />
                                         <input
                                             v-model="answer.answer_ar"
@@ -82,10 +86,11 @@
                                         />
                                     </div>
                                     <button
-                                        v-if="formData.answers.length > 2"
+                                        v-if="formData.answers && formData.answers.length > 2 && formData.type === 'multiple_choice'"
                                         type="button"
                                         @click="removeAnswer(index)"
-                                        class="text-red-500 hover:text-red-700 transition-colors"
+                                        class="text-red-500 hover:text-red-700 transition-colors p-1"
+                                        :title="t('common.delete') || 'Delete'"
                                     >
                                         <i class="bi bi-trash"></i>
                                     </button>
@@ -100,6 +105,7 @@
                                     {{ t('questions.add_answer') || 'Add Answer' }}
                                 </button>
                             </div>
+                            <p v-if="errors.answers" class="form-error mt-2">{{ errors.answers }}</p>
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">
@@ -199,6 +205,9 @@ const handleTypeChange = () => {
 };
 
 const addAnswer = () => {
+    if (!props.formData.answers) {
+        props.formData.answers = [];
+    }
     props.formData.answers.push({
         answer: '',
         answer_ar: '',
@@ -208,10 +217,12 @@ const addAnswer = () => {
 };
 
 const removeAnswer = (index) => {
-    if (props.formData.answers.length > 2) {
+    if (props.formData.answers && props.formData.answers.length > 2) {
         props.formData.answers.splice(index, 1);
         props.formData.answers.forEach((answer, idx) => {
-            answer.order = idx;
+            if (answer) {
+                answer.order = idx;
+            }
         });
     }
 };

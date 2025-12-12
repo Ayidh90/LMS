@@ -38,6 +38,7 @@ class LessonController extends Controller
                 'id' => $s->id,
                 'title' => $s->translated_title ?? $s->title,
             ]),
+            'lessonTypes' => $this->getLessonTypes(),
         ]);
     }
 
@@ -105,6 +106,8 @@ class LessonController extends Controller
         // Calculate attendance stats
         $attendanceStats = $this->calculateAttendanceStats($attendances, $students);
 
+        $sections = $this->sectionService->getByCourse($course->id);
+
         return Inertia::render('Admin/Lessons/Show', [
             'course' => $this->formatCourse($course),
             'lesson' => $this->formatLessonFull($lesson),
@@ -118,6 +121,11 @@ class LessonController extends Controller
             'attendances' => $attendances,
             'attendanceStats' => $attendanceStats,
             'questionTypes' => $this->getQuestionTypes(),
+            'sections' => $sections->map(fn($s) => [
+                'id' => $s->id,
+                'title' => $s->translated_title ?? $s->title,
+            ]),
+            'lessonTypes' => $this->getLessonTypes(),
         ]);
     }
     
@@ -353,6 +361,8 @@ class LessonController extends Controller
             'content' => $lesson->translated_content ?? $lesson->content,
             'content_ar' => $lesson->content_ar,
             'video_url' => $lesson->video_url,
+            'live_meeting_date' => $lesson->live_meeting_date,
+            'live_meeting_link' => $lesson->live_meeting_link,
             'questions' => $lesson->questions ? $lesson->questions->map(fn($q) => [
                 'id' => $q->id,
                 'type' => $q->type,
@@ -376,6 +386,7 @@ class LessonController extends Controller
             ['value' => 'embed_frame', 'label' => __('lessons.types.embed_frame')],
             ['value' => 'assignment', 'label' => __('lessons.types.assignment')],
             ['value' => 'test', 'label' => __('lessons.types.test')],
+            ['value' => 'live', 'label' => __('lessons.types.live')],
         ];
     }
 

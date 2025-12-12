@@ -51,6 +51,48 @@
             </div>
 
             <div class="max-w-7xl mx-auto py-8 px-4">
+                <!-- Live Meeting Section -->
+                <div v-if="lesson.type === 'live'" class="bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-xl p-6 mb-6">
+                    <div class="flex items-start gap-4">
+                        <div class="flex-shrink-0">
+                            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                                <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold text-gray-900 mb-2">
+                                {{ t('lessons.types.live') || 'Live Meeting' }}
+                            </h3>
+                            <div v-if="lesson.live_meeting_date" class="mb-4">
+                                <p class="text-sm text-gray-600 mb-1">
+                                    <i class="bi bi-calendar-event me-2"></i>
+                                    {{ t('lessons.live.meeting_date') || 'Meeting Date & Time' }}:
+                                </p>
+                                <p class="text-lg font-semibold text-gray-900">
+                                    {{ formatDateTime(lesson.live_meeting_date) }}
+                                </p>
+                            </div>
+                            <div v-if="lesson.live_meeting_link" class="mt-4">
+                                <a
+                                    :href="lesson.live_meeting_link"
+                                    target="_blank"
+                                    class="inline-flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 font-semibold transition-all shadow-lg hover:shadow-xl"
+                                >
+                                    <i class="bi bi-camera-video me-2"></i>
+                                    {{ t('lessons.live.join_meeting') || 'Join Live Meeting' }}
+                                    <i class="bi bi-box-arrow-up-right ms-2"></i>
+                                </a>
+                                <p class="text-xs text-gray-500 mt-2 break-all">{{ lesson.live_meeting_link }}</p>
+                            </div>
+                            <p v-else class="text-sm text-gray-500 mt-2">
+                                {{ t('lessons.live.meeting_link_generated') || 'Meeting link will be generated automatically' }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Content Section -->
                 <div v-if="lesson.content" class="bg-white rounded-xl shadow-sm p-8 mb-6">
                     <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
@@ -551,6 +593,59 @@ const formatContent = (content) => {
 const formatDate = (date) => {
     if (!date) return '';
     return new Date(date).toLocaleString();
+};
+
+const formatDateTime = (dateTime) => {
+    if (!dateTime) return '';
+    
+    try {
+        const dateString = String(dateTime);
+        let date;
+        
+        // Check if the date string has timezone info (Z, +, or - after position 10)
+        const hasTimezone = dateString.includes('Z') || 
+                           dateString.match(/[+-]\d{2}:\d{2}$/) ||
+                           (dateString.includes('T') && dateString.length > 16);
+        
+        if (hasTimezone) {
+            // Date has timezone info - extract UTC components to preserve the stored time
+            const utcDate = new Date(dateString);
+            const year = utcDate.getUTCFullYear();
+            const month = utcDate.getUTCMonth();
+            const day = utcDate.getUTCDate();
+            const hours = utcDate.getUTCHours();
+            const minutes = utcDate.getUTCMinutes();
+            
+            // Create a date object with UTC values but display as local format
+            date = new Date(year, month, day, hours, minutes);
+        } else {
+            // No timezone info - parse date components directly (what was stored)
+            const match = dateString.match(/^(\d{4})-(\d{2})-(\d{2})(?:\s+(\d{2}):(\d{2})(?::(\d{2}))?)?/);
+            if (match) {
+                const [, year, month, day, hour = '00', minute = '00'] = match;
+                // Create date in local timezone (no UTC conversion)
+                date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hour), parseInt(minute));
+            } else {
+                date = new Date(dateString);
+            }
+        }
+        
+        if (isNaN(date.getTime())) {
+            return '';
+        }
+        
+        // Format the date in local time
+        return date.toLocaleString(undefined, {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+        });
+    } catch (e) {
+        console.error('Error formatting date:', e);
+        return '';
+    }
 };
 
 const getInitials = (name) => {

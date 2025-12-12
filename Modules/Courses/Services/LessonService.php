@@ -10,7 +10,8 @@ use Illuminate\Database\Eloquent\Collection;
 class LessonService
 {
     public function __construct(
-        private LessonRepository $repository
+        private LessonRepository $repository,
+        private LiveMeetingService $liveMeetingService
     ) {}
 
     public function getByCourse(int $courseId, array $relations = []): Collection
@@ -48,11 +49,21 @@ class LessonService
         $data['course_id'] = $course->id;
         $data['order'] = $data['order'] ?? $this->repository->getNextOrder($course->id, $data['section_id'] ?? null);
         
+        // Generate live meeting link if type is 'live' and link is not provided
+        if (isset($data['type']) && $data['type'] === 'live' && empty($data['live_meeting_link'])) {
+            $data['live_meeting_link'] = $this->liveMeetingService->generateMeetingLink('jitsi');
+        }
+        
         return $this->repository->create($data);
     }
 
     public function update(Lesson $lesson, array $data): bool
     {
+        // Generate live meeting link if type is 'live' and link is not provided
+        if (isset($data['type']) && $data['type'] === 'live' && empty($data['live_meeting_link']) && empty($lesson->live_meeting_link)) {
+            $data['live_meeting_link'] = $this->liveMeetingService->generateMeetingLink('jitsi');
+        }
+        
         return $this->repository->update($lesson, $data);
     }
 
@@ -88,6 +99,8 @@ class LessonService
             'content' => $lesson->translated_content ?? $lesson->content,
             'content_ar' => $lesson->content_ar,
             'video_url' => $lesson->video_url,
+            'live_meeting_date' => $lesson->live_meeting_date,
+            'live_meeting_link' => $lesson->live_meeting_link,
             'order' => $lesson->order ?? 0,
             'duration_minutes' => $lesson->duration_minutes ?? 0,
             'is_free' => $lesson->is_free ?? false,
