@@ -1204,7 +1204,7 @@ const translations = {
                 join_meeting: 'انضم للمحاضرة المباشرة',
                 meeting_scheduled: 'تم جدولة المحاضرة المباشرة',
                 meeting_link_generated: 'سيتم توليد رابط المحاضرة تلقائياً',
-                meeting_link_hint: 'اتركه فارغاً لتوليد رابط Jitsi Meet تلقائياً، أو أدخل رابط Google Meet/Zoom/Teams الخاص بك',
+                meeting_link_hint: 'اتركه فارغاً لتوليد رابط  تلقائياً، أو أدخل رابط Google Meet/Zoom/Teams الخاص بك',
                 info_title: 'متطلبات الدرس المباشر',
                 info_message: 'يرجى تقديم تاريخ ووقت المحاضرة. سيتم توليد رابط المحاضرة تلقائياً إذا لم يتم توفيره.',
                 date_required_warning: 'تاريخ ووقت المحاضرة المباشرة مطلوب للدروس المباشرة.',

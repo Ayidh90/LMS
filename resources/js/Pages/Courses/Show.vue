@@ -965,6 +965,7 @@
                                         <option value="embed_frame">{{ t('lessons.types.embed_frame') }}</option>
                                         <option value="assignment">{{ t('lessons.types.assignment') }}</option>
                                         <option value="test">{{ t('lessons.types.test') }}</option>
+                                        <option value="live">{{ t('lessons.types.live') }}</option>
                                     </select>
                                 </div>
                                 <div>
@@ -1159,6 +1160,66 @@
                                                 :dir="direction === 'rtl' ? 'rtl' : 'ltr'"
                                                 class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 resize-none font-mono text-sm"
                                             ></textarea>
+                                        </div>
+                                    </div>
+                                </Transition>
+                                
+                                <!-- Live Meeting Fields (for live type) -->
+                                <Transition
+                                    enter-active-class="transition-all duration-300 ease-out"
+                                    enter-from-class="opacity-0 max-h-0"
+                                    enter-to-class="opacity-100 max-h-96"
+                                    leave-active-class="transition-all duration-200 ease-in"
+                                    leave-from-class="opacity-100 max-h-96"
+                                    leave-to-class="opacity-0 max-h-0"
+                                >
+                                    <div v-if="lessonForm.type === 'live'" class="overflow-hidden space-y-4 bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-xl p-5">
+                                        <div class="flex items-center gap-2 mb-3">
+                                            <i class="bi bi-camera-video text-red-600"></i>
+                                            <h4 class="text-sm font-semibold text-gray-900">
+                                                {{ t('lessons.types.live') || 'Live Meeting' }}
+                                            </h4>
+                                        </div>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                    {{ t('lessons.live.meeting_date') || t('lessons.fields.live_meeting_date') || 'Meeting Date & Time' }} <span class="text-red-500">*</span>
+                                                </label>
+                                                <input
+                                                    v-model="lessonForm.live_meeting_date"
+                                                    type="datetime-local"
+                                                    required
+                                                    class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200"
+                                                />
+                                                <p class="mt-1 text-xs text-gray-500">
+                                                    {{ t('lessons.live.date_required_warning') || 'Live lecture date and time is required for live lessons.' }}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                                    {{ t('lessons.live.meeting_link') || t('lessons.fields.live_meeting_link') || 'Meeting Link' }}
+                                                </label>
+                                                <div class="flex items-center gap-2">
+                                                    <input
+                                                        v-model="lessonForm.live_meeting_link"
+                                                        type="url"
+                                                        :placeholder="t('lessons.placeholders.meeting_link') || 'https://meet.jit.si/... or enter your own link'"
+                                                        class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200"
+                                                    />
+                                                    <a
+                                                        v-if="lessonForm.live_meeting_link"
+                                                        :href="lessonForm.live_meeting_link"
+                                                        target="_blank"
+                                                        class="px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all whitespace-nowrap"
+                                                        :title="t('lessons.live.join_meeting') || 'Join Meeting'"
+                                                    >
+                                                        <i class="bi bi-box-arrow-up-right"></i>
+                                                    </a>
+                                                </div>
+                                                <p class="mt-2 text-xs text-gray-500">
+                                                    {{ t('lessons.live.meeting_link_hint') || 'Leave empty to auto-generate a Jitsi Meet link, or enter your own Google Meet/Zoom/Teams link' }}
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
                                 </Transition>
@@ -1439,6 +1500,8 @@ const lessonForm = reactive({
     content: '',
     content_ar: '',
     video_url: '',
+    live_meeting_date: '',
+    live_meeting_link: '',
     duration_minutes: null,
 });
 
@@ -1455,6 +1518,8 @@ const openCreateLessonModal = (sectionId = null) => {
     lessonForm.content = '';
     lessonForm.content_ar = '';
     lessonForm.video_url = '';
+    lessonForm.live_meeting_date = '';
+    lessonForm.live_meeting_link = '';
     lessonForm.duration_minutes = null;
 };
 
@@ -1471,6 +1536,8 @@ const closeCreateLessonModal = () => {
     lessonForm.content = '';
     lessonForm.content_ar = '';
     lessonForm.video_url = '';
+    lessonForm.live_meeting_date = '';
+    lessonForm.live_meeting_link = '';
     lessonForm.duration_minutes = null;
     // Reset file inputs
     if (videoFileInput.value) videoFileInput.value.value = '';
@@ -1537,6 +1604,15 @@ const saveLesson = () => {
         return;
     }
     
+    // Validate live meeting date for live lessons
+    if (lessonForm.type === 'live' && (!lessonForm.live_meeting_date || lessonForm.live_meeting_date.trim() === '')) {
+        showError(
+            t('lessons.live.date_required_warning') || 'Live lecture date and time is required for live lessons.',
+            t('common.error') || 'Error'
+        );
+        return;
+    }
+    
     isSubmittingLesson.value = true;
     
     // Create FormData for file uploads
@@ -1563,6 +1639,8 @@ const saveLesson = () => {
     if (lessonForm.content) formData.append('content', lessonForm.content);
     if (lessonForm.content_ar) formData.append('content_ar', lessonForm.content_ar);
     if (lessonForm.video_url) formData.append('video_url', lessonForm.video_url);
+    if (lessonForm.live_meeting_date) formData.append('live_meeting_date', lessonForm.live_meeting_date);
+    if (lessonForm.live_meeting_link) formData.append('live_meeting_link', lessonForm.live_meeting_link);
     if (lessonForm.duration_minutes !== null && lessonForm.duration_minutes !== '') {
         formData.append('duration_minutes', lessonForm.duration_minutes);
     }
