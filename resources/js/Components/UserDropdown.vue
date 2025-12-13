@@ -1,85 +1,173 @@
 <template>
-    <div v-if="auth" class="relative" :dir="direction">
-        <button
-            @click="toggleDropdown"
-            class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
-        >
-            <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                {{ getInitials(auth?.name) }}
-            </div>
-            <span class="text-sm font-medium text-gray-700 hidden md:block">{{ auth?.name }}</span>
-            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-            </svg>
-        </button>
+    <div v-if="auth" class="position-relative user-dropdown-container" :dir="direction">
+        <!-- Expanded State -->
+        <div v-if="!minimized" class="w-100">
+            <button
+                ref="expandedButtonRef"
+                @click.stop="toggleDropdown"
+                class="btn btn-link text-decoration-none w-100 d-flex align-items-center gap-2 px-2 py-2 rounded user-dropdown-btn"
+                :class="{ 'bg-light': showDropdown }"
+            >
+                <div class="position-relative flex-shrink-0">
+                    <div
+                        class="bg-primary bg-gradient rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm"
+                        style="width: 40px; height: 40px; font-size: 0.875rem"
+                    >
+                        {{ getInitials(auth?.name) }}
+                    </div>
+                    <span
+                        class="position-absolute bottom-0 end-0 translate-middle bg-success border-2 border-white rounded-circle"
+                        style="width: 12px; height: 12px"
+                    ></span>
+                </div>
+                <div class="flex-grow-1 min-w-0 text-start">
+                    <p class="text-muted small mb-0" style="font-size: 0.75rem">
+                        {{ t("admin.welcome_back") }}
+                    </p>
+                    <p
+                        class="small fw-semibold text-dark text-truncate mb-0"
+                        style="font-size: 0.875rem"
+                    >
+                        {{ auth?.name }}
+                    </p>
+                </div>
+                <i
+                    class="bi bi-chevron-down text-secondary small"
+                    :class="{ 'rotate-180': showDropdown }"
+                    style="transition: transform 0.2s ease"
+                ></i>
+            </button>
 
-        <div
-            v-if="showDropdown"
-            class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 z-50 overflow-hidden"
-        >
-            <div class="p-3 border-b border-gray-200">
-                <p class="text-sm font-semibold text-gray-900">{{ auth?.name }}</p>
-                <p class="text-xs text-gray-500">{{ auth?.email }}</p>
-            </div>
-            
-            <div class="py-1">
-                <Link
-                    v-if="showProfile"
-                    :href="route('profile.show')"
-                    class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    @click="showDropdown = false"
+            <!-- Dropdown Menu -->
+            <Teleport to="body">
+                <div
+                    v-if="showDropdown"
+                    class="position-fixed bg-white rounded shadow-lg border border-gray-200 overflow-hidden user-dropdown-menu"
+                    :style="expandedDropdownStyle"
                 >
-                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    {{ t('profile.my_profile') }}
-                </Link>
+                <div class="p-3 border-bottom border-gray-200 bg-white">
+                    <p class="small fw-semibold text-dark mb-0">{{ auth?.name }}</p>
+                    <p class="text-muted small mb-0" style="font-size: 0.75rem">{{ auth?.email }}</p>
+                </div>
                 
-                <Link
-                    v-if="showDashboard"
-                    :href="dashboardRoute"
-                    class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    @click="showDropdown = false"
-                >
-                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                    </svg>
-                    {{ t('common.dashboard') }}
-                </Link>
+                <div class="py-1 bg-white">
+                    <Link
+                        v-if="showProfile"
+                        :href="route('profile.show')"
+                        class="d-flex align-items-center gap-3 px-3 py-2 small text-dark text-decoration-none hover-bg-light transition-colors bg-white"
+                        @click="closeDropdown"
+                    >
+                        <i class="bi bi-person text-secondary"></i>
+                        <span>{{ t('profile.my_profile') }}</span>
+                    </Link>
+                    
+                    <Link
+                        v-if="showDashboard"
+                        :href="dashboardRoute"
+                        class="d-flex align-items-center gap-3 px-3 py-2 small text-dark text-decoration-none hover-bg-light transition-colors bg-white"
+                        @click="closeDropdown"
+                    >
+                        <i class="bi bi-house text-secondary"></i>
+                        <span>{{ t('common.dashboard') }}</span>
+                    </Link>
+                </div>
                 
-                <!-- <Link
-                    :href="route('courses.index')"
-                    class="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    @click="showDropdown = false"
+                <div class="border-top border-gray-200 py-1 bg-white">
+                    <button
+                        @click="logout"
+                        class="w-100 d-flex align-items-center gap-3 px-3 py-2 small text-danger text-decoration-none border-0 bg-white hover-bg-light transition-colors"
+                    >
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span>{{ t('common.logout') }}</span>
+                    </button>
+                </div>
+                </div>
+            </Teleport>
+        </div>
+
+        <!-- Minimized State -->
+        <div v-else class="d-flex justify-content-center">
+            <button
+                ref="buttonRef"
+                @click.stop="toggleDropdown"
+                class="btn btn-link text-decoration-none p-0 position-relative user-dropdown-btn-minimized"
+                :class="{ 'bg-light rounded-circle': showDropdown }"
+                style="width: 40px; height: 40px;"
+            >
+                <div
+                    class="bg-primary bg-gradient rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm mx-auto"
+                    style="width: 40px; height: 40px; font-size: 0.875rem"
                 >
-                    <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                    </svg>
-                    {{ t('courses.my_courses') }}
-                </Link> -->
-            </div>
-            
-            <div class="border-t border-gray-200 py-1">
-                <button
-                    @click="logout"
-                    class="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                    {{ getInitials(auth?.name) }}
+                </div>
+                <span
+                    class="position-absolute bottom-0 end-0 translate-middle bg-success border-2 border-white rounded-circle"
+                    style="width: 10px; height: 10px"
+                ></span>
+            </button>
+
+            <!-- Dropdown Menu for Minimized State -->
+            <Teleport to="body">
+                <div
+                    v-if="showDropdown"
+                    class="position-fixed bg-white rounded shadow-lg border border-gray-200 overflow-hidden user-dropdown-menu-minimized"
+                    :style="minimizedDropdownStyle"
                 >
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                    {{ t('common.logout') }}
-                </button>
-            </div>
+                <div class="p-3 border-bottom border-gray-200 bg-white">
+                    <p class="small fw-semibold text-dark mb-0">{{ auth?.name }}</p>
+                    <p class="text-muted small mb-0" style="font-size: 0.75rem">{{ auth?.email }}</p>
+                </div>
+                
+                <div class="py-1 bg-white">
+                    <Link
+                        v-if="showProfile"
+                        :href="route('profile.show')"
+                        class="d-flex align-items-center gap-3 px-3 py-2 small text-dark text-decoration-none hover-bg-light transition-colors bg-white"
+                        @click="closeDropdown"
+                    >
+                        <i class="bi bi-person text-secondary"></i>
+                        <span>{{ t('profile.my_profile') }}</span>
+                    </Link>
+                    
+                    <Link
+                        v-if="showDashboard"
+                        :href="dashboardRoute"
+                        class="d-flex align-items-center gap-3 px-3 py-2 small text-dark text-decoration-none hover-bg-light transition-colors bg-white"
+                        @click="closeDropdown"
+                    >
+                        <i class="bi bi-house text-secondary"></i>
+                        <span>{{ t('common.dashboard') }}</span>
+                    </Link>
+                </div>
+                
+                <div class="border-top border-gray-200 py-1 bg-white">
+                    <button
+                        @click="logout"
+                        class="w-100 d-flex align-items-center gap-3 px-3 py-2 small text-danger text-decoration-none border-0 bg-white hover-bg-light transition-colors"
+                    >
+                        <i class="bi bi-box-arrow-right"></i>
+                        <span>{{ t('common.logout') }}</span>
+                    </button>
+                </div>
+                </div>
+            </Teleport>
         </div>
     </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, defineProps, defineExpose, watch, Teleport } from 'vue';
 import { usePage, Link, router } from '@inertiajs/vue3';
 import { useDirection } from '@/composables/useDirection';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
+
+const props = defineProps({
+    minimized: {
+        type: Boolean,
+        default: false
+    }
+});
 
 const { direction } = useDirection();
 const { t } = useTranslation();
@@ -88,6 +176,35 @@ const page = usePage();
 
 const showDropdown = ref(false);
 const auth = computed(() => page.props.auth?.user);
+const dropdownRef = ref(null);
+const buttonRef = ref(null);
+const expandedButtonRef = ref(null);
+
+// Calculate position for expanded dropdown
+const expandedDropdownStyle = computed(() => {
+    if (props.minimized || !expandedButtonRef.value) {
+        return {};
+    }
+    
+    try {
+        const buttonRect = expandedButtonRef.value.getBoundingClientRect();
+        return {
+            top: `${buttonRect.bottom + 8}px`,
+            left: `${buttonRect.left}px`,
+            width: `${buttonRect.width}px`,
+            minWidth: '200px',
+            zIndex: 9999
+        };
+    } catch (error) {
+        return {
+            top: '80px',
+            left: '20px',
+            width: '224px',
+            minWidth: '200px',
+            zIndex: 9999
+        };
+    }
+});
 
 const dashboardRoute = computed(() => {
     const user = auth.value;
@@ -130,15 +247,71 @@ const toggleDropdown = () => {
     showDropdown.value = !showDropdown.value;
 };
 
+const closeDropdown = () => {
+    showDropdown.value = false;
+};
+
 const logout = () => {
     router.post(route('logout'));
 };
 
+// Calculate position for minimized dropdown
+const minimizedDropdownStyle = computed(() => {
+    if (!props.minimized || !buttonRef.value) {
+        return {};
+    }
+    
+    try {
+        const buttonRect = buttonRef.value.getBoundingClientRect();
+        return {
+            top: `${buttonRect.bottom + 8}px`,
+            left: `${buttonRect.left}px`,
+            width: '224px',
+            minWidth: '224px',
+            zIndex: 9999
+        };
+    } catch (error) {
+        return {
+            top: '80px',
+            left: '20px',
+            width: '224px',
+            minWidth: '224px',
+            zIndex: 9999
+        };
+    }
+});
+
 const handleClickOutside = (event) => {
-    if (!event.target.closest('.relative')) {
+    // Check if click is on the dropdown button or inside the dropdown menu
+    const container = event.target.closest('.user-dropdown-container');
+    const dropdownMenu = event.target.closest('.user-dropdown-menu, .user-dropdown-menu-minimized');
+    
+    // If click is inside container or dropdown menu, don't close
+    if (container || dropdownMenu) {
+        return;
+    }
+    
+    // Close dropdown if click is outside
+    showDropdown.value = false;
+    
+    // Also check if click is on the sidebar toggle button (should close dropdown)
+    const sidebarToggle = event.target.closest('#kt_app_sidebar_toggle');
+    if (sidebarToggle) {
         showDropdown.value = false;
     }
 };
+
+// Watch for minimized prop changes and close dropdown
+watch(() => props.minimized, (newVal) => {
+    if (newVal) {
+        showDropdown.value = false;
+    }
+});
+
+// Expose closeDropdown method for parent component
+defineExpose({
+    closeDropdown
+});
 
 onMounted(() => {
     document.addEventListener('click', handleClickOutside);
@@ -148,4 +321,81 @@ onUnmounted(() => {
     document.removeEventListener('click', handleClickOutside);
 });
 </script>
+
+<style scoped>
+.user-dropdown-container {
+    z-index: 10;
+    position: relative;
+    isolation: isolate;
+}
+
+.user-dropdown-btn {
+    border: none;
+    background: transparent;
+    transition: background-color 0.2s ease;
+}
+
+.user-dropdown-btn:hover {
+    background-color: #f8f9fa !important;
+}
+
+.user-dropdown-btn-minimized {
+    border: none;
+    background: transparent;
+    transition: background-color 0.2s ease;
+}
+
+.user-dropdown-btn-minimized:hover {
+    background-color: #f8f9fa !important;
+}
+
+.user-dropdown-menu {
+    animation: slideDown 0.2s ease-out;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    background: white !important;
+    position: relative;
+    isolation: isolate;
+}
+
+.user-dropdown-menu-minimized {
+    animation: slideDown 0.2s ease-out;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    background: white !important;
+    position: relative;
+    isolation: isolate;
+}
+
+.hover-bg-light:hover {
+    background-color: #f8f9fa !important;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.rotate-180 {
+    transform: rotate(180deg);
+}
+
+/* Ensure dropdown doesn't overflow sidebar */
+.user-dropdown-menu {
+    max-width: calc(100vw - 20px);
+}
+
+@media (max-width: 991px) {
+    .user-dropdown-menu-minimized {
+        left: 20px !important;
+        right: 20px !important;
+        width: auto !important;
+        min-width: auto !important;
+    }
+}
+</style>
 

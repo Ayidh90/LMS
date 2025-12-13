@@ -115,20 +115,58 @@ provide('toggleMinimize', toggleMinimize);
     width: auto;
 }
 
-/* Both RTL and LTR - Sidebar is on the right side, content margin on right */
-.admin-main-content.sidebar-expanded {
+/* LTR (English) - Sidebar on the left, content margin on left */
+.admin-layout-wrapper.is-ltr .admin-main-content.sidebar-expanded,
+[dir="ltr"] .admin-main-content.sidebar-expanded {
+    margin-left: 260px;
+    margin-right: 0;
+}
+
+.admin-layout-wrapper.is-ltr .admin-main-content.sidebar-minimized,
+[dir="ltr"] .admin-main-content.sidebar-minimized {
+    margin-left: 75px;
+    margin-right: 0;
+}
+
+.admin-layout-wrapper.is-ltr .admin-main-content.sidebar-hidden,
+[dir="ltr"] .admin-main-content.sidebar-hidden {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+/* RTL (Arabic) - Sidebar on the right, content margin on right */
+.admin-layout-wrapper.is-rtl .admin-main-content.sidebar-expanded,
+[dir="rtl"] .admin-main-content.sidebar-expanded {
     margin-right: 260px;
     margin-left: 0;
 }
 
-.admin-main-content.sidebar-minimized {
+.admin-layout-wrapper.is-rtl .admin-main-content.sidebar-minimized,
+[dir="rtl"] .admin-main-content.sidebar-minimized {
     margin-right: 75px;
     margin-left: 0;
 }
 
-.admin-main-content.sidebar-hidden {
+.admin-layout-wrapper.is-rtl .admin-main-content.sidebar-hidden,
+[dir="rtl"] .admin-main-content.sidebar-hidden {
     margin-right: 0;
     margin-left: 0;
+}
+
+/* Default fallback - assume LTR if no direction specified */
+.admin-main-content.sidebar-expanded {
+    margin-left: 260px;
+    margin-right: 0;
+}
+
+.admin-main-content.sidebar-minimized {
+    margin-left: 75px;
+    margin-right: 0;
+}
+
+.admin-main-content.sidebar-hidden {
+    margin-left: 0;
+    margin-right: 0;
 }
 
 /* Mobile - no margin */

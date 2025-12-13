@@ -413,10 +413,12 @@ body {
 
 /* ============================================
    SIDEBAR POSITIONING
-   Sidebar is always on the RIGHT side
+   Sidebar positioning based on RTL/LTR direction
    ============================================ */
 
-.app-sidebar {
+/* RTL (Arabic) - Sidebar on the right */
+[dir="rtl"] .app-sidebar,
+.sidebar-rtl.app-sidebar {
     right: 0 !important;
     left: auto !important;
     border-right: none !important;
@@ -424,18 +426,52 @@ body {
     box-shadow: -2px 0 8px rgba(0, 0, 0, 0.08) !important;
 }
 
-/* Hidden sidebar - slides to the right */
-.app-sidebar.sidebar-hidden {
+/* LTR (English) - Sidebar on the left */
+[dir="ltr"] .app-sidebar,
+.sidebar-ltr.app-sidebar,
+.app-sidebar:not([dir="rtl"]):not(.sidebar-rtl) {
+    left: 0 !important;
+    right: auto !important;
+    border-left: none !important;
+    border-right: 1px solid #dee2e6 !important;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Hidden sidebar - slides based on direction */
+[dir="rtl"] .app-sidebar.sidebar-hidden,
+.sidebar-rtl.app-sidebar.sidebar-hidden {
     transform: translateX(100%) !important;
+}
+
+[dir="ltr"] .app-sidebar.sidebar-hidden,
+.sidebar-ltr.app-sidebar.sidebar-hidden {
+    transform: translateX(-100%) !important;
 }
 
 .app-sidebar.sidebar-visible {
     transform: translateX(0) !important;
 }
 
-/* Desktop: Always visible */
+/* Desktop: Always visible - override all direction-specific transforms */
 @media (min-width: 992px) {
-    .app-sidebar.sidebar-hidden {
+    .app-sidebar.sidebar-hidden,
+    [dir="rtl"] .app-sidebar.sidebar-hidden,
+    .sidebar-rtl.app-sidebar.sidebar-hidden,
+    [dir="ltr"] .app-sidebar.sidebar-hidden,
+    .sidebar-ltr.app-sidebar.sidebar-hidden,
+    .app-sidebar:not([dir="rtl"]):not(.sidebar-rtl).sidebar-hidden {
+        transform: translateX(0) !important;
+    }
+    
+    /* Ensure sidebar is always visible on desktop */
+    [dir="ltr"] .app-sidebar,
+    .sidebar-ltr.app-sidebar,
+    .app-sidebar:not([dir="rtl"]):not(.sidebar-rtl) {
+        transform: translateX(0) !important;
+    }
+    
+    [dir="rtl"] .app-sidebar,
+    .sidebar-rtl.app-sidebar {
         transform: translateX(0) !important;
     }
 }

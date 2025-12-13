@@ -22,10 +22,10 @@
                 </div>
             </div>
 
-            <div class="max-w-7xl mx-auto py-6 px-4">
-                <div class="flex gap-6">
+            <div class="container-fluid py-4">
+                <div class="row g-4">
                     <!-- Main Video Player -->
-                    <div class="flex-1">
+                    <div class="col-lg-9 col-md-8">
                         <!-- Breadcrumb -->
                         <nav class="text-sm text-gray-600 mb-4">
                             <Link :href="route('welcome')" class="hover:text-blue-600">{{ t('common.home') || 'Home' }}</Link>
@@ -109,148 +109,170 @@
                         </div>
                         
                         <!-- Student Progress & Attendance Card -->
-                        <div v-if="isStudent && currentStudentProgress" class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-5 mb-6">
-                            <div class="flex flex-wrap items-center gap-6">
-                                <!-- Course Progress -->
-                                <div class="flex items-center gap-3">
-                                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <p class="text-xs text-gray-500 font-medium">{{ t('lessons.course_progress') || 'Course Progress' }}</p>
-                                        <div class="flex items-center gap-2">
-                                            <div class="w-24 bg-blue-200 rounded-full h-2">
-                                                <div class="bg-blue-600 h-2 rounded-full transition-all duration-500" :style="`width: ${currentStudentProgress.progress_percentage}%`"></div>
+                        <div v-if="isStudent && currentStudentProgress" class="card border-0 shadow-sm mb-4" style="background: linear-gradient(to right, #e7f3ff, #e0e7ff); border-color: #bfdbfe !important;">
+                            <div class="card-body p-4">
+                                <div class="row g-4">
+                                    <!-- Current Lesson Attendance -->
+                                    <div v-if="currentStudentAttendance" class="col-md-12 col-lg-4">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
+                                                :class="{
+                                                    'bg-success bg-opacity-10': currentStudentAttendance.status === 'present',
+                                                    'bg-danger bg-opacity-10': currentStudentAttendance.status === 'absent',
+                                                    'bg-warning bg-opacity-10': currentStudentAttendance.status === 'late',
+                                                    'bg-info bg-opacity-10': currentStudentAttendance.status === 'excused',
+                                                }"
+                                                style="width: 48px; height: 48px;"
+                                            >
+                                                <i class="bi fs-5"
+                                                    :class="{
+                                                        'bi-check-circle-fill text-success': currentStudentAttendance.status === 'present',
+                                                        'bi-x-circle-fill text-danger': currentStudentAttendance.status === 'absent',
+                                                        'bi-clock-fill text-warning': currentStudentAttendance.status === 'late',
+                                                        'bi-info-circle-fill text-info': currentStudentAttendance.status === 'excused',
+                                                    }"
+                                                ></i>
                                             </div>
-                                            <span class="text-sm font-bold text-blue-700">{{ currentStudentProgress.progress_percentage }}%</span>
-                                        </div>
-                                        <p class="text-xs text-gray-500 mt-0.5">{{ currentStudentProgress.completed_lessons }} / {{ currentStudentProgress.total_lessons }} {{ t('lessons.title') || 'Lessons' }}</p>
-                                    </div>
-                                </div>
-                                
-                                <!-- Attendance Rate -->
-                                <div class="flex items-center gap-3">
-                                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <p class="text-xs text-gray-500 font-medium">{{ t('lessons.attendance_rate') || 'Attendance Rate' }}</p>
-                                        <div class="flex items-center gap-2">
-                                            <div class="w-24 bg-green-200 rounded-full h-2">
-                                                <div class="bg-green-600 h-2 rounded-full transition-all duration-500" :style="`width: ${currentStudentProgress.attendance_rate}%`"></div>
+                                            <div class="flex-grow-1">
+                                                <p class="mb-1 small text-muted fw-medium">{{ t('lessons.current_attendance') || 'This Lesson' }}</p>
+                                                <span class="badge mb-1"
+                                                    :class="{
+                                                        'bg-success bg-opacity-10 text-success': currentStudentAttendance.status === 'present',
+                                                        'bg-danger bg-opacity-10 text-danger': currentStudentAttendance.status === 'absent',
+                                                        'bg-warning bg-opacity-10 text-warning': currentStudentAttendance.status === 'late',
+                                                        'bg-info bg-opacity-10 text-info': currentStudentAttendance.status === 'excused',
+                                                    }"
+                                                >
+                                                    {{ currentStudentAttendance.status ? (t('lessons.' + currentStudentAttendance.status) || currentStudentAttendance.status) : '' }}
+                                                </span>
+                                                <p v-if="currentStudentAttendance.marked_by === 'student'" class="mb-0 small text-purple mt-1">
+                                                    <i class="bi bi-check-circle"></i>
+                                                    {{ t('lessons.auto_marked') || 'Auto-marked' }}
+                                                </p>
                                             </div>
-                                            <span class="text-sm font-bold text-green-700">{{ currentStudentProgress.attendance_rate }}%</span>
                                         </div>
-                                        <p class="text-xs text-gray-500 mt-0.5">{{ currentStudentProgress.attended_lessons }} / {{ currentStudentProgress.total_lessons }} {{ t('lessons.attended') || 'Attended' }}</p>
                                     </div>
-                                </div>
-                                
-                                <!-- Current Lesson Attendance -->
-                                <div v-if="currentStudentAttendance" class="flex items-center gap-3">
-                                    <div class="w-12 h-12 rounded-full flex items-center justify-center"
-                                        :class="{
-                                            'bg-green-100': currentStudentAttendance.status === 'present',
-                                            'bg-red-100': currentStudentAttendance.status === 'absent',
-                                            'bg-yellow-100': currentStudentAttendance.status === 'late',
-                                            'bg-blue-100': currentStudentAttendance.status === 'excused',
-                                        }">
-                                        <svg v-if="currentStudentAttendance.status === 'present'" class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                        </svg>
-                                        <svg v-else-if="currentStudentAttendance.status === 'absent'" class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                        <svg v-else class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
+                                    
+                                    <!-- Attendance Rate -->
+                                    <div class="col-md-6 col-lg-4">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="d-flex align-items-center justify-content-center rounded-circle bg-success bg-opacity-10 flex-shrink-0" style="width: 48px; height: 48px;">
+                                                <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <p class="mb-1 small text-muted fw-medium">{{ t('lessons.attendance_rate') || 'Attendance Rate' }}</p>
+                                                <div class="d-flex align-items-center gap-2 mb-1">
+                                                    <div class="progress flex-grow-1" style="height: 8px;">
+                                                        <div class="progress-bar bg-success" role="progressbar" 
+                                                            :style="`width: ${currentStudentProgress.attendance_rate}%`"
+                                                            :aria-valuenow="currentStudentProgress.attendance_rate" 
+                                                            aria-valuemin="0" 
+                                                            aria-valuemax="100"
+                                                            style="transition: width 0.5s ease;">
+                                                        </div>
+                                                    </div>
+                                                    <span class="small fw-bold text-success">{{ currentStudentProgress.attendance_rate }}%</span>
+                                                </div>
+                                                <p class="mb-0 small text-muted">{{ currentStudentProgress.attended_lessons }} / {{ currentStudentProgress.total_lessons }} {{ t('lessons.attended') || 'Attended' }}</p>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p class="text-xs text-gray-500 font-medium">{{ t('lessons.current_attendance') || 'This Lesson' }}</p>
-                                        <span class="px-2 py-1 rounded-full text-xs font-bold"
-                                            :class="{
-                                                'bg-green-100 text-green-700': currentStudentAttendance.status === 'present',
-                                                'bg-red-100 text-red-700': currentStudentAttendance.status === 'absent',
-                                                'bg-yellow-100 text-yellow-700': currentStudentAttendance.status === 'late',
-                                                'bg-blue-100 text-blue-700': currentStudentAttendance.status === 'excused',
-                                            }">
-                                            {{ currentStudentAttendance.status ? (t('lessons.' + currentStudentAttendance.status) || currentStudentAttendance.status) : '' }}
-                                        </span>
-                                        <p v-if="currentStudentAttendance.marked_by === 'student'" class="text-xs text-purple-600 mt-0.5">
-                                            {{ t('lessons.auto_marked') || 'Auto-marked' }}
-                                        </p>
+                                    
+                                    <!-- Course Progress -->
+                                    <div class="col-md-6 col-lg-4">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="d-flex align-items-center justify-content-center rounded-circle bg-primary bg-opacity-10 flex-shrink-0" style="width: 48px; height: 48px;">
+                                                <i class="bi bi-bar-chart-fill text-primary fs-5"></i>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <p class="mb-1 small text-muted fw-medium">{{ t('lessons.course_progress') || 'Course Progress' }}</p>
+                                                <div class="d-flex align-items-center gap-2 mb-1">
+                                                    <div class="progress flex-grow-1" style="height: 8px;">
+                                                        <div class="progress-bar bg-primary" role="progressbar" 
+                                                            :style="`width: ${currentStudentProgress.progress_percentage}%`"
+                                                            :aria-valuenow="currentStudentProgress.progress_percentage" 
+                                                            aria-valuemin="0" 
+                                                            aria-valuemax="100"
+                                                            style="transition: width 0.5s ease;">
+                                                        </div>
+                                                    </div>
+                                                    <span class="small fw-bold text-primary">{{ currentStudentProgress.progress_percentage }}%</span>
+                                                </div>
+                                                <p class="mb-0 small text-muted">{{ currentStudentProgress.completed_lessons }} / {{ currentStudentProgress.total_lessons }} {{ t('lessons.title') || 'Lessons' }}</p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Video Progress Indicator (for students - only for uploaded videos) -->
-                        <div v-if="isStudent && lesson?.video_url && isUploadedVideo && videoWatchPercentage < 80" class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-                            <div class="flex items-center gap-3">
-                                <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <div class="flex-1">
-                                    <p class="text-sm font-medium text-yellow-800">
+                        <div v-if="isStudent && lesson?.video_url && isUploadedVideo && videoWatchPercentage < 80" class="alert alert-warning border-0 shadow-sm mb-4">
+                            <div class="d-flex align-items-start gap-3">
+                                <i class="bi bi-info-circle-fill fs-5 flex-shrink-0"></i>
+                                <div class="flex-grow-1">
+                                    <p class="mb-2 fw-medium mb-2">
                                         {{ t('lessons.watch_video_to_complete') || 'Watch at least 80% of the video to complete this lesson' }}
                                     </p>
-                                    <div class="mt-2 bg-yellow-200 rounded-full h-2">
-                                        <div class="bg-yellow-600 h-2 rounded-full transition-all duration-300" :style="`width: ${videoWatchPercentage}%`"></div>
+                                    <div class="progress mb-2" style="height: 10px;">
+                                        <div class="progress-bar bg-warning" role="progressbar" 
+                                            :style="`width: ${videoWatchPercentage}%`"
+                                            :aria-valuenow="Math.round(videoWatchPercentage)" 
+                                            aria-valuemin="0" 
+                                            aria-valuemax="100"
+                                            style="transition: width 0.3s ease;">
+                                        </div>
                                     </div>
-                                    <p class="text-xs text-yellow-700 mt-1">{{ Math.round(videoWatchPercentage) }}% {{ t('lessons.watched') || 'watched' }}</p>
+                                    <p class="mb-0 small">{{ Math.round(videoWatchPercentage) }}% {{ t('lessons.watched') || 'watched' }}</p>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Lesson Info -->
-                        <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
-                            <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ lesson?.translated_title || lesson?.title || t('lessons.select_lesson') }}</h1>
-                            <p v-if="lesson?.translated_description || lesson?.description" class="text-gray-600 mb-4">{{ lesson.translated_description || lesson.description }}</p>
-                            
-                            <div v-if="lesson" class="flex items-center gap-6 pt-4 border-t border-gray-200">
-                                <div class="flex items-center text-gray-500">
-                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    {{ lesson.duration_minutes }} {{ t('lessons.fields.duration_minutes') }}
+                        <div class="card shadow-sm border-0 mb-4">
+                            <div class="card-body p-4">
+                                <h1 class="card-title h3 fw-bold mb-3">{{ lesson?.translated_title || lesson?.title || t('lessons.select_lesson') }}</h1>
+                                <p v-if="lesson?.translated_description || lesson?.description" class="card-text text-muted mb-3">{{ lesson.translated_description || lesson.description }}</p>
+                                
+                                <div v-if="lesson" class="d-flex align-items-center gap-3 pt-3 border-top">
+                                    <div class="d-flex align-items-center text-muted">
+                                        <i class="bi bi-clock me-2"></i>
+                                        <span class="small">{{ lesson.duration_minutes }} {{ t('lessons.fields.duration_minutes') }}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Lesson Content -->
-                        <div v-if="lesson?.content" class="bg-white rounded-xl shadow-sm p-6 mb-6">
-                            <h2 class="text-xl font-bold text-gray-900 mb-4">{{ t('lessons.fields.content') }}</h2>
-                            <div class="prose max-w-none" v-html="formatContent(lesson.content)"></div>
+                        <div v-if="lesson?.content" class="card shadow-sm border-0 mb-4">
+                            <div class="card-body p-4">
+                                <h2 class="card-title h5 fw-bold mb-3">{{ t('lessons.fields.content') }}</h2>
+                                <div class="lesson-content" v-html="formatContent(lesson.content)"></div>
+                            </div>
                         </div>
 
                         <!-- Questions Section -->
-                        <div v-if="lesson" class="bg-white rounded-xl shadow-sm p-6">
-                            <div class="flex items-center justify-between mb-6">
-                                <div class="flex items-center gap-3">
-                                <h2 class="text-xl font-bold text-gray-900 flex items-center gap-2">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    {{ t('lessons.questions') }} ({{ lesson?.questions?.length || 0 }})
-                                </h2>
-                                    <span v-if="lesson?.section_id" class="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium">
-                                        {{ t('sections.section') }}: {{ getSectionTitle(lesson.section_id) }}
-                                    </span>
+                        <div v-if="lesson" class="card shadow-sm border-0">
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+                                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                                        <h2 class="card-title h5 fw-bold mb-0 d-flex align-items-center gap-2">
+                                            <i class="bi bi-question-circle fs-5"></i>
+                                            {{ t('lessons.questions') }} ({{ lesson?.questions?.length || 0 }})
+                                        </h2>
+                                        <span v-if="lesson?.section_id" class="badge bg-secondary">
+                                            {{ t('sections.section') }}: {{ getSectionTitle(lesson.section_id) }}
+                                        </span>
+                                    </div>
+                                    <Link
+                                        v-if="isInstructor && can('questions.create')"
+                                        :href="route('instructor.lessons.questions.create', [course.slug || course.id, lesson.id])"
+                                        class="btn btn-primary btn-sm d-flex align-items-center gap-2"
+                                    >
+                                        <i class="bi bi-plus-circle"></i>
+                                        {{ t('lessons.actions.add_question') }}
+                                    </Link>
                                 </div>
-                                <Link
-                                    v-if="isInstructor && can('questions.create')"
-                                    :href="route('instructor.lessons.questions.create', [course.slug || course.id, lesson.id])"
-                                    class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors flex items-center gap-2"
-                                >
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                                    </svg>
-                                    {{ t('lessons.actions.add_question') }}
-                                </Link>
-                            </div>
                             
                             <div v-if="lesson?.questions && lesson.questions.length > 0" class="space-y-6">
                                 <div
@@ -440,6 +462,7 @@
                                 <p class="text-lg mb-4">{{ t('lessons.no_questions') }}</p>
                             </div>
                         </div>
+                        </div>
 
                         <!-- Attendance Section for Instructor (View Only) -->
                         <div v-if="isInstructor && can('attendance.mark')" class="bg-white rounded-xl shadow-sm p-6 mt-6">
@@ -534,196 +557,231 @@
                     </div>
 
                     <!-- Sidebar - Sections with Lessons -->
-                    <div class="w-80 flex-shrink-0">
-                        <div class="bg-white rounded-xl shadow-sm p-6 sticky top-4">
-                            <div class="flex items-center justify-between mb-4">
-                                <h2 class="text-lg font-bold text-gray-900">{{ t('sections.title') || 'Sections' }}</h2>
-                                <span class="text-sm text-gray-500 bg-slate-100 px-2 py-1 rounded">
-                                    {{ sections?.length || lessons?.length || 0 }}
-                                </span>
-                            </div>
-
-                            <div class="space-y-4 max-h-[600px] overflow-y-auto">
-                                <!-- Sections with Lessons -->
-                                <template v-if="sections && sections.length > 0">
-                                    <div
-                                        v-for="section in sections"
-                                        :key="section.id"
-                                        class="border border-gray-200 rounded-lg overflow-hidden"
-                                    >
-                                        <!-- Section Header - Collapsible -->
-                                        <button
-                                            type="button"
-                                            @click="toggleSection(section.id)"
-                                            class="w-full bg-gray-50 px-4 py-3 border-b border-gray-200 hover:bg-gray-100 transition-colors flex items-center justify-between text-left"
-                                        >
-                                            <div class="flex items-center gap-2 flex-1">
-                                                <h3 class="text-sm font-semibold text-gray-900">
-                                                    {{ section.translated_title || section.title }}
-                                                </h3>
-                                                <span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-medium">
-                                                    {{ section.lessons?.length || 0 }} 
-                                                </span>
-                                            </div>
-                                            <svg 
-                                                class="w-4 h-4 text-gray-500 flex-shrink-0 transition-transform duration-200"
-                                                :class="{ 'rotate-180': expandedSections[section.id] }"
-                                                fill="none" 
-                                                stroke="currentColor" 
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                            </svg>
-                                        </button>
-                                        
-                                        <!-- Lessons in Section - Collapsible -->
-                                        <transition
-                                            enter-active-class="transition-all duration-300 ease-out"
-                                            enter-from-class="opacity-0 max-h-0"
-                                            enter-to-class="opacity-100 max-h-[2000px]"
-                                            leave-active-class="transition-all duration-300 ease-in"
-                                            leave-from-class="opacity-100 max-h-[2000px]"
-                                            leave-to-class="opacity-0 max-h-0"
-                                        >
-                                            <div v-show="expandedSections[section.id]" class="overflow-hidden">
-                                                <div v-if="section.lessons && section.lessons.length > 0" class="p-2 space-y-1">
-                                                    <Link
-                                                        v-for="(l, lIndex) in section.lessons"
-                                                        :key="l.id"
-                                                        :href="route('courses.play.lesson', [course.slug || course.id, l.id])"
-                                                        class="flex items-center gap-2 p-2 rounded-lg transition-colors group"
-                                                        :class="lesson?.id === l.id ? 'bg-blue-50 border border-blue-200' : 'hover:bg-gray-50 border border-transparent'"
-                                                    >
-                                                        <div class="flex-shrink-0 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                                                            :class="lesson?.id === l.id ? 'bg-blue-600' : 'bg-gray-300 group-hover:bg-blue-400'">
-                                                            {{ lIndex + 1 }}
-                                                        </div>
-                                                        <div class="flex-1 min-w-0">
-                                                            <p class="text-xs font-medium text-gray-900 truncate">{{ l.translated_title || l.title }}</p>
-                                                            <div class="flex items-center gap-2 mt-0.5 flex-wrap">
-                                                                <span class="text-xs text-gray-500">{{ l.duration_minutes }} {{ t('lessons.fields.duration_minutes') }}</span>
-                                                                <span v-if="l.type" class="px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded text-xs capitalize">
-                                                                    {{ l.type ? (t('lessons.types.' + l.type) || l.type) : '' }}
-                                                                </span>
-                                                                <!-- Completion Status -->
-                                                                <span v-if="isStudent && l.completed" class="px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-xs font-medium">
-                                                                    {{ t('lessons.completed') || 'Completed' }}
-                                                                </span>
-                                                                <!-- Attendance Status -->
-                                                                <span v-if="isStudent && l.attendance" class="px-1.5 py-0.5 rounded text-xs font-medium"
-                                                                    :class="{
-                                                                        'bg-green-100 text-green-700': l.attendance.status === 'present',
-                                                                        'bg-red-100 text-red-700': l.attendance.status === 'absent',
-                                                                        'bg-yellow-100 text-yellow-700': l.attendance.status === 'late',
-                                                                        'bg-blue-100 text-blue-700': l.attendance.status === 'excused',
-                                                                    }"
-                                                                >
-                                                                    {{ l.attendance?.status ? (t('lessons.' + l.attendance.status) || l.attendance.status) : '' }}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                        <svg v-if="lesson?.id === l.id" class="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                                        </svg>
-                                                        <!-- Completion Checkmark -->
-                                                        <svg v-if="isStudent && l.completed && lesson?.id !== l.id" class="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                                        </svg>
-                                                        <!-- Add Question Button for Instructor -->
-                                                        <Link
-                                                            v-if="isInstructor && lesson?.id === l.id && can('questions.create')"
-                                                            :href="route('instructor.lessons.questions.create', [course.slug || course.id, l.id])"
-                                                            @click.stop
-                                                            class="flex-shrink-0 p-1.5 text-blue-600 hover:bg-blue-100 rounded transition-colors"
-                                                            :title="t('lessons.actions.add_question')"
-                                                        >
-                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                                                            </svg>
-                                                        </Link>
-                                                    </Link>
-                                                </div>
-                                                <div v-else class="p-4 text-center text-gray-400 text-xs">
-                                                    {{ t('sections.no_lessons') }}
-                                                </div>
-                                            </div>
-                                        </transition>
-                                    </div>
-                                </template>
-                                
-                                <!-- Fallback to Lessons List if no sections -->
-                                <template v-else-if="lessons && lessons.length > 0">
-                                <Link
-                                    v-for="(l, index) in lessons"
-                                    :key="l.id"
-                                    :href="route('courses.play.lesson', [course.slug || course.id, l.id])"
-                                    class="flex items-center gap-3 p-3 rounded-lg transition-colors"
-                                    :class="lesson?.id === l.id ? 'bg-blue-50 border border-blue-200' : 'hover:bg-gray-50 border border-transparent'"
-                                >
-                                    <div class="flex-shrink-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                                        :class="lesson?.id === l.id ? 'bg-blue-600' : 'bg-gray-300'">
-                                        {{ index + 1 }}
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex items-center gap-2 mb-1">
-                                            <p class="text-sm font-medium text-gray-900 truncate">{{ l.translated_title || l.title }}</p>
-                                            <span v-if="l.type" class="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs font-medium capitalize">
-                                                {{ l.type ? (t('lessons.types.' + l.type) || l.type) : '' }}
-                                            </span>
-                                        </div>
-                                        <div class="flex items-center gap-2 mt-1 flex-wrap">
-                                            <span class="text-xs text-gray-500">{{ l.duration_minutes }} {{ t('lessons.fields.duration_minutes') }}</span>
-                                            <!-- Completion Status -->
-                                            <span v-if="isStudent && l.completed" class="px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-xs font-medium">
-                                                {{ t('lessons.completed') || 'Completed' }}
-                                            </span>
-                                            <!-- Attendance Status -->
-                                            <span v-if="isStudent && l.attendance" class="px-1.5 py-0.5 rounded text-xs font-medium"
-                                                :class="{
-                                                    'bg-green-100 text-green-700': l.attendance.status === 'present',
-                                                    'bg-red-100 text-red-700': l.attendance.status === 'absent',
-                                                    'bg-yellow-100 text-yellow-700': l.attendance.status === 'late',
-                                                    'bg-blue-100 text-blue-700': l.attendance.status === 'excused',
-                                                }"
-                                            >
-                                                {{ t('lessons.' + l.attendance.status) || l.attendance.status }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <svg v-if="lesson?.id === l.id" class="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    <!-- Completion Checkmark -->
-                                    <svg v-if="isStudent && l.completed && lesson?.id !== l.id" class="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                        <!-- Add Question Button for Instructor -->
-                                        <Link
-                                            v-if="isInstructor && lesson?.id === l.id && can('questions.create')"
-                                            :href="route('instructor.lessons.questions.create', [course.slug || course.id, l.id])"
-                                            @click.stop
-                                            class="flex-shrink-0 p-1.5 text-blue-600 hover:bg-blue-100 rounded transition-colors"
-                                            :title="t('lessons.actions.add_question')"
-                                        >
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                                            </svg>
-                                        </Link>
-                                </Link>
-                                </template>
-                                
-                                <div v-else class="text-center py-8 text-gray-400 text-sm">
-                                    {{ t('lessons.no_lessons') }}
+                    <div class="col-lg-3 col-md-4 d-none d-md-block">
+                        <div class="card shadow-sm border-0 sticky-top" style="top: 20px;">
+                            <div class="card-body p-0">
+                                <!-- Header -->
+                                <div class="d-flex align-items-center justify-content-between p-3 border-bottom bg-light">
+                                    <h5 class="mb-0 fw-bold text-dark">{{ t('sections.title') || 'Course Content' }}</h5>
+                                    <span class="badge bg-secondary">
+                                        {{ sections?.length || lessons?.length || 0 }}
+                                    </span>
                                 </div>
-                            </div>
 
-                            <!-- Course Info -->
-                            <div class="mt-6 pt-6 border-t border-gray-200">
-                                <Link :href="route('courses.show', course.slug || course.id)" class="block">
-                                    <img :src="getCourseImage(course)" :alt="course.translated_title || course.title" class="w-full h-32 object-cover rounded-lg mb-3" @error="handleImageError($event)" />
-                                    <h3 class="font-semibold text-gray-900 mb-1">{{ course.translated_title || course.title }}</h3>
-                                    <p class="text-sm text-gray-500">{{ course.instructor?.name }}</p>
-                                </Link>
+                                <!-- Sections/Lessons List -->
+                                <div class="course-content-list" style="max-height: 600px; overflow-y: auto;">
+                                    <!-- Sections with Lessons -->
+                                    <template v-if="sections && sections.length > 0">
+                                        <div
+                                            v-for="section in sections"
+                                            :key="section.id"
+                                            class="border-bottom"
+                                        >
+                                            <!-- Section Header - Collapsible -->
+                                            <button
+                                                type="button"
+                                                @click="toggleSection(section.id)"
+                                                class="btn btn-link w-100 text-start text-decoration-none p-3 d-flex align-items-center justify-content-between border-0 bg-light hover-bg-light"
+                                                style="transition: background-color 0.2s;"
+                                                :class="{ 'bg-white': expandedSections[section.id] }"
+                                            >
+                                                <div class="d-flex align-items-center gap-2 flex-grow-1">
+                                                    <h6 class="mb-0 fw-bold text-dark small">
+                                                        {{ section.translated_title || section.title }}
+                                                    </h6>
+                                                    <span class="badge bg-primary">
+                                                        {{ section.lessons?.length || 0 }}
+                                                    </span>
+                                                </div>
+                                                <i 
+                                                    class="bi bi-chevron-down transition-transform"
+                                                    :class="{ 'rotate-180': expandedSections[section.id] }"
+                                                    style="transition: transform 0.3s ease;"
+                                                ></i>
+                                            </button>
+                                            
+                                            <!-- Lessons in Section - Collapsible -->
+                                            <transition
+                                                enter-active-class="transition-all duration-300 ease-out"
+                                                enter-from-class="opacity-0 max-h-0"
+                                                enter-to-class="opacity-100 max-h-[2000px]"
+                                                leave-active-class="transition-all duration-300 ease-in"
+                                                leave-from-class="opacity-100 max-h-[2000px]"
+                                                leave-to-class="opacity-0 max-h-0"
+                                            >
+                                                <div v-show="expandedSections[section.id]" class="overflow-hidden">
+                                                    <div v-if="section.lessons && section.lessons.length > 0" class="p-2">
+                                                        <Link
+                                                            v-for="(l, lIndex) in section.lessons"
+                                                            :key="l.id"
+                                                            :href="route('courses.play.lesson', [course.slug || course.id, l.id])"
+                                                            class="d-flex align-items-start gap-2 p-2 rounded text-decoration-none lesson-item"
+                                                            :class="lesson?.id === l.id ? 'bg-primary bg-opacity-10 border-start border-primary border-3' : 'hover-bg-light'"
+                                                            style="transition: all 0.2s;"
+                                                        >
+                                                            <div class="d-flex align-items-center justify-content-center flex-shrink-0 rounded-circle text-white small fw-bold"
+                                                                :class="lesson?.id === l.id ? 'bg-primary' : 'bg-secondary bg-opacity-50'"
+                                                                style="width: 24px; height: 24px; font-size: 11px;"
+                                                            >
+                                                                {{ lIndex + 1 }}
+                                                            </div>
+                                                            <div class="flex-grow-1 min-w-0">
+                                                                <p class="mb-1 small fw-medium text-dark text-truncate" style="font-size: 13px;">
+                                                                    {{ l.translated_title || l.title }}
+                                                                </p>
+                                                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                                    <span class="text-muted small">
+                                                                        <i class="bi bi-clock"></i>
+                                                                        {{ l.duration_minutes }} {{ t('lessons.fields.duration_minutes') }}
+                                                                    </span>
+                                                                    <span v-if="l.type" class="badge bg-purple bg-opacity-10 text-purple small">
+                                                                        <i class="bi" :class="{
+                                                                            'bi-play-circle': l.type === 'video' || l.type === 'video_file',
+                                                                            'bi-camera-video': l.type === 'live',
+                                                                            'bi-file-text': l.type === 'text'
+                                                                        }"></i>
+                                                                        {{ l.type ? (t('lessons.types.' + l.type) || l.type) : '' }}
+                                                                    </span>
+                                                                    <!-- Completion Status -->
+                                                                    <span v-if="isStudent && l.completed" class="badge bg-success bg-opacity-10 text-success small">
+                                                                        <i class="bi bi-check-circle"></i>
+                                                                        {{ t('lessons.completed') || 'Completed' }}
+                                                                    </span>
+                                                                    <!-- Attendance Status -->
+                                                                    <span v-if="isStudent && l.attendance" class="badge small"
+                                                                        :class="{
+                                                                            'bg-success bg-opacity-10 text-success': l.attendance.status === 'present',
+                                                                            'bg-danger bg-opacity-10 text-danger': l.attendance.status === 'absent',
+                                                                            'bg-warning bg-opacity-10 text-warning': l.attendance.status === 'late',
+                                                                            'bg-info bg-opacity-10 text-info': l.attendance.status === 'excused',
+                                                                        }"
+                                                                    >
+                                                                        {{ l.attendance?.status ? (t('lessons.' + l.attendance.status) || l.attendance.status) : '' }}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            <div class="d-flex align-items-center gap-1 flex-shrink-0">
+                                                                <!-- Active Lesson Indicator -->
+                                                                <i v-if="lesson?.id === l.id" class="bi bi-play-circle-fill text-primary"></i>
+                                                                <!-- Completion Checkmark -->
+                                                                <i v-if="isStudent && l.completed && lesson?.id !== l.id" class="bi bi-check-circle-fill text-success"></i>
+                                                                <!-- Add Question Button for Instructor -->
+                                                                <Link
+                                                                    v-if="isInstructor && lesson?.id === l.id && can('questions.create')"
+                                                                    :href="route('instructor.lessons.questions.create', [course.slug || course.id, l.id])"
+                                                                    @click.stop
+                                                                    class="btn btn-sm btn-link text-primary p-1 text-decoration-none"
+                                                                    :title="t('lessons.actions.add_question')"
+                                                                >
+                                                                    <i class="bi bi-plus-circle"></i>
+                                                                </Link>
+                                                            </div>
+                                                        </Link>
+                                                    </div>
+                                                    <div v-else class="p-4 text-center text-muted small">
+                                                        <i class="bi bi-inbox d-block mb-2" style="font-size: 24px;"></i>
+                                                        {{ t('sections.no_lessons') }}
+                                                    </div>
+                                                </div>
+                                            </transition>
+                                        </div>
+                                    </template>
+                                    
+                                    <!-- Fallback to Lessons List if no sections -->
+                                    <template v-else-if="lessons && lessons.length > 0">
+                                        <Link
+                                            v-for="(l, index) in lessons"
+                                            :key="l.id"
+                                            :href="route('courses.play.lesson', [course.slug || course.id, l.id])"
+                                            class="d-flex align-items-start gap-3 p-3 border-bottom text-decoration-none lesson-item"
+                                            :class="lesson?.id === l.id ? 'bg-primary bg-opacity-10 border-start border-primary border-3' : 'hover-bg-light'"
+                                            style="transition: all 0.2s;"
+                                        >
+                                            <div class="d-flex align-items-center justify-content-center flex-shrink-0 rounded-circle text-white small fw-bold"
+                                                :class="lesson?.id === l.id ? 'bg-primary' : 'bg-secondary bg-opacity-50'"
+                                                style="width: 32px; height: 32px; font-size: 12px;"
+                                            >
+                                                {{ index + 1 }}
+                                            </div>
+                                            <div class="flex-grow-1 min-w-0">
+                                                <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                                                    <p class="mb-0 small fw-medium text-dark text-truncate">
+                                                        {{ l.translated_title || l.title }}
+                                                    </p>
+                                                    <span v-if="l.type" class="badge bg-purple bg-opacity-10 text-purple small">
+                                                        <i class="bi" :class="{
+                                                            'bi-play-circle': l.type === 'video' || l.type === 'video_file',
+                                                            'bi-camera-video': l.type === 'live',
+                                                            'bi-file-text': l.type === 'text'
+                                                        }"></i>
+                                                        {{ l.type ? (t('lessons.types.' + l.type) || l.type) : '' }}
+                                                    </span>
+                                                </div>
+                                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                    <span class="text-muted small">
+                                                        <i class="bi bi-clock"></i>
+                                                        {{ l.duration_minutes }} {{ t('lessons.fields.duration_minutes') }}
+                                                    </span>
+                                                    <!-- Completion Status -->
+                                                    <span v-if="isStudent && l.completed" class="badge bg-success bg-opacity-10 text-success small">
+                                                        <i class="bi bi-check-circle"></i>
+                                                        {{ t('lessons.completed') || 'Completed' }}
+                                                    </span>
+                                                    <!-- Attendance Status -->
+                                                    <span v-if="isStudent && l.attendance" class="badge small"
+                                                        :class="{
+                                                            'bg-success bg-opacity-10 text-success': l.attendance.status === 'present',
+                                                            'bg-danger bg-opacity-10 text-danger': l.attendance.status === 'absent',
+                                                            'bg-warning bg-opacity-10 text-warning': l.attendance.status === 'late',
+                                                            'bg-info bg-opacity-10 text-info': l.attendance.status === 'excused',
+                                                        }"
+                                                    >
+                                                        {{ t('lessons.' + l.attendance.status) || l.attendance.status }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex align-items-center gap-1 flex-shrink-0">
+                                                <!-- Active Lesson Indicator -->
+                                                <i v-if="lesson?.id === l.id" class="bi bi-play-circle-fill text-primary"></i>
+                                                <!-- Completion Checkmark -->
+                                                <i v-if="isStudent && l.completed && lesson?.id !== l.id" class="bi bi-check-circle-fill text-success"></i>
+                                                <!-- Add Question Button for Instructor -->
+                                                <Link
+                                                    v-if="isInstructor && lesson?.id === l.id && can('questions.create')"
+                                                    :href="route('instructor.lessons.questions.create', [course.slug || course.id, l.id])"
+                                                    @click.stop
+                                                    class="btn btn-sm btn-link text-primary p-1 text-decoration-none"
+                                                    :title="t('lessons.actions.add_question')"
+                                                >
+                                                    <i class="bi bi-plus-circle"></i>
+                                                </Link>
+                                            </div>
+                                        </Link>
+                                    </template>
+                                    
+                                    <div v-else class="text-center py-5 text-muted">
+                                        <i class="bi bi-inbox d-block mb-2" style="font-size: 32px;"></i>
+                                        <p class="mb-0 small">{{ t('lessons.no_lessons') }}</p>
+                                    </div>
+                                </div>
+
+                                <!-- Course Info -->
+                                <div class="p-3 border-top bg-light">
+                                    <Link :href="route('courses.show', course.slug || course.id)" class="text-decoration-none">
+                                        <img 
+                                            :src="getCourseImage(course)" 
+                                            :alt="course.translated_title || course.title" 
+                                            class="img-fluid rounded mb-2 w-100" 
+                                            style="height: 120px; object-fit: cover;"
+                                            @error="handleImageError($event)" 
+                                        />
+                                        <h6 class="fw-bold text-dark mb-1 small">{{ course.translated_title || course.title }}</h6>
+                                        <p class="text-muted small mb-0">
+                                            <i class="bi bi-person"></i>
+                                            {{ course.instructor?.name }}
+                                        </p>
+                                    </Link>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -877,7 +935,7 @@
 </template>
 
 <script setup>
-import { computed, ref, watch, onMounted, onUnmounted, reactive } from 'vue';
+import { computed, ref, watch, onMounted, onUnmounted, reactive, Transition } from 'vue';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { useDirection } from '@/composables/useDirection';
@@ -1058,6 +1116,42 @@ watch(() => props.lesson, (newLesson) => {
 
 const toggleSection = (sectionId) => {
     expandedSections.value[sectionId] = !expandedSections.value[sectionId];
+};
+
+// Get current lesson title for dropdown
+const getCurrentLessonTitle = () => {
+    if (!props.lesson) return '';
+    return props.lesson.translated_title || props.lesson.title || '';
+};
+
+// Handle section selection from dropdown
+const selectSection = (sectionId) => {
+    // Expand the selected section
+    expandedSections.value[sectionId] = true;
+    
+    // Scroll to section in sidebar after navigation
+    setTimeout(() => {
+        const sectionElement = document.querySelector(`[data-section-id="${sectionId}"]`);
+        if (sectionElement) {
+            sectionElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }, 300);
+};
+
+// Handle lesson selection from dropdown
+const selectLesson = (lessonId, sectionId = null) => {
+    // If sectionId is provided, expand that section
+    if (sectionId) {
+        expandedSections.value[sectionId] = true;
+    }
+    
+    // Scroll to lesson in sidebar after navigation
+    setTimeout(() => {
+        const lessonElement = document.querySelector(`[data-lesson-id="${lessonId}"]`);
+        if (lessonElement) {
+            lessonElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }, 300);
 };
 
 // Default course image
@@ -1742,6 +1836,129 @@ onUnmounted(() => {
 .modal-leave-to .bg-white {
     transform: scale(0.95);
     opacity: 0;
+}
+
+/* Udemy-like Sidebar Styles */
+.course-content-list {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e0 #f7fafc;
+}
+
+.course-content-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.course-content-list::-webkit-scrollbar-track {
+    background: #f7fafc;
+}
+
+.course-content-list::-webkit-scrollbar-thumb {
+    background-color: #cbd5e0;
+    border-radius: 3px;
+}
+
+.course-content-list::-webkit-scrollbar-thumb:hover {
+    background-color: #a0aec0;
+}
+
+.lesson-item {
+    border-left: 3px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.lesson-item:hover {
+    background-color: #f8f9fa !important;
+    border-left-color: #0d6efd;
+}
+
+.lesson-item.bg-primary.bg-opacity-10 {
+    background-color: rgba(13, 110, 253, 0.08) !important;
+}
+
+.hover-bg-light:hover {
+    background-color: #f8f9fa !important;
+}
+
+/* Rotate chevron icon */
+.rotate-180 {
+    transform: rotate(180deg);
+}
+
+.transition-transform {
+    transition: transform 0.3s ease;
+}
+
+/* Badge colors - Purple theme for lesson types */
+.bg-purple {
+    background-color: #6f42c1 !important;
+}
+
+.bg-purple.bg-opacity-10 {
+    background-color: rgba(111, 66, 193, 0.1) !important;
+}
+
+.bg-purple.bg-opacity-25 {
+    background-color: rgba(111, 66, 193, 0.25) !important;
+}
+
+.text-purple {
+    color: #6f42c1 !important;
+}
+
+.text-purple-600 {
+    color: #6f42c1 !important;
+}
+
+.text-purple-700 {
+    color: #5a32a3 !important;
+}
+
+.bg-purple-100 {
+    background-color: rgba(111, 66, 193, 0.1) !important;
+}
+
+.bg-purple-700 {
+    background-color: #5a32a3 !important;
+}
+
+/* Ensure badge text is readable with purple background */
+.badge.bg-purple.bg-opacity-10.text-purple {
+    border: 1px solid rgba(111, 66, 193, 0.2);
+    font-weight: 500;
+}
+
+/* Active lesson indicator */
+.bi-play-circle-fill {
+    font-size: 18px;
+}
+
+.bi-check-circle-fill {
+    font-size: 18px;
+}
+
+/* Section header hover effect */
+.btn-link.hover-bg-light:hover {
+    background-color: #f8f9fa !important;
+}
+
+/* Smooth transitions */
+.transition-all {
+    transition: all 0.3s ease;
+}
+
+/* Course content list item spacing */
+.course-content-list .lesson-item:last-child {
+    border-bottom: none;
+}
+
+/* Improve card shadow */
+.card.shadow-sm {
+    box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Section border styling */
+.border-bottom:last-child {
+    border-bottom: none !important;
 }
 </style>
 

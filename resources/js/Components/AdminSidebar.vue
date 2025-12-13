@@ -7,8 +7,11 @@
       'sidebar-minimized': minimized,
       'sidebar-hidden': !mobileOpen,
       'sidebar-visible': mobileOpen,
+      'sidebar-rtl': isRTL,
+      'sidebar-ltr': isLTR,
     }"
     :style="{ width: minimized ? '75px' : '260px' }"
+    :dir="isRTL ? 'rtl' : 'ltr'"
   >
     <!-- Header Section - Bootstrap Style -->
     <div
@@ -50,53 +53,25 @@
       >
         <i
           class="bi sidebar-toggle-icon text-secondary"
-          :class="minimized ? 'bi-chevron-left' : 'bi-chevron-right'"
+          :class="
+            isRTL
+              ? minimized
+                ? 'bi-chevron-right'
+                : 'bi-chevron-left'
+              : minimized
+              ? 'bi-chevron-right'
+              : 'bi-chevron-left'
+          "
         ></i>
       </button>
 
-      <!-- User Info Card - Bootstrap Style -->
-      <div v-if="!minimized" class="user-info-card">
-        <div class="d-flex align-items-center gap-3 p-2 rounded">
-          <div class="position-relative flex-shrink-0">
-            <div
-              class="bg-primary bg-gradient rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm"
-              style="width: 48px; height: 48px; font-size: 1rem"
-            >
-              {{ getUserInitials() }}
-            </div>
-            <span
-              class="position-absolute bottom-0 end-0 translate-middle bg-success border-2 border-white rounded-circle"
-              style="width: 14px; height: 14px"
-            ></span>
-          </div>
-          <div class="flex-grow-1 min-w-0">
-            <p class="text-muted small mb-0" style="font-size: 0.75rem">
-              {{ t("admin.welcome_back") }}
-            </p>
-            <p
-              class="small fw-semibold text-dark text-truncate mb-0"
-              style="font-size: 0.875rem"
-            >
-              {{ userName }}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Minimized Avatar - Bootstrap Style -->
-      <div v-else class="d-flex justify-content-center pt-2">
-        <div class="position-relative">
-          <div
-            class="bg-primary bg-gradient rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm"
-            style="width: 40px; height: 40px; font-size: 0.875rem"
-          >
-            {{ getUserInitials() }}
-          </div>
-          <span
-            class="position-absolute bottom-0 end-0 translate-middle bg-success border-2 border-white rounded-circle"
-            style="width: 10px; height: 10px"
-          ></span>
-        </div>
+      <!-- User Dropdown - Bootstrap Style -->
+      <div class="user-dropdown-wrapper">
+        <UserDropdown 
+          :minimized="minimized" 
+          @dropdown-toggle="handleUserDropdownToggle"
+          ref="userDropdownRef"
+        />
       </div>
     </div>
 
@@ -205,7 +180,8 @@
                   @click.prevent="toggleSubmenu(index)"
                 >
                   <span
-                    class="menu-icon me-3 flex-shrink-0 d-flex align-items-center justify-content-center"
+                    class="menu-icon flex-shrink-0 d-flex align-items-center justify-content-center"
+                    :class="isRTL ? 'ms-3' : 'me-3'"
                     style="width: 20px; height: 20px"
                   >
                     <i
@@ -220,14 +196,15 @@
                   >
                     {{ item.title }}
                   </span>
-                  <span v-if="item.count && !minimized" class="menu-badge ms-2">
+                  <span v-if="item.count && !minimized" class="menu-badge" :class="isRTL ? 'me-2' : 'ms-2'">
                     <span class="badge bg-primary">
                       {{ item.count }}
                     </span>
                   </span>
                   <span
                     v-if="hasChildren(item) && !minimized"
-                    class="menu-arrow ms-2"
+                    class="menu-arrow"
+                    :class="isRTL ? 'me-2' : 'ms-2'"
                   >
                     <i
                       class="bi bi-chevron-down small"
@@ -248,7 +225,8 @@
                   @click="handleMenuItemClick"
                 >
                   <span
-                    class="menu-icon me-3 flex-shrink-0 d-flex align-items-center justify-content-center"
+                    class="menu-icon flex-shrink-0 d-flex align-items-center justify-content-center"
+                    :class="isRTL ? 'ms-3' : 'me-3'"
                     style="width: 20px; height: 20px"
                   >
                     <i
@@ -263,7 +241,7 @@
                   >
                     {{ item.title }}
                   </span>
-                  <span v-if="item.count && !minimized" class="menu-badge ms-2">
+                  <span v-if="item.count && !minimized" class="menu-badge" :class="isRTL ? 'me-2' : 'ms-2'">
                     <span class="badge bg-primary">
                       {{ item.count }}
                     </span>
@@ -276,7 +254,8 @@
                     hasChildren(item) &&
                     (openSubmenus[index] || item.show || checkRoute(item))
                   "
-                  class="menu-sub mt-1 ms-4"
+                  class="menu-sub mt-1"
+                  :class="isRTL ? 'me-4' : 'ms-4'"
                 >
                   <template
                     v-for="(subItem, subIndex) in item.children"
@@ -313,7 +292,8 @@
                         "
                       >
                         <span
-                          class="menu-bullet me-3 d-flex align-items-center justify-content-center"
+                          class="menu-bullet d-flex align-items-center justify-content-center"
+                          :class="isRTL ? 'ms-3' : 'me-3'"
                         >
                           <i
                             class="bi bi-circle-fill"
@@ -325,7 +305,8 @@
                         </span>
                         <span
                           v-if="subItem.count || subItem.count === null"
-                          class="menu-badge ms-2"
+                          class="menu-badge"
+                          :class="isRTL ? 'me-2' : 'ms-2'"
                         >
                           <span
                             v-if="subItem.count === null"
@@ -352,7 +333,8 @@
   <div
     v-if="mobileOpen"
     @click="closeMobile"
-    class="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 z-40 d-lg-none"
+    class="position-fixed top-0 w-100 h-100 bg-dark bg-opacity-50 z-40 d-lg-none"
+    :class="isRTL ? 'start-0' : 'end-0'"
     style="transition: opacity 0.3s"
   ></div>
 </template>
@@ -364,10 +346,24 @@ import { useTranslation } from "@/composables/useTranslation";
 import { usePermissions } from "@/composables/usePermissions";
 import { Ziggy } from "../ziggy";
 import { route as ziggyRoute } from "../../../vendor/tightenco/ziggy/dist/index.esm.js";
+import UserDropdown from "./UserDropdown.vue";
 
 const { t } = useTranslation();
 const page = usePage();
 const { can: canPermission } = usePermissions();
+
+// Get current locale and direction
+const currentLocale = computed(() => {
+  return page.props?.locale || 'ar';
+});
+
+const isRTL = computed(() => {
+  return currentLocale.value === 'ar';
+});
+
+const isLTR = computed(() => {
+  return currentLocale.value === 'en';
+});
 
 // Route function - use window.route (set globally in app.js) or Ziggy directly
 const route = (name, params = {}, absolute = false) => {
@@ -415,21 +411,16 @@ const route = (name, params = {}, absolute = false) => {
 };
 
 const openSubmenus = ref({});
+const userDropdownRef = ref(null);
 
-// User information
-const userName = computed(() => {
-  return page.props?.auth?.user?.name || "Admin User";
-});
-
-const getUserInitials = () => {
-  const name = userName.value;
-  if (!name) return "AU";
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
+// Handle user dropdown toggle
+const handleUserDropdownToggle = (isOpen) => {
+  // Close dropdown when sidebar is minimized or mobile sidebar closes
+  if (isOpen && (minimized.value || !mobileOpen.value)) {
+    if (userDropdownRef.value && userDropdownRef.value.closeDropdown) {
+      userDropdownRef.value.closeDropdown();
+    }
+  }
 };
 
 // Website name from settings
@@ -951,7 +942,44 @@ watch(
       mobileSidebarOpen.value = false;
       document.body.style.overflow = "";
     }
+    // Close user dropdown on route change
+    if (userDropdownRef.value && userDropdownRef.value.closeDropdown) {
+      userDropdownRef.value.closeDropdown();
+    }
   }
+);
+
+// Close user dropdown when sidebar is minimized
+watch(
+  () => minimized.value,
+  (newVal) => {
+    if (newVal && userDropdownRef.value && userDropdownRef.value.closeDropdown) {
+      userDropdownRef.value.closeDropdown();
+    }
+  }
+);
+
+// Close user dropdown when mobile sidebar closes
+watch(
+  () => mobileOpen.value,
+  (newVal) => {
+    if (!newVal && userDropdownRef.value && userDropdownRef.value.closeDropdown) {
+      userDropdownRef.value.closeDropdown();
+    }
+  }
+);
+
+// Watch for locale changes and update document direction
+watch(
+  () => currentLocale.value,
+  (newLocale) => {
+    if (typeof window !== 'undefined') {
+      const direction = newLocale === 'ar' ? 'rtl' : 'ltr';
+      document.documentElement.setAttribute('dir', direction);
+      document.documentElement.setAttribute('lang', newLocale);
+    }
+  },
+  { immediate: true }
 );
 
 // Handle window resize to ensure toggle button works correctly
@@ -988,6 +1016,19 @@ const handleClickOutside = (event) => {
       closeMobile();
     }
   }
+  
+  // Close user dropdown when clicking outside sidebar (on mobile)
+  if (
+    typeof window !== "undefined" &&
+    window.innerWidth < 1024 &&
+    userDropdownRef.value &&
+    userDropdownRef.value.closeDropdown
+  ) {
+    const sidebar = document.getElementById("kt_app_sidebar");
+    if (sidebar && !sidebar.contains(event.target)) {
+      userDropdownRef.value.closeDropdown();
+    }
+  }
 };
 
 onMounted(() => {
@@ -996,6 +1037,11 @@ onMounted(() => {
   if (typeof window !== "undefined") {
     isMobile.value = window.innerWidth < 1024;
     window.addEventListener("resize", handleResize);
+    
+    // Ensure document direction is set correctly on mount
+    const direction = currentLocale.value === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.setAttribute('dir', direction);
+    document.documentElement.setAttribute('lang', currentLocale.value);
   }
   // Close sidebar on escape key
   document.addEventListener("keydown", (e) => {
@@ -1024,6 +1070,23 @@ onUnmounted(() => {
   z-index: 1040;
 }
 
+.sidebar-ltr.app-sidebar,
+.app-sidebar:not(.sidebar-rtl):not([dir="rtl"]) {
+  left: 0 !important;
+  right: auto !important;
+  border-left: none !important;
+  border-right: 1px solid #dee2e6 !important;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+.sidebar-rtl.app-sidebar {
+  right: 0 !important;
+  left: auto !important;
+  border-right: none !important;
+  border-left: 1px solid #dee2e6 !important;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.08) !important;
+}
+
 .sidebar-expanded {
   width: 260px;
 }
@@ -1032,13 +1095,57 @@ onUnmounted(() => {
   width: 75px;
 }
 
+/* Desktop: Always visible */
+@media (min-width: 992px) {
+  .app-sidebar.sidebar-hidden,
+  .sidebar-rtl.app-sidebar.sidebar-hidden,
+  .sidebar-ltr.app-sidebar.sidebar-hidden,
+  .app-sidebar:not(.sidebar-rtl):not([dir="rtl"]).sidebar-hidden {
+    transform: translateX(0) !important;
+  }
+  
+  /* Ensure LTR sidebar is always visible on desktop */
+  .sidebar-ltr.app-sidebar,
+  .app-sidebar:not(.sidebar-rtl):not([dir="rtl"]) {
+    transform: translateX(0) !important;
+  }
+  
+  /* Ensure RTL sidebar is always visible on desktop */
+  .sidebar-rtl.app-sidebar {
+    transform: translateX(0) !important;
+  }
+}
+
 /* Mobile Styles */
 @media (max-width: 991px) {
   .app-sidebar {
     width: 280px !important;
     max-width: 85vw;
-    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
     z-index: 50;
+  }
+
+  .sidebar-ltr.app-sidebar {
+    box-shadow: 2px 0 20px rgba(0, 0, 0, 0.15);
+  }
+
+  .sidebar-ltr.app-sidebar.sidebar-hidden {
+    transform: translateX(-100%) !important;
+  }
+
+  .sidebar-ltr.app-sidebar.sidebar-visible {
+    transform: translateX(0) !important;
+  }
+
+  .sidebar-rtl.app-sidebar {
+    box-shadow: -2px 0 20px rgba(0, 0, 0, 0.15);
+  }
+
+  .sidebar-rtl.app-sidebar.sidebar-hidden {
+    transform: translateX(100%) !important;
+  }
+
+  .sidebar-rtl.app-sidebar.sidebar-visible {
+    transform: translateX(0) !important;
   }
 
   .menu-link {
@@ -1065,6 +1172,14 @@ onUnmounted(() => {
 .app-sidebar-header {
   background: #ffffff;
   border-bottom: 1px solid #dee2e6;
+}
+
+.sidebar-rtl .app-sidebar-header {
+  text-align: right;
+}
+
+.sidebar-ltr .app-sidebar-header {
+  text-align: left;
 }
 
 .user-info-card {
@@ -1098,6 +1213,10 @@ onUnmounted(() => {
   transform: translateX(-50%) scale(1.05);
 }
 
+.sidebar-rtl .sidebar-toggle-minimized:hover {
+  transform: translateX(50%) scale(1.05);
+}
+
 .sidebar-toggle-btn:active {
   background: #dee2e6;
 }
@@ -1110,6 +1229,10 @@ onUnmounted(() => {
   transform: translateX(-50%) scale(0.95);
 }
 
+.sidebar-rtl .sidebar-toggle-minimized:active {
+  transform: translateX(50%) scale(0.95);
+}
+
 .sidebar-toggle-btn:focus {
   box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
   outline: none;
@@ -1117,13 +1240,27 @@ onUnmounted(() => {
 
 .sidebar-toggle-expanded {
   top: 0.5rem;
+}
+
+.sidebar-ltr .sidebar-toggle-expanded {
   left: 0.5rem;
+  right: auto;
+}
+
+.sidebar-rtl .sidebar-toggle-expanded {
+  right: 0.5rem;
+  left: auto;
 }
 
 .sidebar-toggle-minimized {
   top: 0.5rem;
   left: 50% !important;
+  right: 50% !important;
   transform: translateX(-50%);
+}
+
+.sidebar-rtl .sidebar-toggle-minimized {
+  transform: translateX(50%);
 }
 
 .sidebar-toggle-icon {
@@ -1136,10 +1273,28 @@ onUnmounted(() => {
   padding-right: 40px;
 }
 
+.sidebar-rtl .sidebar-title-wrapper {
+  padding-right: 40px;
+  padding-left: 0;
+}
+
+.sidebar-ltr .sidebar-title-wrapper {
+  padding-left: 40px;
+  padding-right: 0;
+}
+
 .sidebar-title {
   font-size: 0.95rem;
   line-height: 1.4;
   transition: all 0.2s ease;
+}
+
+.sidebar-rtl .sidebar-title {
+  text-align: right;
+}
+
+.sidebar-ltr .sidebar-title {
+  text-align: left;
 }
 
 .sidebar-title-icon {
@@ -1169,6 +1324,19 @@ onUnmounted(() => {
   background-color: #f8f9fa;
 }
 
+.user-dropdown-wrapper {
+  width: 100%;
+  padding: 0.5rem;
+}
+
+.sidebar-rtl .user-dropdown-wrapper {
+  direction: rtl;
+}
+
+.sidebar-ltr .user-dropdown-wrapper {
+  direction: ltr;
+}
+
 .menu-link {
   transition: all 0.2s ease;
   position: relative;
@@ -1187,12 +1355,22 @@ onUnmounted(() => {
 .menu-link.bg-primary::before {
   content: "";
   position: absolute;
-  right: 0;
   top: 0;
   bottom: 0;
   width: 3px;
   background: #0d6efd;
+}
+
+.sidebar-rtl .menu-link.bg-primary::before {
+  right: 0;
+  left: auto;
   border-radius: 0 3px 3px 0;
+}
+
+.sidebar-ltr .menu-link.bg-primary::before {
+  left: 0;
+  right: auto;
+  border-radius: 3px 0 0 3px;
 }
 
 .menu-icon {
@@ -1222,6 +1400,14 @@ onUnmounted(() => {
   margin-bottom: 0.25rem;
 }
 
+.sidebar-rtl .menu-section-label {
+  text-align: right;
+}
+
+.sidebar-ltr .menu-section-label {
+  text-align: left;
+}
+
 .menu-separator {
   margin: 0.5rem 0;
 }
@@ -1245,6 +1431,20 @@ onUnmounted(() => {
   color: #0d6efd;
 }
 
+.menu-bullet {
+  flex-shrink: 0;
+}
+
+.sidebar-rtl .menu-bullet {
+  margin-left: 0.75rem;
+  margin-right: 0;
+}
+
+.sidebar-ltr .menu-bullet {
+  margin-right: 0.75rem;
+  margin-left: 0;
+}
+
 .menu-arrow {
   transition: transform 0.2s ease;
   flex-shrink: 0;
@@ -1254,9 +1454,21 @@ onUnmounted(() => {
   transform: rotate(180deg);
 }
 
+.sidebar-rtl .menu-arrow.rotate-180 {
+  transform: rotate(-180deg);
+}
+
 .app-sidebar-wrapper {
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 transparent;
+}
+
+.sidebar-rtl .app-sidebar-wrapper {
+  direction: rtl;
+}
+
+.sidebar-ltr .app-sidebar-wrapper {
+  direction: ltr;
 }
 
 .app-sidebar-wrapper::-webkit-scrollbar {
@@ -1276,10 +1488,27 @@ onUnmounted(() => {
   background: #94a3b8;
 }
 
+/* RTL scrollbar positioning */
+.sidebar-rtl .app-sidebar-wrapper::-webkit-scrollbar {
+  direction: rtl;
+}
+
+.sidebar-ltr .app-sidebar-wrapper::-webkit-scrollbar {
+  direction: ltr;
+}
+
 /* Minimized state */
 .sidebar-minimized .menu-link {
   justify-content: center !important;
   padding: 0.75rem !important;
+}
+
+.sidebar-rtl .menu-link {
+  text-align: right;
+}
+
+.sidebar-ltr .menu-link {
+  text-align: left;
 }
 
 .sidebar-minimized .menu-title,
@@ -1291,10 +1520,19 @@ onUnmounted(() => {
 
 .sidebar-minimized .menu-icon {
   margin-right: 0 !important;
+  margin-left: 0 !important;
 }
 
 .sidebar-minimized .menu-sub {
   display: none !important;
+}
+
+.sidebar-rtl .menu-sub {
+  padding-right: 0;
+}
+
+.sidebar-ltr .menu-sub {
+  padding-left: 0;
 }
 
 .sidebar-minimized .menu-separator {
@@ -1352,8 +1590,14 @@ onUnmounted(() => {
 
 /* High contrast mode support */
 @media (prefers-contrast: high) {
-  .app-sidebar {
+  .sidebar-rtl .app-sidebar {
     border-left: 2px solid #000;
+    border-right: none;
+  }
+
+  .sidebar-ltr .app-sidebar {
+    border-right: 2px solid #000;
+    border-left: none;
   }
 
   .menu-link.bg-blue-50 {
