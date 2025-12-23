@@ -180,7 +180,7 @@
                   @click.prevent="toggleSubmenu(index)"
                 >
                   <span
-                    class="menu-icon flex-shrink-0 d-flex align-items-center justify-content-center"
+                    class="menu-icon flex-shrink-0 d-flex align-items-center justify-content-center position-relative"
                     :class="isRTL ? 'ms-3' : 'me-3'"
                     style="width: 20px; height: 20px"
                   >
@@ -189,17 +189,18 @@
                       :class="getBootstrapIcon(item.icon)"
                       class="fs-6"
                     ></i>
+                    <!-- Live Indicator Dot -->
+                    <span
+                      v-if="item.hasLiveIndicator && hasLiveMeetings"
+                      class="live-indicator-dot position-absolute"
+                      :style="isRTL ? 'top: -2px; left: -2px;' : 'top: -2px; right: -2px;'"
+                    ></span>
                   </span>
                   <span
                     v-if="!minimized"
                     class="menu-title fw-medium small flex-grow-1 text-nowrap text-truncate"
                   >
                     {{ item.title }}
-                  </span>
-                  <span v-if="item.count && !minimized" class="menu-badge" :class="isRTL ? 'me-2' : 'ms-2'">
-                    <span class="badge bg-primary">
-                      {{ item.count }}
-                    </span>
                   </span>
                   <span
                     v-if="hasChildren(item) && !minimized"
@@ -225,7 +226,7 @@
                   @click="handleMenuItemClick"
                 >
                   <span
-                    class="menu-icon flex-shrink-0 d-flex align-items-center justify-content-center"
+                    class="menu-icon flex-shrink-0 d-flex align-items-center justify-content-center position-relative"
                     :class="isRTL ? 'ms-3' : 'me-3'"
                     style="width: 20px; height: 20px"
                   >
@@ -234,17 +235,18 @@
                       :class="getBootstrapIcon(item.icon)"
                       class="fs-6"
                     ></i>
+                    <!-- Live Indicator Dot -->
+                    <span
+                      v-if="item.hasLiveIndicator && hasLiveMeetings"
+                      class="live-indicator-dot position-absolute"
+                      :style="isRTL ? 'top: -2px; left: -2px;' : 'top: -2px; right: -2px;'"
+                    ></span>
                   </span>
                   <span
                     v-if="!minimized"
                     class="menu-title fw-medium small flex-grow-1 text-nowrap text-truncate"
                   >
                     {{ item.title }}
-                  </span>
-                  <span v-if="item.count && !minimized" class="menu-badge" :class="isRTL ? 'me-2' : 'ms-2'">
-                    <span class="badge bg-primary">
-                      {{ item.count }}
-                    </span>
                   </span>
                 </Link>
 
@@ -342,6 +344,7 @@
 <script setup>
 import { computed, ref, inject, watch, onMounted, onUnmounted } from "vue";
 import { Link, usePage, router } from "@inertiajs/vue3";
+import axios from "axios";
 import { useTranslation } from "@/composables/useTranslation";
 import { usePermissions } from "@/composables/usePermissions";
 import { Ziggy } from "../ziggy";
@@ -363,6 +366,60 @@ const isRTL = computed(() => {
 
 const isLTR = computed(() => {
   return currentLocale.value === 'en';
+});
+
+// Live meetings state - initialize from page props
+const getInitialLiveMeetingsCount = () => {
+  // Get from page props (shared props are available directly in page.props)
+  if (page.props?.liveMeetingsCount !== undefined) {
+    return page.props.liveMeetingsCount;
+  }
+  // Default to 0
+  return 0;
+};
+
+const liveMeetingsCount = ref(getInitialLiveMeetingsCount());
+
+// Function to calculate live meetings count from page props
+const fetchLiveMeetingsCount = () => {
+  // Try to get from liveMeetings array if available
+  if (page.props?.liveMeetings && Array.isArray(page.props.liveMeetings)) {
+    const now = new Date();
+    const count = page.props.liveMeetings.filter(meeting => {
+      if (!meeting || !meeting.live_meeting_date) return false;
+      try {
+        const meetingDate = new Date(meeting.live_meeting_date);
+        if (isNaN(meetingDate.getTime())) return false;
+        const duration = meeting.duration_minutes || 60;
+        const endDate = new Date(meetingDate.getTime() + duration * 60000);
+        return meetingDate <= now && endDate >= now;
+      } catch (e) {
+        return false;
+      }
+    }).length;
+    liveMeetingsCount.value = count;
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Live meetings count calculated from props:', liveMeetingsCount.value);
+    }
+  } else if (page.props?.liveMeetingsCount !== undefined) {
+    // Fallback to direct count if provided
+    liveMeetingsCount.value = page.props.liveMeetingsCount;
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Live meetings count from page props:', liveMeetingsCount.value);
+    }
+  }
+};
+
+// Check if there are live meetings
+const hasLiveMeetings = computed(() => {
+  const hasLive = liveMeetingsCount.value > 0;
+  // Always log for debugging (remove in production if needed)
+  console.log('🔍 hasLiveMeetings check:', {
+    hasLive,
+    count: liveMeetingsCount.value,
+    type: typeof liveMeetingsCount.value
+  });
+  return hasLive;
 });
 
 // Route function - use window.route (set globally in app.js) or Ziggy directly
@@ -529,6 +586,7 @@ const bootstrapIcons = {
   "key-square": "bi-key",
   "text-circle": "bi-file-text",
   "check-circle": "bi-check-circle",
+  "camera-video": "bi-camera-video",
 };
 
 const getBootstrapIcon = (iconName) => {
@@ -616,6 +674,13 @@ const menuItems = computed(() => {
         icon: "plus-circle",
         route: "admin.courses.create",
         permission: "courses.create",
+      },
+      {
+        title: t("admin.live_meetings") || "Live Meetings",
+        icon: "camera-video",
+        route: "admin.live_meetings.index",
+        permission: "lessons.view",
+        hasLiveIndicator: true,
       },
       {
         icon: "separator",
@@ -745,6 +810,9 @@ const safeRoute = (routeName, routeParams = {}) => {
       if (routeName === "admin.settings.index") {
         return "/admin/settings";
       }
+      if (routeName === "admin.live_meetings.index") {
+        return "/admin/live-meetings";
+      }
       return "#";
     }
     return routeUrl;
@@ -753,6 +821,9 @@ const safeRoute = (routeName, routeParams = {}) => {
     // Fallback: try to construct URL manually for known routes
     if (routeName === "admin.settings.index") {
       return "/admin/settings";
+    }
+    if (routeName === "admin.live_meetings.index") {
+      return "/admin/live-meetings";
     }
     return "#";
   }
@@ -934,10 +1005,10 @@ const shouldShowSeparator = (separatorIndex) => {
   return false;
 };
 
-// Close mobile sidebar on route change
+// Close mobile sidebar on route change and update live meetings count
 watch(
   () => page.url,
-  () => {
+  (newUrl, oldUrl) => {
     if (mobileSidebarOpen && typeof mobileSidebarOpen.value !== "undefined") {
       mobileSidebarOpen.value = false;
       document.body.style.overflow = "";
@@ -946,7 +1017,32 @@ watch(
     if (userDropdownRef.value && userDropdownRef.value.closeDropdown) {
       userDropdownRef.value.closeDropdown();
     }
-  }
+    // Update live meetings count from props immediately (no delay needed)
+    if (page.props?.liveMeetingsCount !== undefined) {
+      liveMeetingsCount.value = page.props.liveMeetingsCount;
+    }
+    // Always fetch from API to ensure we have latest data
+    console.log('🔄 Route changed, fetching live meetings count...', { newUrl, oldUrl });
+    // Small delay to ensure page props are loaded
+    setTimeout(() => {
+      fetchLiveMeetingsCount();
+    }, 100);
+  },
+  { immediate: false }
+);
+
+// Watch for props changes to update live meetings count
+watch(
+  () => [page.props?.liveMeetings, page.props?.liveMeetingsCount],
+  (newValues, oldValues) => {
+    // Update count when props change, but preserve current value if new value is not available
+    if (page.props?.liveMeetingsCount !== undefined) {
+      liveMeetingsCount.value = page.props.liveMeetingsCount;
+    }
+    // Still fetch from API to ensure we have latest data
+    fetchLiveMeetingsCount();
+  },
+  { deep: true, immediate: false }
 );
 
 // Close user dropdown when sidebar is minimized
@@ -1031,6 +1127,9 @@ const handleClickOutside = (event) => {
   }
 };
 
+// Polling interval for live meetings (30 seconds)
+let liveMeetingsPollInterval = null;
+
 onMounted(() => {
   document.addEventListener("click", handleClickOutside);
   // Handle window resize
@@ -1049,6 +1148,19 @@ onMounted(() => {
       closeMobile();
     }
   });
+  
+  // Fetch live meetings count on mount immediately
+  console.log('🚀 AdminSidebar mounted, fetching live meetings count...');
+  fetchLiveMeetingsCount();
+  
+  // Set up polling to check for live meetings every 30 seconds
+  if (typeof window !== "undefined") {
+    // Start polling immediately, will update every 30 seconds
+    liveMeetingsPollInterval = setInterval(() => {
+      console.log('⏰ Polling: fetching live meetings count...');
+      fetchLiveMeetingsCount();
+    }, 30000); // 30 seconds
+  }
 });
 
 onUnmounted(() => {
@@ -1057,6 +1169,12 @@ onUnmounted(() => {
     window.removeEventListener("resize", handleResize);
   }
   document.body.style.overflow = "";
+  
+  // Clear polling interval
+  if (liveMeetingsPollInterval) {
+    clearInterval(liveMeetingsPollInterval);
+    liveMeetingsPollInterval = null;
+  }
 });
 </script>
 
@@ -1386,6 +1504,7 @@ onUnmounted(() => {
   color: #0d6efd;
 }
 
+
 .menu-title {
   transition: color 0.2s ease;
   color: inherit;
@@ -1561,6 +1680,86 @@ onUnmounted(() => {
     font-size: 0.875rem;
   }
 
+  .menu-sub .menu-link {
+    padding: 0.625rem 0.75rem !important;
+    font-size: 0.8125rem;
+  }
+}
+
+/* Live Indicator Styles */
+.live-indicator {
+  animation: pulse-live 2s ease-in-out infinite;
+  z-index: 20 !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: none;
+}
+
+.menu-icon {
+  position: relative !important;
+  overflow: visible !important;
+}
+
+.menu-icon .live-indicator {
+  position: absolute !important;
+  top: -2px !important;
+  width: 10px !important;
+  height: 10px !important;
+  background: #10b981 !important;
+  border-radius: 50% !important;
+  border: 2px solid white !important;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.4) !important;
+  z-index: 20 !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Live Indicator Dot - Small green dot badge */
+.live-indicator-dot {
+  width: 8px;
+  height: 8px;
+  background: #10b981;
+  border-radius: 50%;
+  border: 2px solid white;
+  z-index: 20;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes pulse-live {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
+}
+
+.menu-link:hover .live-indicator {
+  animation: pulse-live-hover 1s ease-in-out infinite;
+}
+
+@keyframes pulse-live-hover {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.3), 0 0 8px rgba(16, 185, 129, 0.5);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+    box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.5), 0 0 12px rgba(16, 185, 129, 0.7);
+  }
+}
+
+@media (max-width: 575px) {
   .menu-sub .menu-link {
     padding: 0.625rem 0.75rem !important;
     font-size: 0.8125rem;

@@ -399,9 +399,22 @@ const closeBatchModal = () => {
 };
 
 const submitBatch = (formData) => {
-    // Prepare form data
+    // Sync formData values into batchForm to ensure Arabic fields are included
+    if (formData) {
+        batchForm.name = formData.name || '';
+        batchForm.name_ar = formData.name_ar || '';
+        batchForm.description = formData.description || '';
+        batchForm.description_ar = formData.description_ar || '';
+        batchForm.instructor_id = formData.instructor_id || null;
+        batchForm.start_date = formData.start_date || null;
+        batchForm.end_date = formData.end_date || null;
+        batchForm.max_students = formData.max_students || null;
+        batchForm.is_active = formData.is_active !== undefined ? formData.is_active : true;
+    }
+    
+    // Prepare form data - convert empty strings to null for nullable fields (including Arabic fields)
     ['name_ar', 'description', 'description_ar', 'start_date', 'end_date', 'max_students'].forEach(field => {
-        if (batchForm[field] === '' || batchForm[field] === null) {
+        if (batchForm[field] === '' || batchForm[field] === null || batchForm[field] === undefined) {
             batchForm[field] = null;
         }
     });

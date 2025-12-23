@@ -62,9 +62,17 @@ class BatchController extends Controller
             ->first();
         
         if ($existingBatch) {
+            $locale = app()->getLocale();
+            $endDate = $existingBatch->end_date 
+                ? \Carbon\Carbon::parse($existingBatch->end_date)->locale($locale)->isoFormat('MMM D, YYYY')
+                : __('batches.batch_has_no_end_date');
+            
             return redirect()->back()
                 ->withErrors([
-                    'start_date' => __('Cannot create a new batch. The previous batch (') . $existingBatch->translated_name . __(') has not ended yet. Please wait until ') . ($existingBatch->end_date ? \Carbon\Carbon::parse($existingBatch->end_date)->format('Y-m-d') : __('the batch ends')) . __(' before creating a new one.'),
+                    'start_date' => __('batches.cannot_create_batch_existing_not_ended', [
+                        'batch_name' => $existingBatch->translated_name,
+                        'end_date' => $endDate,
+                    ]),
                 ])
                 ->withInput();
         }
@@ -75,11 +83,11 @@ class BatchController extends Controller
         // If request wants to stay on same page (from modal), return back to course show
         if ($request->header('X-Inertia')) {
             return redirect()->route('admin.courses.show', $course)
-                ->with('success', __('Batch created successfully.'));
+                ->with('success', __('batches.created_successfully'));
         }
 
         return redirect()->route('admin.courses.batches.index', $course)
-            ->with('success', __('Batch created successfully.'));
+            ->with('success', __('batches.created_successfully'));
     }
 
     public function show(Course $course, Batch $batch)
@@ -157,11 +165,11 @@ class BatchController extends Controller
         // If request wants to stay on same page (from modal), return back to course show
         if ($request->header('X-Inertia')) {
             return redirect()->route('admin.courses.show', $course)
-                ->with('success', __('Batch updated successfully.'));
+                ->with('success', __('batches.updated_successfully'));
         }
 
         return redirect()->route('admin.courses.batches.index', $course)
-            ->with('success', __('Batch updated successfully.'));
+            ->with('success', __('batches.updated_successfully'));
     }
 
     public function destroy(Course $course, Batch $batch)
@@ -169,7 +177,7 @@ class BatchController extends Controller
         $batch->delete();
 
         return redirect()->route('admin.courses.batches.index', $course)
-            ->with('success', __('Batch deleted successfully.'));
+            ->with('success', __('batches.deleted_successfully'));
     }
 
     public function addStudents(Request $request, Course $course, Batch $batch)

@@ -1151,12 +1151,19 @@ const openBatchModal = (batch = null) => {
         batchForm.reset();
         // Show warning if there's an existing batch that hasn't ended
         if (props.existingBatch) {
+            const locale = page.props.locale || 'en';
             const endDate = props.existingBatch.end_date 
-                ? new Date(props.existingBatch.end_date).toLocaleDateString() 
+                ? new Date(props.existingBatch.end_date).toLocaleDateString(locale === 'ar' ? 'ar-SA' : 'en-US', { 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric' 
+                })
                 : t('admin.batch_has_no_end_date') || 'no end date';
+            const errorMessage = (t('admin.cannot_create_batch_existing_not_ended') || 'Cannot create a new batch. The previous batch (:batch_name) has not ended yet. Please wait until :end_date before creating a new one.')
+                .replace(':batch_name', props.existingBatch.name || '')
+                .replace(':end_date', endDate);
             showError(
-                t('admin.cannot_create_batch_existing_not_ended') || 
-                `Cannot create a new batch. The previous batch (${props.existingBatch.name}) has not ended yet. Please wait until ${endDate} before creating a new one.`,
+                errorMessage,
                 t('common.warning') || 'Warning'
             );
         }
@@ -1177,6 +1184,19 @@ const getInstructorName = (instructorId) => {
 };
 
 const submitBatch = (formData) => {
+    // Sync formData values into batchForm to ensure Arabic fields are included
+    if (formData) {
+        batchForm.name = formData.name || '';
+        batchForm.name_ar = formData.name_ar || '';
+        batchForm.description = formData.description || '';
+        batchForm.description_ar = formData.description_ar || '';
+        batchForm.instructor_id = formData.instructor_id || null;
+        batchForm.start_date = formData.start_date || null;
+        batchForm.end_date = formData.end_date || null;
+        batchForm.max_students = formData.max_students || null;
+        batchForm.is_active = formData.is_active !== undefined ? formData.is_active : true;
+    }
+    
     // Ensure instructor_id is properly set (required field)
     if (!batchForm.instructor_id || batchForm.instructor_id === '') {
         batchForm.instructor_id = null;
@@ -1184,9 +1204,9 @@ const submitBatch = (formData) => {
         batchForm.instructor_id = parseInt(batchForm.instructor_id);
     }
     
-    // Convert empty strings to null for nullable fields
+    // Convert empty strings to null for nullable fields (including Arabic fields)
     ['name_ar', 'description', 'description_ar'].forEach(field => {
-        if (batchForm[field] === '') {
+        if (batchForm[field] === '' || batchForm[field] === null || batchForm[field] === undefined) {
             batchForm[field] = null;
         }
     });

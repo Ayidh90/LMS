@@ -87,6 +87,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     
     // Show route must be after nested routes to avoid conflicts
     Route::get('/courses/{course}', [AdminCourseController::class, 'show'])->middleware('permission:courses.view-all')->name('courses.show');
+    
+    // Live Meetings - All live lessons across all courses
+    Route::get('/live-meetings', [AdminLessonController::class, 'liveMeetings'])->middleware('permission:lessons.view')->name('live_meetings.index');
 });
 
 // ============================================

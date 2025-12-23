@@ -16,6 +16,7 @@ use App\Models\LessonAttendance;
 use App\Models\LessonCompletion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class LessonController extends Controller
@@ -59,12 +60,12 @@ class LessonController extends Controller
     public function store(StoreLessonRequest $request, Course $course)
     {
         $data = $request->validated();
-        
+
         // Convert empty string to null for section_id
         if (isset($data['section_id']) && $data['section_id'] === '') {
             $data['section_id'] = null;
         }
-        
+
         if (!empty($data['section_id'])) {
             $section = $this->sectionService->getById($data['section_id']);
             if (!$section || !$this->sectionService->belongsToCourse($section, $course)) {
@@ -91,18 +92,18 @@ class LessonController extends Controller
         }
 
         $lesson->load(['section', 'questions.answers']);
-        
+
         // Get all batches for this course
         $batches = Batch::where('course_id', $course->id)
             ->with(['enrollments.student', 'instructor:id,name'])
             ->get();
-        
+
         // Get attendance data
         $attendances = $this->attendanceService->getLessonAttendances($lesson, $batches->pluck('id'));
-        
+
         // Get students with their attendance status
         $students = $this->getStudentsWithAttendance($batches, $lesson, $attendances);
-        
+
         // Calculate attendance stats
         $attendanceStats = $this->calculateAttendanceStats($attendances, $students);
 
@@ -128,7 +129,7 @@ class LessonController extends Controller
             'lessonTypes' => $this->getLessonTypes(),
         ]);
     }
-    
+
     /**
      * Mark attendance for students (Admin can mark for any batch)
      */
@@ -147,7 +148,7 @@ class LessonController extends Controller
         ]);
 
         $admin = Auth::user();
-        
+
         // Validate all attendances belong to this course
         $validAttendances = [];
         foreach ($validated['attendances'] as $data) {
@@ -155,11 +156,11 @@ class LessonController extends Controller
             if (!$batch || $batch->course_id !== $course->id) {
                 continue;
             }
-            
+
             $enrollment = Enrollment::where('batch_id', $data['batch_id'])
                 ->where('student_id', $data['student_id'])
                 ->first();
-            
+
             if ($enrollment) {
                 $validAttendances[] = $data;
             }
@@ -169,7 +170,7 @@ class LessonController extends Controller
 
         return back()->with('success', __('Attendance marked successfully.'));
     }
-    
+
     /**
      * Get attendance report for a lesson
      */
@@ -182,10 +183,10 @@ class LessonController extends Controller
         $batches = Batch::where('course_id', $course->id)
             ->with(['enrollments.student', 'instructor:id,name'])
             ->get();
-        
+
         $attendances = $this->attendanceService->getLessonAttendances($lesson, $batches->pluck('id'));
         $students = $this->getStudentsWithAttendance($batches, $lesson, $attendances);
-        
+
         return Inertia::render('Admin/Lessons/AttendanceReport', [
             'course' => $this->formatCourse($course),
             'lesson' => [
@@ -202,23 +203,23 @@ class LessonController extends Controller
             'attendances' => $attendances,
         ]);
     }
-    
+
     private function getStudentsWithAttendance($batches, Lesson $lesson, $attendances)
     {
         $students = collect();
         $attendanceMap = $attendances->keyBy(fn($a) => $a['student_id'] . '-' . $a['batch_id']);
-        
+
         foreach ($batches as $batch) {
             foreach ($batch->enrollments as $enrollment) {
                 $key = $enrollment->student_id . '-' . $batch->id;
                 $attendance = $attendanceMap->get($key);
-                
+
                 // Get completion status
                 $completion = LessonCompletion::where('lesson_id', $lesson->id)
                     ->where('student_id', $enrollment->student_id)
                     ->where('batch_id', $batch->id)
                     ->first();
-                
+
                 $students->push([
                     'id' => $enrollment->student->id,
                     'name' => $enrollment->student->name,
@@ -237,10 +238,10 @@ class LessonController extends Controller
                 ]);
             }
         }
-        
+
         return $students;
     }
-    
+
     private function calculateAttendanceStats($attendances, $students)
     {
         $total = $students->count();
@@ -249,7 +250,7 @@ class LessonController extends Controller
         $late = $attendances->where('status', 'late')->count();
         $excused = $attendances->where('status', 'excused')->count();
         $notMarked = $total - $attendances->count();
-        
+
         return [
             'total' => $total,
             'present' => $present,
@@ -287,7 +288,7 @@ class LessonController extends Controller
         }
 
         $data = $request->validated();
-        
+
         if (isset($data['section_id'])) {
             $section = $this->sectionService->getById($data['section_id']);
             if (!$section || !$this->sectionService->belongsToCourse($section, $course)) {
@@ -399,5 +400,68 @@ class LessonController extends Controller
             ['value' => 'essay', 'label' => __('Essay')],
         ];
     }
-}
 
+    /**
+     * Display all live meetings across all courses
+     */
+    public function liveMeetings()
+    {
+        try {
+            // Get all live lessons with their relationships
+            $liveLessons = Lesson::where('type', 'live')
+                ->with(['course', 'section'])
+                ->orderByRaw('CASE WHEN live_meeting_date IS NULL THEN 1 ELSE 0 END')
+                ->orderBy('live_meeting_date', 'asc')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            $mappedMeetings = $liveLessons->map(function ($lesson) {
+                try {
+                    // Format date as stored in database (YYYY-MM-DD HH:mm:ss) without timezone conversion
+                    // This ensures the date matches exactly what's in the database
+                    $dateString = null;
+                    if ($lesson->live_meeting_date) {
+                        $dateString = $lesson->live_meeting_date->format('Y-m-d H:i:s');
+                    }
+
+                    return [
+                        'id' => $lesson->id,
+                        'title' => $lesson->translated_title ?? $lesson->title ?? 'Untitled Lesson',
+                        'description' => $lesson->translated_description ?? $lesson->description ?? null,
+                        'live_meeting_date' => $dateString,
+                        'live_meeting_link' => $lesson->live_meeting_link,
+                        'order' => $lesson->order ?? 0,
+                        'is_free' => $lesson->is_free ?? false,
+                        'course' => $lesson->course ? [
+                            'id' => $lesson->course->id,
+                            'title' => $lesson->course->translated_title ?? $lesson->course->title ?? 'Unknown Course',
+                            'slug' => $lesson->course->slug ?? null,
+                        ] : null,
+                        'section' => $lesson->section ? [
+                            'id' => $lesson->section->id,
+                            'title' => $lesson->section->translated_title ?? $lesson->section->title ?? 'Unknown Section',
+                            'order' => $lesson->section->order ?? 0,
+                        ] : null,
+                        'duration_minutes' => $lesson->duration_minutes ?? 60,
+                    ];
+                } catch (\Exception $e) {
+                    Log::error('Error mapping lesson: ' . $e->getMessage(), [
+                        'lesson_id' => $lesson->id ?? null
+                    ]);
+                    return null;
+                }
+            })->filter(); // Remove null values
+
+            return Inertia::render('Admin/LiveMeetings/Index', [
+                'liveMeetings' => $mappedMeetings->values()->all(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error in liveMeetings: ' . $e->getMessage());
+
+            return Inertia::render('Admin/LiveMeetings/Index', [
+                'liveMeetings' => [],
+            ]);
+        }
+    }
+
+}
