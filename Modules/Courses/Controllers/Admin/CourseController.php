@@ -13,6 +13,7 @@ use Modules\Courses\Requests\StoreCourseRequest;
 use Modules\Courses\Requests\UpdateCourseRequest;
 use Modules\Courses\Services\CourseService;
 use Modules\Courses\Services\SectionService;
+use Modules\Courses\Services\LessonAttendanceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -27,7 +28,8 @@ class CourseController extends Controller
         private CourseService $courseService,
         private CourseRepository $courseRepository,
         private SectionService $sectionService,
-        private TrackService $trackService
+        private TrackService $trackService,
+        private LessonAttendanceService $attendanceService
     ) {}
 
     /**
@@ -51,12 +53,14 @@ class CourseController extends Controller
     /**
      * Show the form for creating a new course
      */
-    public function create()
+    public function create(Request $request)
     {
         $tracks = $this->trackService->getPaginatedTracks([], 100)->items();
+        $selectedTrackId = $request->input('track_id');
         
         return Inertia::render('Admin/Courses/Create', [
             'tracks' => $tracks,
+            'selectedTrackId' => $selectedTrackId,
         ]);
     }
 
@@ -329,6 +333,63 @@ class CourseController extends Controller
             $totalLessons
         );
 
+        // Get lesson completion statistics per student
+        $lessonCompletionStats = [];
+        if (!empty($batchIds) && !empty($lessonIds)) {
+            // Get all enrollments as a collection
+            $enrollmentsQuery = Enrollment::query();
+            if (!empty($batchIds)) {
+                $enrollmentsQuery->whereIn('batch_id', $batchIds);
+            }
+            $enrollmentsCollection = $enrollmentsQuery->get();
+            $uniqueStudentIds = $enrollmentsCollection->pluck('student_id')->unique();
+            
+            foreach ($uniqueStudentIds as $studentId) {
+                $student = User::find($studentId);
+                if (!$student) {
+                    continue;
+                }
+                
+                // Get student's enrollments for this course
+                $studentEnrollments = $enrollmentsCollection->where('student_id', $studentId);
+                $studentBatchIds = $studentEnrollments->pluck('batch_id')->toArray();
+                
+                // Sync lesson completions from attendance records for each batch
+                // This ensures all attendance records are reflected in progress
+                foreach ($studentBatchIds as $batchId) {
+                    try {
+                        $this->attendanceService->syncCompletionsFromAttendance(
+                            $student,
+                            $course,
+                            $batchId,
+                            false // Don't update enrollment progress here, we'll calculate it ourselves
+                        );
+                    } catch (\Exception $e) {
+                        Log::warning("Failed to sync completions for student {$studentId} in batch {$batchId}: " . $e->getMessage());
+                    }
+                }
+                
+                // Count completed lessons after syncing
+                $completedLessonsCount = \App\Models\LessonCompletion::where('student_id', $studentId)
+                    ->whereIn('lesson_id', $lessonIds)
+                    ->whereIn('batch_id', $studentBatchIds)
+                    ->distinct('lesson_id')
+                    ->count();
+                
+                $progressPercentage = $totalLessons > 0 
+                    ? round(($completedLessonsCount / $totalLessons) * 100, 1) 
+                    : 0;
+                
+                $lessonCompletionStats[] = [
+                    'student_id' => $studentId,
+                    'student_name' => $student->name,
+                    'completed_lessons' => $completedLessonsCount,
+                    'total_lessons' => $totalLessons,
+                    'progress_percentage' => $progressPercentage,
+                ];
+            }
+        }
+
         return [
             'total_batches' => $batches->count(),
             'total_enrollments' => $totalEnrollments,
@@ -338,6 +399,7 @@ class CourseController extends Controller
             'total_questions' => $totalQuestions,
             'completed_lessons' => $completedLessons,
             'completion_rate' => $completionRate,
+            'lesson_completion_stats' => $lessonCompletionStats,
         ];
     }
 

@@ -59,16 +59,20 @@
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">
                                     {{ t('lessons.fields.section') || 'Section' }}
+                                    <span v-if="isAdmin" class="text-red-500">*</span>
                                 </label>
                                 <select
                                     v-model="formData.section_id"
                                     class="form-select"
+                                    :class="{ 'border-red-500': errors.section_id }"
+                                    :required="isAdmin"
                                 >
                                     <option :value="null">{{ t('lessons.no_section') || 'No Section' }}</option>
                                     <option v-for="section in sections" :key="section.id" :value="section.id">
                                         {{ section.translated_title || section.title }}
                                     </option>
                                 </select>
+                                <p v-if="errors.section_id" class="form-error">{{ errors.section_id }}</p>
                             </div>
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">
@@ -237,6 +241,7 @@
 import { computed, watch, ref, nextTick } from 'vue';
 import { useTranslation } from '@/composables/useTranslation';
 import { useModal } from '@/composables/useModal';
+import { usePermissions } from '@/composables/usePermissions';
 import { usePage } from '@inertiajs/vue3';
 
 const props = defineProps({
@@ -274,6 +279,7 @@ const emit = defineEmits(['close', 'submit', 'type-change']);
 
 const { t } = useTranslation();
 const { setModalOpen } = useModal();
+const { isAdmin } = usePermissions();
 const page = usePage();
 
 const isEdit = computed(() => !!props.lesson);
@@ -338,6 +344,14 @@ const handleTypeChange = () => {
 };
 
 const submit = () => {
+    // Validate section is required for admin users
+    if (isAdmin.value && (!props.formData.section_id || props.formData.section_id === null || props.formData.section_id === '')) {
+        // The backend will also validate this, but we can show a client-side error
+        // The error will be handled by the backend validation
+        emit('submit', props.formData);
+        return;
+    }
+    
     emit('submit', props.formData);
 };
 </script>

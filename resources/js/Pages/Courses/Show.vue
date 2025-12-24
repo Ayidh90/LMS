@@ -930,13 +930,17 @@
                                 </div>
                                 <div v-if="course.sections && course.sections.length > 0">
                                     <label class="block text-sm font-semibold text-gray-700 mb-2">
-                                        {{ t('lessons.fields.section') }}
+                                        {{ t('lessons.fields.section') }} <span class="text-red-500">*</span>
                                     </label>
                                     <select
                                         v-model="lessonForm.section_id"
-                                        class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-white"
+                                        required
+                                        :class="[
+                                            'w-full border-2 rounded-xl px-4 py-3 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 bg-white',
+                                            !lessonForm.section_id ? 'border-red-500' : 'border-gray-200'
+                                        ]"
                                     >
-                                        <option :value="null">{{ t('lessons.fields.no_section') }}</option>
+                                        <option :value="null">{{ t('lessons.no_section') || t('lessons.fields.no_section') || 'No Section' }}</option>
                                         <option
                                             v-for="section in course.sections"
                                             :key="section.id"
@@ -945,6 +949,9 @@
                                             {{ section.translated_title || section.title }}
                                         </option>
                                     </select>
+                                    <p v-if="!lessonForm.section_id && sectionError" class="mt-1 text-sm text-red-500">
+                                        {{ t('lessons.validation.section_required') || 'Section is required. Please select a section.' }}
+                                    </p>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-semibold text-gray-700 mb-2">
@@ -1189,7 +1196,10 @@
                                                     v-model="lessonForm.live_meeting_date"
                                                     type="datetime-local"
                                                     required
-                                                    class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200"
+                                                    step="60"
+                                                    :min="new Date().toISOString().slice(0, 16)"
+                                                    class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200 bg-white"
+                                                    :placeholder="t('lessons.placeholders.meeting_date') || 'Select date and time'"
                                                 />
                                                 <p class="mt-1 text-xs text-gray-500">
                                                     {{ t('lessons.live.date_required_warning') || 'Live lecture date and time is required for live lessons.' }}
@@ -1490,6 +1500,7 @@ const selectedFile = ref(null);
 const videoFileInput = ref(null);
 const imageFileInput = ref(null);
 const documentFileInput = ref(null);
+const sectionError = ref(false);
 const lessonForm = reactive({
     title: '',
     title_ar: '',
@@ -1527,6 +1538,7 @@ const closeCreateLessonModal = () => {
     showCreateLessonModal.value = false;
     selectedSectionIdForLesson.value = null;
     selectedFile.value = null;
+    sectionError.value = false;
     lessonForm.title = '';
     lessonForm.title_ar = '';
     lessonForm.section_id = null;
@@ -1543,6 +1555,27 @@ const closeCreateLessonModal = () => {
     if (videoFileInput.value) videoFileInput.value.value = '';
     if (imageFileInput.value) imageFileInput.value.value = '';
     if (documentFileInput.value) documentFileInput.value.value = '';
+};
+
+// Handle datetime-local input to ensure proper format
+const handleDateTimeInput = (event) => {
+    const value = event.target.value;
+    // Ensure the value is in the correct format (YYYY-MM-DDTHH:mm)
+    if (value && !value.includes('T')) {
+        // If only date is selected, add default time
+        const date = new Date(value);
+        if (!isNaN(date.getTime())) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours() || 12).padStart(2, '0');
+            const minutes = String(date.getMinutes() || 0).padStart(2, '0');
+            lessonForm.live_meeting_date = `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+    } else if (value) {
+        // Ensure format is correct
+        lessonForm.live_meeting_date = value;
+    }
 };
 
 const triggerFileInput = (type) => {
@@ -1586,6 +1619,19 @@ const getUrlPlaceholder = (type) => {
 };
 
 const saveLesson = () => {
+    // Clear previous section error
+    sectionError.value = false;
+    
+    // Validate section_id is required
+    if (!lessonForm.section_id || lessonForm.section_id === null || lessonForm.section_id === '') {
+        sectionError.value = true;
+        showError(
+            t('lessons.validation.section_required') || 'Section is required. Please select a section.',
+            t('common.error') || 'Validation Error'
+        );
+        return;
+    }
+    
     // Validate required fields based on type
     const needsFileOrUrl = ['youtube_video', 'google_drive_video', 'embed_frame', 'video_file', 'image', 'document_file'].includes(lessonForm.type);
     const hasFile = selectedFile.value !== null;
@@ -1633,13 +1679,49 @@ const saveLesson = () => {
     formData.append('title', lessonForm.title);
     if (lessonForm.title_ar) formData.append('title_ar', lessonForm.title_ar);
     formData.append('type', lessonForm.type);
-    if (lessonForm.section_id) formData.append('section_id', lessonForm.section_id);
+    // section_id is required - always append it
+    formData.append('section_id', lessonForm.section_id);
     if (lessonForm.description) formData.append('description', lessonForm.description);
     if (lessonForm.description_ar) formData.append('description_ar', lessonForm.description_ar);
     if (lessonForm.content) formData.append('content', lessonForm.content);
     if (lessonForm.content_ar) formData.append('content_ar', lessonForm.content_ar);
     if (lessonForm.video_url) formData.append('video_url', lessonForm.video_url);
-    if (lessonForm.live_meeting_date) formData.append('live_meeting_date', lessonForm.live_meeting_date);
+    
+    // Handle live_meeting_date separately - format for live lessons
+    if (lessonForm.type === 'live' && lessonForm.live_meeting_date) {
+        // datetime-local input provides local time in format YYYY-MM-DDTHH:mm (no timezone)
+        // We need to convert this to MySQL format (YYYY-MM-DD HH:mm:ss)
+        const dateValue = lessonForm.live_meeting_date.trim();
+        
+        // Validate format matches YYYY-MM-DDTHH:mm
+        if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(dateValue)) {
+            // Convert from datetime-local format (YYYY-MM-DDTHH:mm) to MySQL format (YYYY-MM-DD HH:mm:ss)
+            const [datePart, timePart] = dateValue.split('T');
+            formData.append('live_meeting_date', `${datePart} ${timePart}:00`);
+        } else {
+            // Invalid format, try to parse and format
+            try {
+                const date = new Date(dateValue);
+                if (!isNaN(date.getTime())) {
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const hours = String(date.getHours()).padStart(2, '0');
+                    const minutes = String(date.getMinutes()).padStart(2, '0');
+                    formData.append('live_meeting_date', `${year}-${month}-${day} ${hours}:${minutes}:00`);
+                } else {
+                    // If parsing fails, send as-is
+                    formData.append('live_meeting_date', dateValue);
+                }
+            } catch (e) {
+                // If error, send as-is
+                formData.append('live_meeting_date', dateValue);
+            }
+        }
+    } else if (lessonForm.live_meeting_date) {
+        formData.append('live_meeting_date', lessonForm.live_meeting_date);
+    }
+    
     if (lessonForm.live_meeting_link) formData.append('live_meeting_link', lessonForm.live_meeting_link);
     if (lessonForm.duration_minutes !== null && lessonForm.duration_minutes !== '') {
         formData.append('duration_minutes', lessonForm.duration_minutes);

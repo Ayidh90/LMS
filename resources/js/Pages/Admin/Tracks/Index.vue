@@ -2,11 +2,11 @@
     <AdminLayout :page-title="t('tracks.tracks_management') || 'Tracks'">
         <Head :title="t('tracks.tracks_management') || 'Tracks'" />
         <div class="container-fluid px-3 px-md-4 px-lg-5 py-4">
-            <div class="mb-4">
-                <nav aria-label="breadcrumb" class="mb-3">
-                    <ol class="breadcrumb mb-2">
+            <div class="tracks-index-header">
+                <nav aria-label="breadcrumb" class="tracks-breadcrumb">
+                    <ol class="breadcrumb">
                         <li class="breadcrumb-item">
-                            <Link :href="route('admin.dashboard')" class="text-decoration-none">
+                            <Link :href="route('admin.dashboard')" class="breadcrumb-link">
                                 {{ t('common.dashboard') || 'Dashboard' }}
                             </Link>
                         </li>
@@ -16,11 +16,11 @@
                     </ol>
                 </nav>
                 <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
-                    <div>
-                        <h1 class="h2 fw-bold mb-2">{{ t('tracks.tracks_management') || 'Tracks' }}</h1>
-                        <p class="text-muted mb-0">{{ t('tracks.tracks_description') || 'Manage learning tracks' }}</p>
+                    <div class="tracks-header-text">
+                        <h1 class="tracks-title">{{ t('tracks.tracks_management') || 'Tracks' }}</h1>
+                        <p class="tracks-subtitle">{{ t('tracks.tracks_description') || 'Manage learning tracks' }}</p>
                     </div>
-                    <Link :href="route('admin.tracks.create')" class="btn btn-primary btn-lg">
+                    <Link :href="route('admin.tracks.create')" class="btn btn-primary btn-lg tracks-create-btn">
                         <i class="bi bi-plus-circle me-2"></i>
                         {{ t('tracks.create') || 'Create Track' }}
                     </Link>
@@ -227,36 +227,97 @@ const confirmDelete = async (track) => {
     word-break: break-word;
 }
 
-.breadcrumb {
+/* Breadcrumb Styling */
+.tracks-breadcrumb {
+    margin-bottom: 1.5rem;
+}
+
+.tracks-breadcrumb .breadcrumb {
     background: transparent;
     padding: 0;
-    margin-bottom: 0.5rem;
+    margin: 0;
     font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-.breadcrumb-item + .breadcrumb-item::before {
-    content: "›";
-    padding: 0 0.5rem;
-    color: #adb5bd;
+.tracks-breadcrumb .breadcrumb-item {
+    display: flex;
+    align-items: center;
+    color: #6b7280;
 }
 
-[dir="rtl"] .breadcrumb-item + .breadcrumb-item::before {
-    content: "‹";
+.tracks-breadcrumb .breadcrumb-item + .breadcrumb-item::before {
+    content: "/";
+    padding: 0 0.75rem;
+    color: #9ca3af;
+    font-weight: 400;
+    display: inline-block;
 }
 
-.breadcrumb-item a {
-    color: #6c757d;
+[dir="rtl"] .tracks-breadcrumb .breadcrumb-item + .breadcrumb-item::before {
+    content: "/";
+}
+
+.tracks-breadcrumb .breadcrumb-link {
+    color: #6b7280;
     text-decoration: none;
-    transition: color 0.2s;
+    transition: color 0.2s ease;
 }
 
-.breadcrumb-item a:hover {
-    color: #0d6efd;
+.tracks-breadcrumb .breadcrumb-link:hover {
+    color: #111827;
 }
 
-.breadcrumb-item.active {
-    color: #212529;
+.tracks-breadcrumb .breadcrumb-item.active {
+    color: #111827;
     font-weight: 500;
+}
+
+/* Page Header */
+.tracks-index-header {
+    margin-bottom: 2rem;
+}
+
+.tracks-header-text {
+    flex: 1;
+    min-width: 0;
+}
+
+.tracks-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 0.5rem 0;
+    line-height: 1.2;
+}
+
+@media (min-width: 768px) {
+    .tracks-title {
+        font-size: 2.25rem;
+    }
+}
+
+.tracks-subtitle {
+    font-size: 1rem;
+    color: #6b7280;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.tracks-create-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* RTL Support */
+[dir="rtl"] .tracks-header-text {
+    text-align: right;
+}
+
+[dir="ltr"] .tracks-header-text {
+    text-align: left;
 }
 </style>
 

@@ -193,6 +193,7 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
 import { useAlert } from '@/composables/useAlert';
+import { usePermissions } from '@/composables/usePermissions';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import LessonForm from '@/Pages/Admin/Lessons/Form.vue';
 
@@ -206,6 +207,7 @@ const props = defineProps({
 const { t } = useTranslation();
 const { route } = useRoute();
 const { showSuccess, showError } = useAlert();
+const { isAdmin } = usePermissions();
 
 const selectedSection = ref('');
 
@@ -463,6 +465,15 @@ const closeLessonModal = () => {
 };
 
 const submitLesson = (formData) => {
+    // Validate section is required for admin users
+    if (isAdmin.value && (!lessonForm.section_id || lessonForm.section_id === null || lessonForm.section_id === '')) {
+        showError(
+            t('lessons.validation.section_required') || 'Section is required for admin users. Please select a section.',
+            t('common.error') || 'Validation Error'
+        );
+        return;
+    }
+    
     // Convert empty strings to null for nullable fields
     if (lessonForm.section_id === '' || lessonForm.section_id === null) {
         lessonForm.section_id = null;

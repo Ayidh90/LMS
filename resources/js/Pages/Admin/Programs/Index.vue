@@ -3,25 +3,13 @@
         <Head :title="t('programs.programs_management') || 'Programs'" />
         <div class="container-fluid px-3 px-md-4 px-lg-5 py-4">
             <!-- Page Header -->
-            <div class="mb-4">
-                <nav aria-label="breadcrumb" class="mb-3">
-                    <ol class="breadcrumb mb-2">
-                        <li class="breadcrumb-item">
-                            <Link :href="route('admin.dashboard')" class="text-decoration-none">
-                                {{ t('common.dashboard') || 'Dashboard' }}
-                            </Link>
-                        </li>
-                        <li class="breadcrumb-item active" aria-current="page">
-                            {{ t('programs.programs_management') || 'Programs' }}
-                        </li>
-                    </ol>
-                </nav>
+            <div class="programs-index-header">
                 <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
-                    <div>
-                        <h1 class="h2 fw-bold mb-2">{{ t('programs.programs_management') || 'Programs' }}</h1>
-                        <p class="text-muted mb-0">{{ t('programs.programs_description') || 'Manage training programs' }}</p>
+                    <div class="programs-header-text">
+                        <h1 class="programs-title">{{ t('programs.programs_management') || 'Programs' }}</h1>
+                        <p class="programs-subtitle">{{ t('programs.programs_description') || 'Manage training programs' }}</p>
                     </div>
-                    <Link :href="route('admin.programs.create')" class="btn btn-primary btn-lg">
+                    <Link :href="route('admin.programs.create')" class="btn btn-primary btn-lg programs-create-btn">
                         <i class="bi bi-plus-circle me-2"></i>
                         {{ t('programs.create_program') || 'Create Program' }}
                     </Link>
@@ -199,36 +187,49 @@ const confirmDelete = async (program) => {
     word-break: break-word;
 }
 
-.breadcrumb {
-    background: transparent;
-    padding: 0;
-    margin-bottom: 0.5rem;
-    font-size: 0.875rem;
+/* Page Header */
+.programs-index-header {
+    margin-bottom: 2rem;
 }
 
-.breadcrumb-item + .breadcrumb-item::before {
-    content: "›";
-    padding: 0 0.5rem;
-    color: #adb5bd;
+.programs-header-text {
+    flex: 1;
+    min-width: 0;
 }
 
-[dir="rtl"] .breadcrumb-item + .breadcrumb-item::before {
-    content: "‹";
+.programs-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 0.5rem 0;
+    line-height: 1.2;
 }
 
-.breadcrumb-item a {
-    color: #6c757d;
-    text-decoration: none;
-    transition: color 0.2s;
+@media (min-width: 768px) {
+    .programs-title {
+        font-size: 2.25rem;
+    }
 }
 
-.breadcrumb-item a:hover {
-    color: #0d6efd;
+.programs-subtitle {
+    font-size: 1rem;
+    color: #6b7280;
+    margin: 0;
+    line-height: 1.5;
 }
 
-.breadcrumb-item.active {
-    color: #212529;
-    font-weight: 500;
+.programs-create-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* RTL Support */
+[dir="rtl"] .programs-header-text {
+    text-align: right;
+}
+
+[dir="ltr"] .programs-header-text {
+    text-align: left;
 }
 </style>
 

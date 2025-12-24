@@ -27,10 +27,12 @@ use Illuminate\Support\Facades\Auth;
 Route::get('/', function () {
     if (Auth::check()) {
         $user = Auth::user();
-        if ($user->isAdmin()) {
-            return redirect()->route('admin.dashboard');
-        }
-        return redirect()->route('profile.show');
+        return match(true) {
+            $user->isAdmin() => redirect()->route('admin.dashboard'),
+            $user->isInstructor() => redirect()->route('instructor.dashboard'),
+            $user->isStudent() => redirect()->route('student.dashboard'),
+            default => redirect()->route('profile.show'),
+        };
     }
     return redirect()->route('login');
 })->name('welcome');
@@ -101,6 +103,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     
     // Tracks Management
     Route::middleware('permission:tracks.manage')->group(function () {
+        Route::post('tracks/{track}/courses', [AdminTrackController::class, 'addCourses'])->name('tracks.add-courses');
+        Route::delete('tracks/{track}/courses/{course}', [AdminTrackController::class, 'removeCourse'])->name('tracks.remove-course');
         Route::resource('tracks', AdminTrackController::class);
     });
 });

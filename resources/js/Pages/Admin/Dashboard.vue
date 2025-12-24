@@ -35,6 +35,44 @@
       <!-- Statistics Grid - Modern Compact Style -->
       <div v-if="can('dashboard-view')" class="mb-4">
         <div class="statistics-grid">
+          <!-- Programs -->
+          <Link :href="safeRoute('admin.programs.index')" class="stat-item stat-item-indigo text-decoration-none">
+            <div class="stat-icon">
+              <i class="bi bi-diagram-3"></i>
+            </div>
+            <div class="stat-content">
+              <div class="stat-value">{{ totalPrograms }}</div>
+              <div class="stat-label">{{ t('admin.programs_count') || t('programs.programs_management') || 'Programs' }}</div>
+              <div class="stat-details">
+                <span v-if="activePrograms > 0" class="stat-badge stat-badge-success">
+                  <i class="bi bi-check-circle"></i> {{ activePrograms }} {{ t('admin.active') || 'Active' }}
+                </span>
+                <span v-if="programsTracksCount > 0" class="stat-badge stat-badge-indigo">
+                  <i class="bi bi-diagram-2"></i> {{ programsTracksCount }} {{ t('admin.tracks') || t('programs.tracks') || 'Tracks' }}
+                </span>
+              </div>
+            </div>
+          </Link>
+
+          <!-- Tracks -->
+          <Link :href="safeRoute('admin.tracks.index')" class="stat-item stat-item-emerald text-decoration-none">
+            <div class="stat-icon">
+              <i class="bi bi-diagram-2"></i>
+            </div>
+            <div class="stat-content">
+              <div class="stat-value">{{ totalTracks }}</div>
+              <div class="stat-label">{{ t('admin.tracks_count') || t('tracks.tracks_management') || 'Tracks' }}</div>
+              <div class="stat-details">
+                <span v-if="activeTracks > 0" class="stat-badge stat-badge-success">
+                  <i class="bi bi-check-circle"></i> {{ activeTracks }} {{ t('admin.active') || 'Active' }}
+                </span>
+                <span v-if="tracksCoursesCount > 0" class="stat-badge stat-badge-emerald">
+                  <i class="bi bi-book"></i> {{ tracksCoursesCount }} {{ t('admin.courses') || t('tracks.courses') || 'Courses' }}
+                </span>
+              </div>
+            </div>
+          </Link>
+
           <!-- Courses -->
           <Link :href="safeRoute('admin.courses.index')" class="stat-item stat-item-primary text-decoration-none">
             <div class="stat-icon">
@@ -453,6 +491,46 @@ const weeklyEnrollments = computed(() => {
   return 0;
 });
 
+// Programs count
+const totalPrograms = computed(() => {
+  return props.stats?.total_programs || 
+         props.statistics?.programs?.total || 
+         props.statistics?.programs_count ||
+         0;
+});
+
+const activePrograms = computed(() => {
+  return props.statistics?.programs?.active || 
+         props.stats?.active_programs || 
+         0;
+});
+
+const programsTracksCount = computed(() => {
+  return props.statistics?.programs?.tracks || 
+         props.statistics?.programs?.total_tracks ||
+         0;
+});
+
+// Tracks count
+const totalTracks = computed(() => {
+  return props.stats?.total_tracks || 
+         props.statistics?.tracks?.total || 
+         props.statistics?.tracks_count ||
+         0;
+});
+
+const activeTracks = computed(() => {
+  return props.statistics?.tracks?.active || 
+         props.stats?.active_tracks || 
+         0;
+});
+
+const tracksCoursesCount = computed(() => {
+  return props.statistics?.tracks?.courses || 
+         props.statistics?.tracks?.total_courses ||
+         0;
+});
+
 // Format chart labels for display
 const formatChartLabels = (labels) => {
   if (!labels || !Array.isArray(labels)) return [];
@@ -769,6 +847,11 @@ const handleImageError = (event) => {
   box-shadow: 0 4px 12px rgba(20, 184, 166, 0.15);
 }
 
+.stat-item-emerald:hover {
+  border-color: #10b981;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+}
+
 .stat-icon {
   width: 56px;
   height: 56px;
@@ -822,6 +905,11 @@ const handleImageError = (event) => {
 
 .stat-item-teal .stat-icon {
   background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+  color: #fff;
+}
+
+.stat-item-emerald .stat-icon {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: #fff;
 }
 
@@ -899,6 +987,11 @@ const handleImageError = (event) => {
 .stat-badge-teal {
   background-color: #ccfbf1;
   color: #134e4a;
+}
+
+.stat-badge-emerald {
+  background-color: #d1fae5;
+  color: #065f46;
 }
 
 @media (max-width: 768px) {

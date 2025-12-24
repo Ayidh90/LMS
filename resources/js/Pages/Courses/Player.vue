@@ -211,7 +211,7 @@
                             <div class="d-flex align-items-start gap-3">
                                 <i class="bi bi-info-circle-fill fs-5 flex-shrink-0"></i>
                                 <div class="flex-grow-1">
-                                    <p class="mb-2 fw-medium mb-2">
+                                    <p class="mb-2 fw-medium">
                                         {{ t('lessons.watch_video_to_complete') || 'Watch at least 80% of the video to complete this lesson' }}
                                     </p>
                                     <div class="progress mb-2" style="height: 10px;">
@@ -971,6 +971,7 @@ const page = usePage();
 const auth = computed(() => page.props.auth?.user);
 const layout = computed(() => auth.value ? AuthenticatedLayout : AppLayout);
 const isStudent = computed(() => auth.value?.role === 'student');
+const isInstructor = computed(() => props.isInstructor || auth.value?.role === 'instructor');
 
 // Computed property to get current lesson attendance - updates when lesson changes
 const currentStudentAttendance = computed(() => {
@@ -1630,8 +1631,19 @@ const handleLiveMeetingClick = async (event) => {
             // Open the meeting link in a new tab
             window.open(props.lesson.live_meeting_link, '_blank');
             
-            // Reload to update progress and attendance
-            router.reload({ only: ['lesson', 'course', 'lessons', 'sections', 'studentProgress', 'studentAttendance'] });
+            // Show success message
+            showSuccess(
+                t('lessons.attendance_marked_successfully') || 'Attendance marked successfully!',
+                t('common.success') || 'Success'
+            );
+            
+            // Reload to update progress and attendance with a small delay to ensure server has processed
+            setTimeout(() => {
+                router.reload({ 
+                    only: ['lesson', 'course', 'lessons', 'sections', 'studentProgress', 'studentAttendance'],
+                    preserveScroll: true 
+                });
+            }, 800);
         } else {
             // If marking failed, still open the link
             window.open(props.lesson.live_meeting_link, '_blank');

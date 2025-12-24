@@ -10,6 +10,7 @@ use Modules\Courses\Models\Course;
 use Modules\Courses\Models\Lesson;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class LessonAttendanceService
 {
@@ -521,7 +522,7 @@ class LessonAttendanceService
                 $trackProgressService->updateCourseProgressInTrack($enrollment);
             } catch (\Exception $e) {
                 // Log error but don't fail the enrollment update
-                \Log::warning('Failed to update track progress: ' . $e->getMessage());
+                Log::warning('Failed to update track progress: ' . $e->getMessage());
             }
         }
     }

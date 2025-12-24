@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use App\Providers\RouteServiceProvider;
 use Closure;
 use Illuminate\Http\Request;
@@ -23,11 +24,16 @@ class RedirectIfAuthenticated
             if (Auth::guard($guard)->check()) {
                 $user = Auth::guard($guard)->user();
                 
-                // Redirect based on role and is_admin flag
+                // Ensure user is an instance of User model
+                if (!$user instanceof User) {
+                    continue;
+                }
+                
+                // Redirect based on user role to their respective dashboard
                 return match(true) {
                     $user->isAdmin() => redirect()->route('admin.dashboard'),
-                    $user->isInstructor() => redirect()->route('profile.show'),
-                    $user->isStudent() => redirect()->route('profile.show'),
+                    $user->isInstructor() => redirect()->route('instructor.dashboard'),
+                    $user->isStudent() => redirect()->route('student.dashboard'),
                     default => redirect()->route('profile.show'),
                 };
             }

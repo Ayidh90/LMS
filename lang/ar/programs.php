@@ -35,5 +35,20 @@ return [
     'tracks' => 'المسارات',
     'courses' => 'الدورات',
     'active_tracks' => 'المسارات النشطة',
+    
+    // Progress Statistics
+    'overall_completion' => 'إجمالي الإنجاز',
+    'progress_statistics' => 'إحصائيات التقدم',
+    'track_completion' => 'إنجاز المسارات',
+    'track' => 'المسار',
+    'total_students' => 'إجمالي الطلاب',
+    'completed_students' => 'الطلاب المكتملين',
+    'completion_percentage' => 'نسبة الإنجاز %',
+    'progress' => 'التقدم',
+    'student_progress' => 'تقدم الطلاب في البرنامج',
+    'student' => 'الطالب',
+    'completed_tracks' => 'المسارات المكتملة',
+    'total_tracks' => 'إجمالي المسارات',
+    'completion' => 'الإنجاز',
 ];
 

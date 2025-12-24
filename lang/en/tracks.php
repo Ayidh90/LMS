@@ -40,5 +40,34 @@ return [
     'published_courses' => 'Published Courses',
     'total_students' => 'Total Students',
     'students' => 'Students',
+    
+    // Progress Statistics
+    'overall_completion' => 'Overall Completion',
+    'progress_statistics' => 'Progress Statistics',
+    'course_completion' => 'Course Completion',
+    'course' => 'Course',
+    'completed_students' => 'Completed Students',
+    'completion_percentage' => 'Completion %',
+    'progress' => 'Progress',
+    'student_progress' => 'Student Progress in Track',
+    'student' => 'Student',
+    'completed_courses' => 'Completed Courses',
+    'total_courses' => 'Total Courses',
+    'completion' => 'Completion',
+    
+    // Course Management
+    'add_course' => 'Add Course',
+    'select_courses' => 'Select courses to add',
+    'selected' => 'selected',
+    'add' => 'Add',
+    'remove_from_track' => 'Remove from Track',
+    'remove_course' => 'Remove Course',
+    'courses_added_successfully' => 'Courses added successfully',
+    'add_courses_error' => 'Failed to add courses',
+    'confirm_remove_course' => 'Are you sure you want to remove ":course" from this track?',
+    'course_removed_successfully' => 'Course removed successfully',
+    'remove_course_error' => 'Failed to remove course',
+    'select_at_least_one_course' => 'Please select at least one course',
+    'no_available_courses' => 'No available courses to add',
 ];
 

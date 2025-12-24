@@ -53,6 +53,7 @@ return [
     'hour' => 'hour',
     'language_english' => 'English',
     'language_arabic' => 'Arabic',
+    'current_language' => 'Current Language',
     'description' => 'Description',
     'order' => 'Order',
     'active' => 'Active',

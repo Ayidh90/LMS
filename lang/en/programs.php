@@ -36,5 +36,20 @@ return [
     'tracks' => 'Tracks',
     'courses' => 'Courses',
     'active_tracks' => 'Active Tracks',
+    
+    // Progress Statistics
+    'overall_completion' => 'Overall Completion',
+    'progress_statistics' => 'Progress Statistics',
+    'track_completion' => 'Track Completion',
+    'track' => 'Track',
+    'total_students' => 'Total Students',
+    'completed_students' => 'Completed Students',
+    'completion_percentage' => 'Completion %',
+    'progress' => 'Progress',
+    'student_progress' => 'Student Progress in Program',
+    'student' => 'Student',
+    'completed_tracks' => 'Completed Tracks',
+    'total_tracks' => 'Total Tracks',
+    'completion' => 'Completion',
 ];
 

@@ -42,6 +42,10 @@ class DashboardController extends Controller
             'published_courses' => $data['statistics']['courses']['published'],
             'total_roles' => $data['statistics']['roles']['total'],
             'total_permissions' => $data['statistics']['permissions']['total'],
+            'total_programs' => $data['statistics']['programs']['total'] ?? 0,
+            'active_programs' => $data['statistics']['programs']['active'] ?? 0,
+            'total_tracks' => $data['statistics']['tracks']['total'] ?? 0,
+            'active_tracks' => $data['statistics']['tracks']['active'] ?? 0,
         ];
 
         return Inertia::render('Admin/Dashboard', [

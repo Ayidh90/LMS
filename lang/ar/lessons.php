@@ -22,6 +22,8 @@ return [
         'order' => 'الترتيب',
         'duration_minutes' => 'المدة (دقائق)',
         'is_free' => 'درس مجاني',
+        'section' => 'الفصل',
+        'type' => 'النوع',
     ],
     
     'actions' => [
@@ -36,6 +38,7 @@ return [
     ],
     
     'no_lessons' => 'لا توجد دروس بعد.',
+    'no_section' => 'بدون فصل',
     'total' => 'دروس',
     'add' => 'إضافة درس',
     
@@ -93,9 +96,11 @@ return [
         'live_meeting_date_required' => 'تاريخ ووقت المحاضرة المباشرة مطلوب للدروس المباشرة.',
         'live_meeting_date_invalid' => 'تاريخ ووقت المحاضرة المباشرة يجب أن يكون تاريخاً صحيحاً.',
         'live_meeting_link_invalid' => 'رابط المحاضرة المباشرة يجب أن يكون رابطاً صحيحاً.',
+        'section_required' => 'الفصل مطلوب للمديرين. يرجى اختيار فصل.',
     ],
     'placeholders' => [
         'meeting_link' => 'https://meet.jit.si/... أو أدخل رابطك الخاص',
+        'meeting_date' => 'اختر التاريخ والوقت',
     ],
     
     'actions' => [

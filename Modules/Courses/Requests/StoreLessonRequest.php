@@ -14,6 +14,8 @@ class StoreLessonRequest extends FormRequest
     public function rules(): array
     {
         $type = $this->input('type');
+        $user = $this->user();
+        $isAdmin = $user && method_exists($user, 'isAdmin') && $user->isAdmin();
         
         $rules = [
             'title' => ['required', 'string', 'max:255'],
@@ -23,7 +25,7 @@ class StoreLessonRequest extends FormRequest
             'description_ar' => ['nullable', 'string'],
             'content' => ['nullable', 'string'],
             'content_ar' => ['nullable', 'string'],
-            'section_id' => ['nullable', 'integer', 'exists:sections,id'],
+            'section_id' => $isAdmin ? ['required', 'integer', 'exists:sections,id'] : ['nullable', 'integer', 'exists:sections,id'],
             'order' => ['nullable', 'integer', 'min:0'],
             'duration_minutes' => ['nullable', 'integer', 'min:0'],
             'is_free' => ['nullable', 'boolean'],
@@ -53,6 +55,16 @@ class StoreLessonRequest extends FormRequest
     {
         $validator->after(function ($validator) {
             $type = $this->input('type');
+            $user = $this->user();
+            $isAdmin = $user && method_exists($user, 'isAdmin') && $user->isAdmin();
+            
+            // Validate section_id is required for admin users
+            if ($isAdmin) {
+                $sectionId = $this->input('section_id');
+                if (empty($sectionId) || $sectionId === null || $sectionId === '') {
+                    $validator->errors()->add('section_id', __('The section field is required for admin users.'));
+                }
+            }
             
             // Validate live lesson requirements
             if ($type === 'live') {
@@ -89,7 +101,10 @@ class StoreLessonRequest extends FormRequest
 
     public function messages(): array
     {
-        return [
+        $user = $this->user();
+        $isAdmin = $user && method_exists($user, 'isAdmin') && $user->isAdmin();
+        
+        $messages = [
             'title.required' => __('The lesson title is required.'),
             'type.required' => __('Please select a lesson type.'),
             'type.in' => __('Invalid lesson type selected.'),
@@ -103,6 +118,12 @@ class StoreLessonRequest extends FormRequest
             'live_meeting_date.date' => __('lessons.validation.live_meeting_date_invalid'),
             'live_meeting_link.url' => __('lessons.validation.live_meeting_link_invalid'),
         ];
+        
+        if ($isAdmin) {
+            $messages['section_id.required'] = __('The section field is required for admin users.');
+        }
+        
+        return $messages;
     }
     
     /**

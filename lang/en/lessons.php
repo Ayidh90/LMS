@@ -22,6 +22,8 @@ return [
         'order' => 'Order',
         'duration_minutes' => 'Duration (Minutes)',
         'is_free' => 'Free Lesson',
+        'section' => 'Section',
+        'type' => 'Type',
     ],
     
     'actions' => [
@@ -36,6 +38,7 @@ return [
     ],
     
     'no_lessons' => 'No lessons yet.',
+    'no_section' => 'No Section',
     'total' => 'Lessons',
     'add' => 'Add Lesson',
     
@@ -93,9 +96,11 @@ return [
         'live_meeting_date_required' => 'The live meeting date is required for live lessons.',
         'live_meeting_date_invalid' => 'The live meeting date must be a valid date.',
         'live_meeting_link_invalid' => 'The live meeting link must be a valid URL.',
+        'section_required' => 'Section is required for admin users. Please select a section.',
     ],
     'placeholders' => [
         'meeting_link' => 'https://meet.jit.si/... or enter your own link',
+        'meeting_date' => 'Select date and time',
     ],
     
     'actions' => [

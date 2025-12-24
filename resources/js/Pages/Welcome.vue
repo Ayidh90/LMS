@@ -291,8 +291,8 @@
                                 
                                 <!-- Action Buttons (RTL-aware) -->
                                 <div class="flex gap-2" :class="direction === 'rtl' ? 'flex-row-reverse' : ''">
-                                    <!-- View Button (Right in LTR, Left in RTL) -->
-                                <Link :href="route('courses.show', course.slug || course.id)" class="flex-1">
+                                    <!-- View Button -->
+                                    <Link :href="route('courses.show', course.slug || course.id)" class="flex-1">
                                         <Button 
                                             :label="t('courses.actions.view')" 
                                             icon="pi pi-eye"
@@ -301,21 +301,28 @@
                                             outlined
                                             severity="secondary"
                                         />
-                                </Link>
+                                    </Link>
                                     
-                                    <!-- View Course Button -->
-                                <Button
-                                    @click="router.visit(route('courses.show', course.slug || course.id))"
-                                    :label="t('courses.actions.view')"
-                                    icon="pi pi-eye"
-                                    severity="primary"
-                                    size="small"
-                                    class="flex-1 view-button font-semibold"
-                                />
+                                    <!-- Enroll Button (if not enrolled) -->
+                                    <Button
+                                        v-if="!isEnrolled(course.id)"
+                                        @click="enroll(course.slug || course.id)"
+                                        :label="t('courses.actions.enroll')"
                                         icon="pi pi-check-circle"
                                         severity="primary"
                                         size="small"
                                         class="flex-1 enroll-button font-semibold"
+                                    />
+                                    
+                                    <!-- Enrolled Button (if already enrolled) -->
+                                    <Button
+                                        v-else
+                                        :label="t('courses.actions.enrolled')"
+                                        icon="pi pi-check-circle"
+                                        severity="secondary"
+                                        size="small"
+                                        class="flex-1 enrolled-button font-semibold"
+                                        disabled
                                     />
                                 </div>
                             </div>

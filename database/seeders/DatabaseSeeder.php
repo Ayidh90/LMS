@@ -58,11 +58,24 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        // Create additional student user
+        User::updateOrCreate(
+            ['email' => 'mamava@mailinator.com'],
+            [
+                'name' => 'Mamava Student',
+                'password' => Hash::make('password'),
+                'role' => 'student',
+                'is_admin' => false,
+                'is_active' => true,
+            ]
+        );
+
         $this->command->info('Default users created!');
         $this->command->info('Super Admin: superadmin@lms.com (no password)');
         $this->command->info('Admin: admin@lms.com / password');
         $this->command->info('Instructor: instructor@lms.com / password');
         $this->command->info('Student: student@lms.com / password');
+        $this->command->info('Student: mamava@mailinator.com / password');
 
         // Seed permissions first
         $this->call(PermissionSeeder::class);
@@ -89,6 +102,11 @@ class DatabaseSeeder extends Seeder
         $studentUser = User::where('email', 'student@lms.com')->first();
         if ($studentUser) {
             $studentUser->assignRole('student');
+        }
+        
+        $mamavaUser = User::where('email', 'mamava@mailinator.com')->first();
+        if ($mamavaUser) {
+            $mamavaUser->assignRole('student');
         }
         
         // Seed categories and FAQs

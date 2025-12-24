@@ -378,6 +378,10 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    selectedTrackId: {
+        type: Number,
+        default: null,
+    },
 });
 
 const { t } = useTranslation();
@@ -385,7 +389,7 @@ const { route } = useRoute();
 const { showSuccess, showError } = useAlert();
 
 const form = useForm({
-    track_id: null,
+    track_id: props.selectedTrackId || null,
     title: '',
     title_ar: '',
     description: '',

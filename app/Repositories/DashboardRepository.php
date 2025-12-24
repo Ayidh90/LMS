@@ -10,6 +10,8 @@ use App\Models\Enrollment;
 use App\Models\Batch;
 use App\Models\Category;
 use App\Models\LessonCompletion;
+use App\Models\Program;
+use App\Models\Track;
 use Modules\Roles\Models\Role;
 use App\Models\Permission;
 use Illuminate\Support\Facades\DB;
@@ -65,6 +67,16 @@ class DashboardRepository
             'completions' => [
                 'total' => LessonCompletion::count(),
                 'today' => LessonCompletion::whereDate('completed_at', today())->count(),
+            ],
+            'programs' => [
+                'total' => Program::count(),
+                'active' => Program::where('is_active', true)->count(),
+                'tracks' => Track::count(),
+            ],
+            'tracks' => [
+                'total' => Track::count(),
+                'active' => Track::where('is_active', true)->count(),
+                'courses' => DB::table('courses')->whereNotNull('track_id')->count(),
             ],
         ];
     }

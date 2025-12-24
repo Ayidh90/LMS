@@ -53,6 +53,7 @@ return [
     'hour' => 'ساعة',
     'language_english' => 'الإنجليزية',
     'language_arabic' => 'العربية',
+    'current_language' => 'اللغة الحالية',
     'description' => 'الوصف',
     'order' => 'الترتيب',
     'active' => 'نشط',

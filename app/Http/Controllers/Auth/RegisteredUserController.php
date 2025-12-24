@@ -37,10 +37,11 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        // Redirect based on role and is_admin flag
-        // Only admins get dashboard, students and instructors go to welcome
+        // Redirect based on user role to their respective dashboard
         return match(true) {
             $user->isAdmin() => redirect()->route('admin.dashboard'),
+            $user->isInstructor() => redirect()->route('instructor.dashboard'),
+            $user->isStudent() => redirect()->route('student.dashboard'),
             default => redirect()->route('welcome'),
         };
     }

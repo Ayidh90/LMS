@@ -108,6 +108,72 @@
                         </div>
                     </div>
                 </div>
+                <div class="col-6 col-md-4 col-lg-3 col-xl-2">
+                    <div class="card border-0 shadow-sm h-100 stat-card-hover">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <div class="bg-success bg-gradient rounded p-3">
+                                    <i class="bi bi-graph-up-arrow fs-4 text-white"></i>
+                                </div>
+                            </div>
+                            <h3 class="h2 fw-bold text-success mb-1">{{ statistics?.completion_rate || 0 }}%</h3>
+                            <small class="text-muted fw-semibold d-block">{{ t('admin.completion_rate') || 'Completion Rate' }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lesson Completion Statistics -->
+            <div v-if="statistics?.lesson_completion_stats && statistics.lesson_completion_stats.length > 0" class="row g-4 mb-4">
+                <div class="col-12">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center" 
+                             style="cursor: pointer;"
+                             @click="toggleLessonStatsCollapse">
+                            <h5 class="mb-0">
+                                <i class="bi bi-graph-up-arrow me-2"></i>
+                                {{ t('admin.lesson_completion_statistics') || 'Lesson Completion Statistics' }}
+                            </h5>
+                            <i class="bi" 
+                               :class="isLessonStatsCollapsed ? 'bi-chevron-down' : 'bi-chevron-up'"
+                               style="transition: transform 0.3s ease;"></i>
+                        </div>
+                        <div v-show="!isLessonStatsCollapsed" class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>{{ t('admin.student') || 'Student' }}</th>
+                                            <th>{{ t('admin.completed_lessons') || 'Completed Lessons' }}</th>
+                                            <th>{{ t('admin.total_lessons') || 'Total Lessons' }}</th>
+                                            <th>{{ t('admin.progress') || 'Progress' }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="stat in statistics.lesson_completion_stats" :key="stat.student_id">
+                                            <td><strong>{{ stat.student_name }}</strong></td>
+                                            <td>{{ stat.completed_lessons }}</td>
+                                            <td>{{ stat.total_lessons }}</td>
+                                            <td>
+                                                <div class="progress" style="height: 20px; position: relative;">
+                                                    <div class="progress-bar" 
+                                                         :class="getProgressClass(stat.progress_percentage)" 
+                                                         :style="{ width: getProgressWidth(stat.progress_percentage) }"
+                                                         role="progressbar"
+                                                         :aria-valuenow="getProgressPercentage(stat.progress_percentage)"
+                                                         aria-valuemin="0"
+                                                         aria-valuemax="100">
+                                                        {{ getProgressText(stat.progress_percentage) }}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="row g-4">
@@ -510,6 +576,7 @@ import { Head, Link, usePage, useForm, router } from '@inertiajs/vue3';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
 import { useAlert } from '@/composables/useAlert';
+import { usePermissions } from '@/composables/usePermissions';
 import { computed, onMounted, nextTick, ref, watch } from 'vue';
 import SectionForm from '@/Pages/Admin/Sections/Form.vue';
 import LessonForm from '@/Pages/Admin/Lessons/Form.vue';
@@ -529,6 +596,7 @@ const props = defineProps({
 const { t } = useTranslation();
 const { route } = useRoute();
 const { showSuccess, showError } = useAlert();
+const { isAdmin } = usePermissions();
 const page = usePage();
 
 const direction = computed(() => page.props.direction || 'ltr');
@@ -561,6 +629,13 @@ if (props.course?.sections && props.course.sections.length > 0) {
     expandedSections.value.add(props.course.sections[0].id);
 }
 
+// Lesson Completion Statistics collapse state
+const isLessonStatsCollapsed = ref(false);
+
+const toggleLessonStatsCollapse = () => {
+    isLessonStatsCollapsed.value = !isLessonStatsCollapsed.value;
+};
+
 const toggleSection = (sectionId) => {
     if (expandedSections.value.has(sectionId)) {
         expandedSections.value.delete(sectionId);
@@ -575,6 +650,26 @@ const isSectionExpanded = (sectionId) => {
 
 const handleImageError = (event) => {
     event.target.src = '/images/default-course.avif';
+};
+
+// Progress helper functions
+const getProgressPercentage = (percentage) => {
+    const value = percentage ?? 0;
+    return Math.max(0, Math.min(100, value));
+};
+
+const getProgressWidth = (percentage) => {
+    return getProgressPercentage(percentage) + '%';
+};
+
+const getProgressClass = (percentage) => {
+    const value = getProgressPercentage(percentage);
+    return value >= 100 ? 'bg-success' : 'bg-primary';
+};
+
+const getProgressText = (percentage) => {
+    const value = getProgressPercentage(percentage);
+    return value.toFixed(1) + '%';
 };
 
 // Modal states
@@ -857,6 +952,15 @@ watch(() => lessonForm.type, (newType, oldType) => {
 });
 
 const submitLesson = (formData) => {
+    // Validate section is required for admin users
+    if (isAdmin.value && (!lessonForm.section_id || lessonForm.section_id === null || lessonForm.section_id === '')) {
+        showError(
+            t('lessons.validation.section_required') || 'Section is required for admin users. Please select a section.',
+            t('common.error') || 'Validation Error'
+        );
+        return;
+    }
+    
     // Convert empty strings to null for nullable fields
     if (lessonForm.section_id === '' || lessonForm.section_id === null) {
         lessonForm.section_id = null;

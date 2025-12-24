@@ -6,7 +6,7 @@
                     <div class="flex">
                         <div class="flex-shrink-0 flex items-center">
                             <Link :href="homeRoute" class="text-xl font-bold text-indigo-600">
-                                LMS
+                                {{ navbarTitle }}
                             </Link>
                         </div>
                         <!-- <div v-if="showDashboard" class="hidden sm:ml-6 sm:flex sm:space-x-8">
@@ -52,16 +52,49 @@ const { t } = useTranslation();
 const { route } = useRoute();
 const page = usePage();
 
+const user = computed(() => page.props.auth?.user);
+
 const homeRoute = computed(() => {
+    if (!user.value) return route('welcome');
+    
+    const role = user.value.role;
+    const isAdmin = user.value.is_admin === 1 || user.value.is_admin === true;
+    
+    // Route to appropriate dashboard based on role
+    if ((role === 'super_admin' || role === 'admin') && isAdmin) {
+        return route('admin.dashboard');
+    } else if (role === 'student') {
+        return route('student.dashboard');
+    } else if (role === 'instructor') {
+        return route('instructor.dashboard');
+    }
+    
     return route('welcome');
 });
 
-const dashboardRoute = computed(() => {
-    const user = page.props.auth?.user;
-    if (!user) return route('welcome');
+const navbarTitle = computed(() => {
+    if (!user.value) return 'LMS';
     
-    const role = user.role;
-    const isAdmin = user.is_admin === 1 || user.is_admin === true;
+    const role = user.value.role;
+    const isAdmin = user.value.is_admin === 1 || user.value.is_admin === true;
+    
+    // Show "Dashboard" for students and instructors, "LMS" for others
+    if (role === 'student') {
+        return t('student.dashboard') || 'Dashboard';
+    } else if (role === 'instructor') {
+        return t('instructor.dashboard') || 'Dashboard';
+    } else if ((role === 'super_admin' || role === 'admin') && isAdmin) {
+        return t('admin.dashboard') || 'Dashboard';
+    }
+    
+    return 'LMS';
+});
+
+const dashboardRoute = computed(() => {
+    if (!user.value) return route('welcome');
+    
+    const role = user.value.role;
+    const isAdmin = user.value.is_admin === 1 || user.value.is_admin === true;
     
     // Only admins with is_admin == 1 get dashboard, students and instructors don't have dashboard
     if ((role === 'super_admin' || role === 'admin') && isAdmin) {
