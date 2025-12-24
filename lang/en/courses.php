@@ -15,12 +15,29 @@ return [
         'description' => 'Description',
         'description_ar' => 'Description (Arabic)',
         'level' => 'Level',
+        'course_type' => 'Course Type',
+        'track' => 'Track',
+        'track_id' => 'Track',
         'price' => 'Price',
         'duration_hours' => 'Duration (Hours)',
         'thumbnail' => 'Thumbnail URL',
         'is_published' => 'Published',
         'instructor' => 'Instructor',
     ],
+    
+    'types' => [
+        'course' => 'Course',
+        'recurring' => 'Recurring',
+    ],
+    
+    'placeholders' => [
+        'title' => 'Enter course title',
+        'description' => 'Enter course description',
+    ],
+    
+    'basic_info' => 'Basic Information',
+    'details' => 'Course Details',
+    'thumbnail' => 'Course Thumbnail',
     
     'levels' => [
         'beginner' => 'Beginner',

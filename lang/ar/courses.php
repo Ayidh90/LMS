@@ -15,12 +15,29 @@ return [
         'description' => 'الوصف',
         'description_ar' => 'الوصف (عربي)',
         'level' => 'المستوى',
+        'course_type' => 'نوع الدورة',
+        'track' => 'المسار',
+        'track_id' => 'المسار',
         'price' => 'السعر',
         'duration_hours' => 'المدة (ساعات)',
         'thumbnail' => 'رابط الصورة',
         'is_published' => 'منشور',
         'instructor' => 'المدرب',
     ],
+    
+    'types' => [
+        'course' => 'دورة',
+        'recurring' => 'مكرر',
+    ],
+    
+    'placeholders' => [
+        'title' => 'أدخل عنوان الدورة',
+        'description' => 'أدخل وصف الدورة',
+    ],
+    
+    'basic_info' => 'المعلومات الأساسية',
+    'details' => 'تفاصيل الدورة',
+    'thumbnail' => 'صورة الدورة المصغرة',
     
     'levels' => [
         'beginner' => 'مبتدئ',

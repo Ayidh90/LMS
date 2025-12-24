@@ -380,10 +380,9 @@ class CourseController extends Controller
             ];
         }
 
-        // Calculate students count from enrollments through batches
-        $studentsCount = \App\Models\Enrollment::whereHas('batch', function($query) use ($course) {
-            $query->where('course_id', $course->id);
-        })->distinct()->count('student_id');
+        // Calculate unique students count from enrollments through batches
+        // This ensures students enrolled in multiple batches are only counted once
+        $uniqueStudentsCount = $course->getUniqueStudentsCountAttribute();
 
         // Convert course to array and add additional fields
         $courseArray = $courseData->toArray();
@@ -430,8 +429,9 @@ class CourseController extends Controller
             $courseArray['instructor'] = $instructor;
         }
 
-        // Update students_count (use calculated value if database value is 0 or null)
-        $courseArray['students_count'] = $studentsCount > 0 ? $studentsCount : ($courseArray['students_count'] ?? 0);
+        // Always use unique count for students_count (ignore database value)
+        $courseArray['students_count'] = $uniqueStudentsCount;
+        $courseArray['unique_students_count'] = $uniqueStudentsCount;
 
         // Ensure level and duration_hours are included
         $courseArray['level'] = $courseArray['level'] ?? $course->level ?? null;

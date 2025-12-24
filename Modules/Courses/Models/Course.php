@@ -15,34 +15,38 @@ class Course extends Model
     protected $table = 'courses';
 
     protected $fillable = [
+        'track_id',
         'title',
         'title_ar',
         'description',
         'description_ar',
         'slug',
-        // 'instructor_id', // Removed - instructors are assigned to batches now
-        // 'category_id', // Removed - categories are removed from system
         'thumbnail',
         'level',
+        'course_type',
         'price',
         'is_published',
         'duration_hours',
         'students_count',
+        'order',
     ];
 
     protected $appends = [
         'translated_title',
         'translated_description',
         'thumbnail_url',
+        'unique_students_count',
     ];
 
     protected function casts(): array
     {
         return [
+            'track_id' => 'integer',
             'price' => 'decimal:2',
             'is_published' => 'boolean',
             'duration_hours' => 'integer',
             'students_count' => 'integer',
+            'order' => 'integer',
         ];
     }
 
@@ -111,6 +115,26 @@ class Course extends Model
     //     return $this->belongsTo(\App\Models\Category::class);
     // }
 
+    public function track()
+    {
+        return $this->belongsTo(\App\Models\Track::class);
+    }
+
+    /**
+     * Get program through track
+     */
+    public function program()
+    {
+        return $this->hasOneThrough(
+            \App\Models\Program::class,
+            \App\Models\Track::class,
+            'id', // Foreign key on tracks table
+            'id', // Foreign key on programs table
+            'track_id', // Local key on courses table
+            'program_id' // Local key on tracks table
+        );
+    }
+
     public function batches()
     {
         return $this->hasMany(\App\Models\Batch::class);
@@ -142,6 +166,38 @@ class Course extends Model
         });
     }
 
+    /**
+     * Get unique students count from all batches
+     * Counts distinct students across all batches of this course
+     * This ensures that if a student is enrolled in multiple batches of the same course,
+     * they are only counted once
+     */
+    public function getUniqueStudentsCountAttribute(): int
+    {
+        $batchIds = $this->batches()->pluck('id')->toArray();
+        
+        if (empty($batchIds)) {
+            return 0;
+        }
+
+        // Use select distinct with count for accurate unique student count
+        return \App\Models\Enrollment::whereIn('batch_id', $batchIds)
+            ->select('student_id')
+            ->distinct()
+            ->count('student_id');
+    }
+
+    /**
+     * Get students count - always returns the actual unique count from enrollments
+     * This ensures accurate count regardless of database value
+     */
+    public function getStudentsCount(): int
+    {
+        // Always calculate unique students count from actual enrollments
+        // This ensures accuracy even if database value is outdated
+        return $this->getUniqueStudentsCountAttribute();
+    }
+
     public function favorites()
     {
         return $this->hasMany(Favorite::class);
@@ -151,6 +207,11 @@ class Course extends Model
     {
         return $this->belongsToMany(User::class, 'favorites', 'course_id', 'user_id')
             ->withTimestamps();
+    }
+
+    public function trackCourseProgress()
+    {
+        return $this->hasMany(\App\Models\TrackCourseProgress::class);
     }
 
     // Translation helpers

@@ -5,6 +5,7 @@ namespace Modules\Courses\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Enrollment;
 use App\Models\User;
+use App\Services\TrackService;
 use Modules\Courses\Models\Course;
 use Modules\Courses\Models\Question;
 use Modules\Courses\Repositories\CourseRepository;
@@ -25,7 +26,8 @@ class CourseController extends Controller
     public function __construct(
         private CourseService $courseService,
         private CourseRepository $courseRepository,
-        private SectionService $sectionService
+        private SectionService $sectionService,
+        private TrackService $trackService
     ) {}
 
     /**
@@ -51,7 +53,11 @@ class CourseController extends Controller
      */
     public function create()
     {
-        return Inertia::render('Admin/Courses/Create');
+        $tracks = $this->trackService->getPaginatedTracks([], 100)->items();
+        
+        return Inertia::render('Admin/Courses/Create', [
+            'tracks' => $tracks,
+        ]);
     }
 
     /**
@@ -159,9 +165,11 @@ class CourseController extends Controller
     public function edit(Course $course)
     {
         $course->makeVisible(['thumbnail_url', 'translated_title', 'translated_description']);
+        $tracks = $this->trackService->getPaginatedTracks([], 100)->items();
 
         return Inertia::render('Admin/Courses/Edit', [
             'course' => $course,
+            'tracks' => $tracks,
         ]);
     }
 

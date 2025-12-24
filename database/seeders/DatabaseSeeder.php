@@ -99,6 +99,9 @@ class DatabaseSeeder extends Seeder
         
         // Seed courses with lessons, questions, and answers
         $this->call(CourseWithLessonsSeeder::class);
+        
+        // Seed programs, tracks, and courses
+        $this->call(ProgramTrackSeeder::class);
     }
 }
 

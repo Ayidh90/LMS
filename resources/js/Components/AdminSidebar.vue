@@ -169,10 +169,10 @@
                 class="menu-item"
               >
                 <!-- Menu Item with Children (Accordion) -->
-                <a
+                <button
                   v-if="hasChildren(item)"
-                  href="#"
-                  class="menu-link d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1"
+                  type="button"
+                  class="menu-link d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 border-0 bg-transparent w-100 text-start"
                   :class="{
                     'bg-primary bg-opacity-10 text-primary': checkRoute(item),
                     'text-dark': !checkRoute(item),
@@ -212,12 +212,12 @@
                       :class="{ 'rotate-180': openSubmenus[index] }"
                     ></i>
                   </span>
-                </a>
+                </button>
 
                 <!-- Menu Item without Children (Link) -->
                 <Link
                   v-else-if="item?.route"
-                  :href="safeRoute(item.route, item.routeParams || {})"
+                  :href="getMenuItemUrl(item)"
                   class="menu-link d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1"
                   :class="{
                     'bg-primary bg-opacity-10 text-primary': checkRoute(item),
@@ -278,14 +278,7 @@
                             subItem.routeParams || {}
                           ),
                         }"
-                        :href="
-                          subItem?.route
-                            ? safeRoute(
-                                subItem.route,
-                                subItem.routeParams || {}
-                              )
-                            : '#'
-                        "
+                        :href="getMenuItemUrl(subItem)"
                         @click="
                           typeof window !== 'undefined' &&
                           window.innerWidth < 1024
@@ -347,13 +340,13 @@ import { Link, usePage, router } from "@inertiajs/vue3";
 import axios from "axios";
 import { useTranslation } from "@/composables/useTranslation";
 import { usePermissions } from "@/composables/usePermissions";
-import { Ziggy } from "../ziggy";
-import { route as ziggyRoute } from "../../../vendor/tightenco/ziggy/dist/index.esm.js";
+import { useRoute } from "@/composables/useRoute";
 import UserDropdown from "./UserDropdown.vue";
 
 const { t } = useTranslation();
 const page = usePage();
 const { can: canPermission } = usePermissions();
+const { route: routeHelper } = useRoute();
 
 // Get current locale and direction
 const currentLocale = computed(() => {
@@ -422,47 +415,28 @@ const hasLiveMeetings = computed(() => {
   return hasLive;
 });
 
-// Route function - use window.route (set globally in app.js) or Ziggy directly
+// Route function - use the useRoute composable
 const route = (name, params = {}, absolute = false) => {
   if (!name) {
-    console.warn("Route name is required");
+    if (process.env.NODE_ENV === "development") {
+      console.warn("Route name is required");
+    }
     return "#";
   }
 
-  // First try window.route if available (set in app.js)
-  if (typeof window !== "undefined" && typeof window.route === "function") {
-    try {
-      const result = window.route(name, params, absolute);
-      if (result && result !== "#") {
-        return result;
-      }
-    } catch (error) {
-      console.warn(`Error using window.route for [${name}]:`, error);
-      // Fall through to Ziggy route
-    }
-  }
-
-  // Use Ziggy route directly
   try {
-    if (!Ziggy || !Ziggy.routes) {
-      console.warn("Ziggy routes not available");
-      return "#";
-    }
-
-    if (!Ziggy.routes[name]) {
-      console.warn(`Route [${name}] not found in Ziggy.routes`);
-      return "#";
-    }
-
-    const result = ziggyRoute(name, params, absolute, Ziggy);
+    const result = routeHelper(name, params, absolute);
     if (!result || result === "#") {
-      console.warn(`Route [${name}] generated empty URL`);
+      if (process.env.NODE_ENV === "development") {
+        console.warn(`Route [${name}] generated empty URL`);
+      }
       return "#";
     }
-
     return result;
   } catch (error) {
-    console.error(`Error generating route [${name}]:`, error);
+    if (process.env.NODE_ENV === "development") {
+      console.error(`Error generating route [${name}]:`, error);
+    }
     return "#";
   }
 };
@@ -556,13 +530,41 @@ const closeMobile = () => {
   }
 };
 
-const handleMenuItemClick = () => {
+// Get URL for menu item, ensuring it's never '#'
+const getMenuItemUrl = (item) => {
+  if (!item || !item.route) {
+    return "#";
+  }
+  
+  const url = safeRoute(item.route, item.routeParams || {});
+  
+  // Ensure we never return '#' - use fallback instead
+  if (!url || url === "#") {
+    const fallback = getFallbackRoute(item.route, item.routeParams || {});
+    if (process.env.NODE_ENV === "development" && fallback === "#") {
+      console.error(`Failed to generate URL for route [${item.route}]`);
+    }
+    return fallback;
+  }
+  
+  return url;
+};
+
+const handleMenuItemClick = (event) => {
   // Close mobile sidebar on mobile devices when clicking menu items
   if (typeof window !== "undefined" && window.innerWidth < 1024) {
     closeMobile();
   }
   // Let Inertia Link component handle the navigation automatically
-  // No need to prevent default or manually navigate - Link handles it
+  // Don't prevent default - Link handles navigation
+  
+  // Debug: Log the href being used
+  if (process.env.NODE_ENV === "development") {
+    const href = event?.currentTarget?.href || event?.target?.closest('a')?.href;
+    if (href) {
+      console.log('Menu item clicked, navigating to:', href);
+    }
+  }
 };
 
 const handleLogoError = (event) => {
@@ -578,15 +580,17 @@ const bootstrapIcons = {
   "file-up": "bi-file-earmark-arrow-up",
   "shield-cross": "bi-shield-check",
   "file-down": "bi-file-earmark-arrow-down",
-  "abstract-30": "bi-grid-3x3",
+  "abstract-30": "bi-diagram-3",
   "setting-4": "bi-gear",
-  map: "bi-map",
+  map: "bi-diagram-2",
   document: "bi-file-earmark-text",
   category: "bi-folder",
   "key-square": "bi-key",
   "text-circle": "bi-file-text",
   "check-circle": "bi-check-circle",
   "camera-video": "bi-camera-video",
+  "diagram-3": "bi-diagram-3",
+  "diagram-2": "bi-diagram-2",
 };
 
 const getBootstrapIcon = (iconName) => {
@@ -622,6 +626,44 @@ const menuItems = computed(() => {
         title: t("common.dashboard"),
         icon: "chart-simple-3",
         route: "admin.dashboard",
+      },
+      {
+        icon: "separator",
+      },
+      {
+        title: t("admin.programs_management") || "Programs Management",
+        permission: "programs.manage",
+      },
+      {
+        title: t("admin.view_programs") || "View Programs",
+        icon: "diagram-3",
+        route: "admin.programs.index",
+        permission: "programs.manage",
+      },
+      {
+        title: t("admin.create_program") || "Create Program",
+        icon: "plus-circle",
+        route: "admin.programs.create",
+        permission: "programs.manage",
+      },
+      {
+        icon: "separator",
+      },
+      {
+        title: t("admin.tracks_management") || "Tracks Management",
+        permission: "tracks.manage",
+      },
+      {
+        title: t("admin.view_tracks") || "View Tracks",
+        icon: "diagram-2",
+        route: "admin.tracks.index",
+        permission: "tracks.manage",
+      },
+      {
+        title: t("admin.create_track") || "Create Track",
+        icon: "plus-circle",
+        route: "admin.tracks.create",
+        permission: "tracks.manage",
       },
       {
         icon: "separator",
@@ -793,40 +835,152 @@ const checkRoute = (item) => {
 
 const safeRoute = (routeName, routeParams = {}) => {
   if (!routeName) {
-    console.warn("safeRoute: routeName is required");
+    if (process.env.NODE_ENV === "development") {
+      console.warn("safeRoute: routeName is required");
+    }
     return "#";
   }
 
   try {
-    const routeUrl = route(routeName, routeParams);
+    // Handle route parameters properly
+    let params = routeParams;
+    
+    // If routeParams is a simple value (string/number), convert to object
+    if (routeParams && typeof routeParams !== 'object' && routeParams !== null) {
+      // For routes like admin.courses.show, use 'course' as key
+      if (routeName.includes('courses')) {
+        params = { course: routeParams };
+      } else if (routeName.includes('programs')) {
+        params = { program: routeParams };
+      } else if (routeName.includes('tracks')) {
+        params = { track: routeParams };
+      } else {
+        // Try to infer from route name
+        const routeParts = routeName.split('.');
+        if (routeParts.length > 1) {
+          const resourceName = routeParts[routeParts.length - 2];
+          params = { [resourceName]: routeParams };
+        }
+      }
+    }
+    
+    const routeUrl = route(routeName, params);
     if (!routeUrl || routeUrl === "#") {
-      // Only warn in development
       if (process.env.NODE_ENV === "development") {
         console.warn(
-          `Route [${routeName}] generated empty URL or returned '#'.`
+          `Route [${routeName}] generated empty URL or returned '#'. Using fallback.`
         );
       }
-      // Fallback: try to construct URL manually for known routes
-      if (routeName === "admin.settings.index") {
-        return "/admin/settings";
-      }
-      if (routeName === "admin.live_meetings.index") {
-        return "/admin/live-meetings";
-      }
-      return "#";
+      // Fallback: construct URL manually for known routes
+      return getFallbackRoute(routeName, params);
     }
     return routeUrl;
   } catch (error) {
-    console.error(`Error in safeRoute for [${routeName}]:`, error);
-    // Fallback: try to construct URL manually for known routes
-    if (routeName === "admin.settings.index") {
-      return "/admin/settings";
+    if (process.env.NODE_ENV === "development") {
+      console.error(`Error in safeRoute for [${routeName}]:`, error);
     }
-    if (routeName === "admin.live_meetings.index") {
-      return "/admin/live-meetings";
-    }
-    return "#";
+    // Fallback: construct URL manually for known routes
+    return getFallbackRoute(routeName, routeParams);
   }
+};
+
+// Fallback route generator for when route helper fails
+const getFallbackRoute = (routeName, params = {}) => {
+  // Dashboard
+  if (routeName === "admin.dashboard") {
+    return "/admin/dashboard";
+  }
+  
+  // Programs
+  if (routeName === "admin.programs.index") {
+    return "/admin/programs";
+  }
+  if (routeName === "admin.programs.create") {
+    return "/admin/programs/create";
+  }
+  if (routeName === "admin.programs.show" || routeName === "admin.programs.edit") {
+    const identifier = params?.program || params?.id || (typeof params === 'object' && Object.keys(params).length > 0 ? Object.values(params)[0] : null);
+    if (identifier) {
+      return routeName.includes('edit') ? `/admin/programs/${identifier}/edit` : `/admin/programs/${identifier}`;
+    }
+  }
+  
+  // Tracks
+  if (routeName === "admin.tracks.index") {
+    return "/admin/tracks";
+  }
+  if (routeName === "admin.tracks.create") {
+    return "/admin/tracks/create";
+  }
+  if (routeName === "admin.tracks.show" || routeName === "admin.tracks.edit") {
+    const identifier = params?.track || params?.id || (typeof params === 'object' && Object.keys(params).length > 0 ? Object.values(params)[0] : null);
+    if (identifier) {
+      return routeName.includes('edit') ? `/admin/tracks/${identifier}/edit` : `/admin/tracks/${identifier}`;
+    }
+  }
+  
+  // Courses
+  if (routeName === "admin.courses.index") {
+    return "/admin/courses";
+  }
+  if (routeName === "admin.courses.create") {
+    return "/admin/courses/create";
+  }
+  if (routeName === "admin.courses.show" || routeName === "admin.courses.edit") {
+    const identifier = params?.course || params?.id || (typeof params === 'object' && Object.keys(params).length > 0 ? Object.values(params)[0] : null);
+    if (identifier) {
+      return routeName.includes('edit') ? `/admin/courses/${identifier}/edit` : `/admin/courses/${identifier}`;
+    }
+  }
+  if (routeName === "admin.courses.batches.index") {
+    const identifier = params?.course || params?.id || (typeof params === 'object' && Object.keys(params).length > 0 ? Object.values(params)[0] : null);
+    if (identifier) {
+      return `/admin/courses/${identifier}/batches`;
+    }
+  }
+  if (routeName === "admin.courses.sections.index") {
+    const identifier = params?.course || params?.id || (typeof params === 'object' && Object.keys(params).length > 0 ? Object.values(params)[0] : null);
+    if (identifier) {
+      return `/admin/courses/${identifier}/sections`;
+    }
+  }
+  if (routeName === "admin.courses.lessons.index") {
+    const identifier = params?.course || params?.id || (typeof params === 'object' && Object.keys(params).length > 0 ? Object.values(params)[0] : null);
+    if (identifier) {
+      return `/admin/courses/${identifier}/lessons`;
+    }
+  }
+  
+  // Users
+  if (routeName === "admin.users.index") {
+    return "/admin/users";
+  }
+  
+  // Roles
+  if (routeName === "admin.roles.index") {
+    return "/admin/roles";
+  }
+  
+  // Settings
+  if (routeName === "admin.settings.index") {
+    return "/admin/settings";
+  }
+  
+  // Live Meetings
+  if (routeName === "admin.live_meetings.index") {
+    return "/admin/live-meetings";
+  }
+  
+  // Activity Logs
+  if (routeName === "admin.activity-logs.index") {
+    return "/admin/activity-logs";
+  }
+  
+  // Default fallback
+  if (process.env.NODE_ENV === "development") {
+    console.warn(`No fallback route found for [${routeName}], returning '#'`);
+  }
+  return "#";
 };
 
 const safeRouteCurrent = (routeName, routeParams = {}) => {
@@ -835,7 +989,26 @@ const safeRouteCurrent = (routeName, routeParams = {}) => {
   }
   try {
     const currentUrl = page.url;
-    const routeUrl = route(routeName, routeParams);
+    
+    // Handle route parameters properly (same logic as safeRoute)
+    let params = routeParams;
+    if (routeParams && typeof routeParams !== 'object') {
+      if (routeName.includes('courses')) {
+        params = { course: routeParams };
+      } else if (routeName.includes('programs')) {
+        params = { program: routeParams };
+      } else if (routeName.includes('tracks')) {
+        params = { track: routeParams };
+      } else {
+        const routeParts = routeName.split('.');
+        if (routeParts.length > 1) {
+          const resourceName = routeParts[routeParts.length - 2];
+          params = { [resourceName]: routeParams };
+        }
+      }
+    }
+    
+    const routeUrl = route(routeName, params);
     if (!routeUrl || routeUrl === "#") return false;
     // Normalize URLs for comparison
     const normalizedCurrent = currentUrl.split("?")[0].replace(/\/$/, "");
@@ -1458,10 +1631,16 @@ onUnmounted(() => {
 .menu-link {
   transition: all 0.2s ease;
   position: relative;
+  cursor: pointer;
 }
 
 .menu-link:hover {
   background-color: #f8f9fa !important;
+}
+
+.menu-link:focus {
+  outline: none;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
 
 .menu-link.bg-primary {

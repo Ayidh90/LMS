@@ -132,6 +132,59 @@
                         </h3>
                         
                         <div class="row g-4">
+                            <!-- Track -->
+                            <div class="col-12 col-md-6">
+                                <label for="track_id" class="form-label fw-semibold">
+                                    {{ t('courses.fields.track') || 'Track' }}
+                                </label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-light">
+                                        <i class="bi bi-diagram-3 text-primary"></i>
+                                    </span>
+                                    <select
+                                        id="track_id"
+                                        v-model="form.track_id"
+                                        class="form-select"
+                                        :class="{ 'is-invalid': form.errors.track_id }"
+                                    >
+                                        <option :value="null">{{ t('common.select') || 'Select track' }}</option>
+                                        <option v-for="track in tracks" :key="track.id" :value="track.id">
+                                            {{ track.translated_name || track.name }}
+                                        </option>
+                                    </select>
+                                    <div v-if="form.errors.track_id" class="invalid-feedback d-block">
+                                        <i class="bi bi-exclamation-circle me-1"></i>
+                                        {{ form.errors.track_id }}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Course Type -->
+                            <div class="col-12 col-md-6">
+                                <label for="course_type" class="form-label fw-semibold">
+                                    {{ t('courses.fields.course_type') || 'Course Type' }} <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-light">
+                                        <i class="bi bi-book text-info"></i>
+                                    </span>
+                                    <select
+                                        id="course_type"
+                                        v-model="form.course_type"
+                                        class="form-select"
+                                        :class="{ 'is-invalid': form.errors.course_type }"
+                                        required
+                                    >
+                                        <option value="course">{{ t('courses.types.course') || 'Course' }}</option>
+                                        <option value="recurring">{{ t('courses.types.recurring') || 'Recurring' }}</option>
+                                    </select>
+                                    <div v-if="form.errors.course_type" class="invalid-feedback d-block">
+                                        <i class="bi bi-exclamation-circle me-1"></i>
+                                        {{ form.errors.course_type }}
+                                    </div>
+                                </div>
+                            </div>
+                            
                             <!-- Level -->
                             <div class="col-12 col-md-6">
                                 <label for="level" class="form-label fw-semibold">
@@ -320,17 +373,25 @@ import { useRoute } from '@/composables/useRoute';
 import { useAlert } from '@/composables/useAlert';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 
+const props = defineProps({
+    tracks: {
+        type: Array,
+        default: () => [],
+    },
+});
 
 const { t } = useTranslation();
 const { route } = useRoute();
 const { showSuccess, showError } = useAlert();
 
 const form = useForm({
+    track_id: null,
     title: '',
     title_ar: '',
     description: '',
     description_ar: '',
     level: '',
+    course_type: 'course',
     duration_hours: 0,
     thumbnail: null,
     is_published: false,

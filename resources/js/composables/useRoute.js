@@ -3,7 +3,11 @@ import { Ziggy } from '../ziggy';
 // Route function implementation based on Ziggy
 function route(name, params = {}, absolute = false) {
     if (!name || !Ziggy.routes || !Ziggy.routes[name]) {
-        // Silently return '#' for undefined or missing routes to avoid console spam
+        // Log warning in development mode
+        if (import.meta.env.DEV) {
+            console.warn(`Route "${name}" not found in Ziggy routes`);
+        }
+        // Return '#' for undefined or missing routes to avoid navigation issues
         return '#';
     }
 
@@ -11,12 +15,14 @@ function route(name, params = {}, absolute = false) {
     let url = routeDef.uri;
 
     // Handle simple value (string/number) - treat as first parameter
-    if (!Array.isArray(params) && typeof params !== 'object' || params === null) {
+    // Check if params is a primitive value (not object, not array, not null)
+    if ((typeof params !== 'object' || params === null) && !Array.isArray(params)) {
         const paramKeys = routeDef.parameters || [];
         if (paramKeys.length > 0) {
             params = { [paramKeys[0]]: params };
         } else {
-            params = { course: params };
+            // Fallback for routes without defined parameters
+            params = {};
         }
     }
     
@@ -40,15 +46,12 @@ function route(name, params = {}, absolute = false) {
         // Handle both {key} and {key?} patterns
         const paramPattern = new RegExp(`\\{${key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\??\\}`, 'g');
         const value = params[key];
-        if (value !== null && value !== undefined) {
-            url = url.replace(paramPattern, encodeURIComponent(value));
+        if (value !== null && value !== undefined && value !== '') {
+            url = url.replace(paramPattern, encodeURIComponent(String(value)));
         }
     });
     
     // Remove any remaining optional parameters that weren't provided
-    url = url.replace(/{[^}]*\?}/g, '');
-
-    // Remove optional parameters that weren't provided
     url = url.replace(/{[^}]*\?}/g, '');
 
     // Build absolute URL if needed

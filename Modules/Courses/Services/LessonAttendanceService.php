@@ -513,6 +513,17 @@ class LessonAttendanceService
             $enrollment->completed_at = now();
             $enrollment->save();
         }
+
+        // Update track progress if course belongs to a track
+        if ($course->track_id) {
+            try {
+                $trackProgressService = app(\App\Services\TrackProgressService::class);
+                $trackProgressService->updateCourseProgressInTrack($enrollment);
+            } catch (\Exception $e) {
+                // Log error but don't fail the enrollment update
+                \Log::warning('Failed to update track progress: ' . $e->getMessage());
+            }
+        }
     }
 }
 

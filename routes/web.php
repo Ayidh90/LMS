@@ -6,6 +6,8 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Admin\ActivityLogController as AdminActivityLogController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
+use App\Http\Controllers\Admin\ProgramController as AdminProgramController;
+use App\Http\Controllers\Admin\TrackController as AdminTrackController;
 use App\Http\Controllers\Instructor\DashboardController as InstructorDashboardController;
 use App\Http\Controllers\Student\DashboardController as StudentDashboardController;
 use App\Http\Controllers\DirectionController;
@@ -90,6 +92,16 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     });
     Route::middleware('permission:settings.edit')->group(function () {
         Route::match(['put', 'post'], '/settings', [AdminSettingsController::class, 'update'])->name('settings.update');
+    });
+    
+    // Programs Management
+    Route::middleware('permission:programs.manage')->group(function () {
+        Route::resource('programs', AdminProgramController::class);
+    });
+    
+    // Tracks Management
+    Route::middleware('permission:tracks.manage')->group(function () {
+        Route::resource('tracks', AdminTrackController::class);
     });
 });
 

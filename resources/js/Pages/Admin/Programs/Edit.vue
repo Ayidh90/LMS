@@ -1,0 +1,151 @@
+<template>
+    <AdminLayout :page-title="t('programs.edit') || 'Edit Program'">
+        <Head :title="t('programs.edit') || 'Edit Program'" />
+        <div class="container-fluid px-3 px-md-4 px-lg-5 py-4">
+            <div class="mb-4">
+                <nav aria-label="breadcrumb" class="mb-3">
+                    <ol class="breadcrumb mb-2">
+                        <li class="breadcrumb-item">
+                            <Link :href="route('admin.programs.index')" class="text-decoration-none">
+                                {{ t('programs.programs_management') || 'Programs' }}
+                            </Link>
+                        </li>
+                        <li class="breadcrumb-item active" aria-current="page">{{ t('programs.edit') || 'Edit Program' }}</li>
+                    </ol>
+                </nav>
+                <h1 class="h2 fw-bold mb-2">{{ t('programs.edit') || 'Edit Program' }}</h1>
+            </div>
+
+            <form @submit.prevent="submit" class="card shadow-sm border-0" enctype="multipart/form-data">
+                <div class="card-body p-4 p-md-5">
+                    <div class="row g-4">
+                        <div class="col-12 col-md-6">
+                            <label for="name" class="form-label fw-semibold">
+                                {{ t('programs.fields.name') || 'Program Name' }} ({{ t('common.language_english') }}) <span class="text-danger">*</span>
+                            </label>
+                            <input
+                                id="name"
+                                v-model="form.name"
+                                type="text"
+                                class="form-control form-control-lg"
+                                :class="{ 'is-invalid': form.errors.name }"
+                                required
+                            />
+                            <div v-if="form.errors.name" class="invalid-feedback d-block">
+                                {{ form.errors.name }}
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label for="name_ar" class="form-label fw-semibold">
+                                {{ t('programs.fields.name_ar') || 'Program Name (Arabic)' }} ({{ t('common.language_arabic') }})
+                            </label>
+                            <input
+                                id="name_ar"
+                                v-model="form.name_ar"
+                                type="text"
+                                dir="rtl"
+                                class="form-control form-control-lg"
+                            />
+                        </div>
+
+                        <div class="col-12">
+                            <label for="description" class="form-label fw-semibold">
+                                {{ t('common.description') || 'Description' }} ({{ t('common.language_english') }})
+                            </label>
+                            <textarea
+                                id="description"
+                                v-model="form.description"
+                                rows="4"
+                                class="form-control"
+                            ></textarea>
+                        </div>
+
+                        <div class="col-12">
+                            <label for="description_ar" class="form-label fw-semibold">
+                                {{ t('common.description') || 'Description' }} ({{ t('common.language_arabic') }})
+                            </label>
+                            <textarea
+                                id="description_ar"
+                                v-model="form.description_ar"
+                                rows="4"
+                                dir="rtl"
+                                class="form-control"
+                            ></textarea>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label for="order" class="form-label fw-semibold">
+                                {{ t('common.order') || 'Order' }}
+                            </label>
+                            <input
+                                id="order"
+                                v-model="form.order"
+                                type="number"
+                                min="0"
+                                class="form-control"
+                            />
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <div class="form-check form-switch mt-4">
+                                <input
+                                    id="is_active"
+                                    v-model="form.is_active"
+                                    class="form-check-input"
+                                    type="checkbox"
+                                />
+                                <label class="form-check-label" for="is_active">
+                                    {{ t('common.active') || 'Active' }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-footer bg-light d-flex justify-content-end gap-2 p-4">
+                    <Link :href="route('admin.programs.index')" class="btn btn-secondary">
+                        {{ t('common.cancel') || 'Cancel' }}
+                    </Link>
+                    <button type="submit" :disabled="form.processing" class="btn btn-primary">
+                        <span v-if="form.processing" class="spinner-border spinner-border-sm me-2"></span>
+                        {{ form.processing ? (t('common.updating') || 'Updating...') : (t('common.update') || 'Update') }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </AdminLayout>
+</template>
+
+<script setup>
+import AdminLayout from '@/Layouts/AdminLayout.vue';
+import { useTranslation } from '@/composables/useTranslation';
+import { useRoute } from '@/composables/useRoute';
+import { Head, Link, useForm, router } from '@inertiajs/vue3';
+
+const props = defineProps({
+    program: Object,
+});
+
+const { t } = useTranslation();
+const { route } = useRoute();
+
+const form = useForm({
+    name: props.program.name || '',
+    name_ar: props.program.name_ar || '',
+    description: props.program.description || '',
+    description_ar: props.program.description_ar || '',
+    order: props.program.order || 0,
+    is_active: props.program.is_active ?? true,
+});
+
+const submit = () => {
+    form.put(route('admin.programs.update', props.program.slug || props.program.id), {
+        preserveScroll: true,
+        onSuccess: () => {
+            router.visit(route('admin.programs.index'));
+        },
+    });
+};
+</script>
+

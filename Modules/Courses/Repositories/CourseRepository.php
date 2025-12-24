@@ -58,6 +58,14 @@ class CourseRepository
             $query->where('level', $filters['level']);
         }
 
+        if (isset($filters['track_id'])) {
+            $query->where('track_id', $filters['track_id']);
+        }
+
+        if (isset($filters['course_type'])) {
+            $query->where('course_type', $filters['course_type']);
+        }
+
         if (isset($filters['search'])) {
             $search = $filters['search'];
             $query->where(function ($q) use ($search) {

@@ -14,11 +14,13 @@ class StoreCourseRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'track_id' => ['nullable', 'exists:tracks,id'],
             'title' => ['required', 'string', 'max:255'],
             'title_ar' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'description_ar' => ['nullable', 'string'],
             'level' => ['required', 'in:beginner,intermediate,advanced'],
+            'course_type' => ['required', 'in:course,recurring'],
             'duration_hours' => ['required', 'integer', 'min:0'],
             'thumbnail' => ['nullable', 'image', 'max:2048'],
             'thumbnail_url' => ['nullable', 'url'],
