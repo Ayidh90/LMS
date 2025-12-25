@@ -403,8 +403,9 @@ const showDateWarning = computed(() => {
 const filteredErrors = computed(() => {
     const filtered = { ...props.errors };
     
-    // Clear title error if title has a value
-    if (filtered.title && props.formData.title && props.formData.title.trim() !== '') {
+    // Clear title error if title has a meaningful value
+    const titleValue = props.formData.title;
+    if (filtered.title && titleValue && typeof titleValue === 'string' && titleValue.trim().length > 0) {
         delete filtered.title;
     }
     
@@ -416,6 +417,11 @@ const filteredErrors = computed(() => {
     // Clear section_id error if section_id has a value
     if (filtered.section_id && props.formData.section_id !== null && props.formData.section_id !== '' && props.formData.section_id !== undefined) {
         delete filtered.section_id;
+    }
+    
+    // Clear video_url error if it has a value
+    if (filtered.video_url && props.formData.video_url && props.formData.video_url.trim() !== '') {
+        delete filtered.video_url;
     }
     
     return filtered;
@@ -445,86 +451,49 @@ watch(() => props.formData.type, async (newType, oldType) => {
     // Reset interaction flag when switching types
     hasInteractedWithDate.value = false;
     
-    // Clear file selection when type changes
+    // Clear file selection and inputs when type changes
     selectedFileName.value = '';
-    
-    // Clear file inputs
     if (videoFileInput.value) videoFileInput.value.value = '';
     if (imageFileInput.value) imageFileInput.value.value = '';
     if (documentFileInput.value) documentFileInput.value.value = '';
     
-    // Clear file from formData
+    // Clear file references from formData
     delete props.formData.video_file;
     delete props.formData.image_file;
     delete props.formData.document_file;
     
-    // When switching away from URL-based types, clear video_url if not a file type
-    if (oldType && !['youtube_video', 'google_drive_video', 'embed_frame', 'video_file', 'image', 'document_file'].includes(newType)) {
-        // Only clear if switching to a type that doesn't use video_url
-        if (!['youtube_video', 'google_drive_video', 'embed_frame', 'video_file', 'image', 'document_file'].includes(newType)) {
-            props.formData.video_url = '';
-        }
+    // Clear fields based on type requirements
+    const urlBasedTypes = ['youtube_video', 'google_drive_video', 'embed_frame'];
+    const fileBasedTypes = ['video_file', 'image', 'document_file'];
+    const contentTypes = ['text', 'assignment', 'test'];
+    
+    // Clear video_url when switching to a type that doesn't use it
+    if (!urlBasedTypes.includes(newType) && !fileBasedTypes.includes(newType)) {
+        props.formData.video_url = '';
     }
     
-    // When switching away from file types, clear video_url if not keeping the file
-    if (oldType && ['video_file', 'image', 'document_file'].includes(oldType) && !['video_file', 'image', 'document_file'].includes(newType)) {
-        // Only clear if switching to a non-file type that doesn't use video_url
-        if (!['youtube_video', 'google_drive_video', 'embed_frame', 'video_file', 'image', 'document_file'].includes(newType)) {
-            props.formData.video_url = '';
-        }
-    }
-    
-    // When switching away from 'live', clear live-specific fields
+    // Clear live-specific fields when switching away from live type
     if (oldType === 'live' && newType !== 'live') {
         props.formData.live_meeting_date = '';
         props.formData.live_meeting_link = '';
     }
     
-    // When switching to 'live', focus on the date input after a short delay
+    // Focus on date input when switching to live type
     if (newType === 'live' && oldType !== 'live') {
         await nextTick();
-        if (liveMeetingDateInput.value) {
-            // Small delay to ensure the input is rendered
-            setTimeout(() => {
-                liveMeetingDateInput.value?.focus();
-            }, 100);
-        }
-    }
-    
-    // When switching to 'text', 'assignment', or 'test', ensure content fields are available
-    if (['text', 'assignment', 'test'].includes(newType) && !['text', 'assignment', 'test'].includes(oldType)) {
-        // Content fields are already shown conditionally, no action needed
-    }
-    
-    // When switching away from 'text', 'assignment', or 'test', preserve content if switching to another content type
-    if (['text', 'assignment', 'test'].includes(oldType) && !['text', 'assignment', 'test'].includes(newType)) {
-        // Only clear content if switching to a type that doesn't use it
-        if (!['text', 'assignment', 'test'].includes(newType)) {
-            // Don't clear content - let user decide, or it will be cleared by backend validation
-        }
-    }
-});
-
-const handleTypeChange = () => {
-    // Clear file selection when type changes
-    selectedFileName.value = '';
-    
-    // Clear video_url when switching away from URL-based types
-    if (!['youtube_video', 'google_drive_video', 'embed_frame'].includes(props.formData.type)) {
-        // Don't clear if it's a file path (for file types)
-        if (!['video_file', 'image', 'document_file'].includes(props.formData.type)) {
-            props.formData.video_url = '';
-        }
-    }
-    
-    // Clear live meeting fields when switching away from live type
-    if (props.formData.type !== 'live') {
-        props.formData.live_meeting_date = '';
-        props.formData.live_meeting_link = '';
+        setTimeout(() => {
+            liveMeetingDateInput.value?.focus();
+        }, 100);
     }
     
     // Emit type change event for parent component handling
-    emit('type-change', props.formData.type);
+    emit('type-change', newType);
+});
+
+const handleTypeChange = () => {
+    // This function is now simplified since the watch handles most of the logic
+    // The watch will automatically trigger when formData.type changes
+    // No additional logic needed here
 };
 
 const triggerFileInput = () => {
@@ -543,10 +512,24 @@ const handleFileChange = (event, fileType) => {
         selectedFileName.value = file.name;
         // Clear video_url when a file is selected - backend will set it to the file path
         props.formData.video_url = '';
-        // Store the file reference for submission
-        // Files will be passed separately in the emit
+        // Store the file reference in formData for submission
+        if (fileType === 'video_file') {
+            props.formData.video_file = file;
+        } else if (fileType === 'image') {
+            props.formData.image_file = file;
+        } else if (fileType === 'document_file') {
+            props.formData.document_file = file;
+        }
     } else {
         selectedFileName.value = '';
+        // Clear the corresponding file reference
+        if (fileType === 'video_file') {
+            delete props.formData.video_file;
+        } else if (fileType === 'image') {
+            delete props.formData.image_file;
+        } else if (fileType === 'document_file') {
+            delete props.formData.document_file;
+        }
     }
 };
 
@@ -560,50 +543,80 @@ const getFileNameFromUrl = (url) => {
 
 const submit = () => {
     // Prepare form data with files
-    const submitData = { ...props.formData };
+    // Always include all fields explicitly to ensure they're sent to the backend
+    // Format data to match StoreLessonRequest format (strings for numbers, null for missing files)
+    const submitData = {};
     
-    // Ensure title is always included (even if empty - backend will validate)
-    submitData.title = props.formData.title !== undefined && props.formData.title !== null
-        ? (typeof props.formData.title === 'string' ? props.formData.title.trim() : String(props.formData.title))
-        : '';
+    // Always include title (even if empty) - backend will validate
+    if (props.formData.title !== undefined && props.formData.title !== null) {
+        const trimmedTitle = typeof props.formData.title === 'string' 
+            ? props.formData.title.trim() 
+            : String(props.formData.title).trim();
+        submitData.title = trimmedTitle; // Include even if empty
+    } else {
+        submitData.title = ''; // Default to empty string
+    }
     
-    // Ensure type is always included
+    // Always include type - backend will validate
     submitData.type = props.formData.type !== undefined && props.formData.type !== null
         ? String(props.formData.type)
         : '';
     
-    // Validate required fields before submitting (but still emit so backend can validate)
-    if (!submitData.title || submitData.title.trim() === '') {
-        // Title is required - backend will validate, but we still emit
-        emit('submit', submitData);
-        return;
+    // Always include section_id as STRING to match StoreLessonRequest format
+    // Backend will convert to integer in prepareForValidation
+    if (props.formData.section_id !== null && props.formData.section_id !== undefined && props.formData.section_id !== '' && props.formData.section_id !== 0) {
+        submitData.section_id = String(props.formData.section_id); // Keep as string
+    } else {
+        submitData.section_id = null;
     }
     
-    if (!submitData.type || submitData.type === '') {
-        // Type is required - backend will validate
-        emit('submit', submitData);
-        return;
+    // Include all other fields from formData
+    submitData.title_ar = props.formData.title_ar || null;
+    submitData.description = props.formData.description || null;
+    submitData.description_ar = props.formData.description_ar || null;
+    submitData.content = props.formData.content || null;
+    submitData.content_ar = props.formData.content_ar || null;
+    
+    // Convert order to STRING to match StoreLessonRequest format
+    submitData.order = props.formData.order !== null && props.formData.order !== undefined && props.formData.order !== '' 
+        ? String(props.formData.order) 
+        : null;
+    
+    // Convert duration_minutes to STRING to match StoreLessonRequest format
+    submitData.duration_minutes = props.formData.duration_minutes !== null && props.formData.duration_minutes !== undefined && props.formData.duration_minutes !== '' 
+        ? String(props.formData.duration_minutes) 
+        : null;
+    
+    submitData.is_free = props.formData.is_free !== undefined ? props.formData.is_free : false;
+    
+    // Handle video_url based on type
+    const urlBasedTypes = ['youtube_video', 'google_drive_video', 'embed_frame'];
+    const fileBasedTypes = ['video_file', 'image', 'document_file'];
+    
+    if (urlBasedTypes.includes(props.formData.type)) {
+        submitData.video_url = props.formData.video_url || '';
+    } else if (fileBasedTypes.includes(props.formData.type)) {
+        submitData.video_url = props.formData.video_url || null;
+    } else {
+        submitData.video_url = null;
     }
     
-    // Validate section is required for admin users
-    if (isAdmin.value && (!submitData.section_id || submitData.section_id === null || submitData.section_id === '')) {
-        // The backend will also validate this, but we can show a client-side error
-        // The error will be handled by the backend validation
-        emit('submit', submitData);
-        return;
+    // Handle live meeting fields
+    if (props.formData.type === 'live') {
+        submitData.live_meeting_date = props.formData.live_meeting_date || null;
+        submitData.live_meeting_link = props.formData.live_meeting_link || null;
+    } else {
+        submitData.live_meeting_date = null;
+        submitData.live_meeting_link = null;
     }
     
-    // Include files if they exist (as File objects for Inertia to handle)
-    if (videoFileInput.value?.files?.[0]) {
-        submitData.video_file = videoFileInput.value.files[0];
-    }
-    if (imageFileInput.value?.files?.[0]) {
-        submitData.image_file = imageFileInput.value.files[0];
-    }
-    if (documentFileInput.value?.files?.[0]) {
-        submitData.document_file = documentFileInput.value.files[0];
-    }
+    // Always include ALL file fields (even if null) to match StoreLessonRequest format
+    // This ensures the backend receives them in the same format
+    submitData.video_file = props.formData.video_file instanceof File ? props.formData.video_file : null;
+    submitData.image_file = props.formData.image_file instanceof File ? props.formData.image_file : null;
+    submitData.document_file = props.formData.document_file instanceof File ? props.formData.document_file : null;
     
+    console.log('Form.vue - Submitting data:', submitData);
     emit('submit', submitData);
 };
 </script>

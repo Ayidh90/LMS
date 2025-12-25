@@ -1005,16 +1005,36 @@ const submitLesson = (formData) => {
     // Ensure title is always set (even if formData didn't include it)
     if (lessonForm.title === undefined || lessonForm.title === null) {
         lessonForm.title = '';
+    } else if (typeof lessonForm.title === 'string') {
+        lessonForm.title = lessonForm.title.trim();
     }
     
     // Ensure type is always set (even if formData didn't include it)
     if (lessonForm.type === undefined || lessonForm.type === null) {
         lessonForm.type = '';
+    } else {
+        lessonForm.type = String(lessonForm.type);
+    }
+    
+    // Ensure section_id is always set (even if null) - critical for FormData
+    if (lessonForm.section_id === undefined || lessonForm.section_id === '' || lessonForm.section_id === 0) {
+        lessonForm.section_id = null;
+    } else if (lessonForm.section_id !== null) {
+        // Convert to integer if it's a string
+        const parsed = typeof lessonForm.section_id === 'string' 
+            ? parseInt(lessonForm.section_id) 
+            : lessonForm.section_id;
+        // Only set if it's a valid positive integer
+        if (isNaN(parsed) || parsed <= 0) {
+            lessonForm.section_id = null;
+        } else {
+            lessonForm.section_id = parsed;
+        }
     }
     
     // Validate section is required for admin users - check after updating formData
     const sectionId = lessonForm.section_id;
-    if (isAdmin.value && (!sectionId || sectionId === null || sectionId === '')) {
+    if (isAdmin.value && (!sectionId || sectionId === null || sectionId === '' || sectionId === 0)) {
         showError(
             t('lessons.validation.section_required') || 'Section is required for admin users. Please select a section.',
             t('common.error') || 'Validation Error'
@@ -1040,13 +1060,6 @@ const submitLesson = (formData) => {
         return;
     }
     
-    // Convert empty strings to null for nullable fields
-    if (lessonForm.section_id === '' || lessonForm.section_id === null) {
-        lessonForm.section_id = null;
-    } else if (lessonForm.section_id) {
-        lessonForm.section_id = parseInt(lessonForm.section_id);
-    }
-    
     // Check if we have files to upload (File objects) - do this after setting files in lessonForm
     // Also check if this is a file type lesson (might need FormData even without new file for updates)
     const fileTypesList = ['video_file', 'image', 'document_file'];
@@ -1061,8 +1074,9 @@ const submitLesson = (formData) => {
                      (lessonForm.image_file instanceof File) || 
                      (lessonForm.document_file instanceof File);
     
-    // For file types, always use FormData to ensure proper handling
-    const useFormData = hasFiles || (isFileTypeLesson && editingLesson.value);
+    // Only use FormData if we actually have files to upload
+    // If no files, use regular JSON to ensure all data is sent correctly
+    const useFormData = hasFiles;
     
     // Debug: Log file detection (only in development)
     if (import.meta.env.DEV) {
@@ -1152,19 +1166,14 @@ const submitLesson = (formData) => {
         }
     }
     
-    // Ensure order is integer or null
-    if (lessonForm.order === '' || lessonForm.order === null) {
+    // Keep order and duration_minutes as they are (will be converted to strings in formDataToSend)
+    // Don't convert to integers here - keep as strings to match StoreLessonRequest format
+    if (lessonForm.order === '' || lessonForm.order === null || lessonForm.order === undefined) {
         lessonForm.order = null;
-    } else {
-        lessonForm.order = parseInt(lessonForm.order) || null;
     }
     
-    // Ensure duration_minutes is integer (default to 0, not null, as DB doesn't allow null)
     if (lessonForm.duration_minutes === '' || lessonForm.duration_minutes === null || lessonForm.duration_minutes === undefined) {
-        lessonForm.duration_minutes = 0;
-    } else {
-        const parsed = parseInt(lessonForm.duration_minutes);
-        lessonForm.duration_minutes = isNaN(parsed) ? 0 : parsed;
+        lessonForm.duration_minutes = null;
     }
     
     if (editingLesson.value) {
@@ -1174,102 +1183,220 @@ const submitLesson = (formData) => {
         const imageFile = lessonForm.image_file instanceof File ? lessonForm.image_file : null;
         const documentFile = lessonForm.document_file instanceof File ? lessonForm.document_file : null;
         
+        // Build the data object directly from lessonForm before transform
+        // This ensures all data is available even when FormData is used
+        // Format data to match StoreLessonRequest format EXACTLY (strings for numbers, null for missing files)
+        const formDataToSend = {
+            title: (lessonForm.title && typeof lessonForm.title === 'string') ? lessonForm.title.trim() : (lessonForm.title || ''),
+            type: lessonForm.type ? String(lessonForm.type) : '',
+            // Convert section_id to STRING to match StoreLessonRequest format
+            section_id: lessonForm.section_id !== null && lessonForm.section_id !== undefined && lessonForm.section_id !== '' && lessonForm.section_id !== 0
+                ? String(lessonForm.section_id) 
+                : null,
+            title_ar: lessonForm.title_ar || null,
+            description: lessonForm.description || null,
+            description_ar: lessonForm.description_ar || null,
+            content: lessonForm.content || null,
+            content_ar: lessonForm.content_ar || null,
+            // Convert order to STRING to match StoreLessonRequest format
+            order: lessonForm.order !== null && lessonForm.order !== undefined && lessonForm.order !== '' 
+                ? String(lessonForm.order) 
+                : null,
+            // Convert duration_minutes to STRING to match StoreLessonRequest format
+            duration_minutes: lessonForm.duration_minutes !== null && lessonForm.duration_minutes !== undefined && lessonForm.duration_minutes !== '' 
+                ? String(lessonForm.duration_minutes) 
+                : null,
+            is_free: lessonForm.is_free !== undefined ? lessonForm.is_free : false,
+            video_url: lessonForm.video_url || null,
+            live_meeting_date: lessonForm.live_meeting_date || null,
+            live_meeting_link: lessonForm.live_meeting_link || null,
+            // Always include ALL file fields (null if not present) to match StoreLessonRequest format
+            video_file: videoFile || null,
+            image_file: imageFile || null,
+            document_file: documentFile || null,
+        };
+        
+        // Handle video_url based on type
+        const urlBasedTypes = ['youtube_video', 'google_drive_video', 'embed_frame'];
+        if (urlBasedTypes.includes(lessonForm.type)) {
+            formDataToSend.video_url = lessonForm.video_url || '';
+        } else if (isFileTypeLesson) {
+            if (lessonForm.video_url) {
+                formDataToSend.video_url = lessonForm.video_url;
+            } else if (!hasFiles && editingLesson.value?.video_url) {
+                formDataToSend.video_url = editingLesson.value.video_url;
+            } else {
+                formDataToSend.video_url = null;
+            }
+        } else {
+            formDataToSend.video_url = null;
+        }
+        
+        // Handle live meeting fields
+        if (lessonForm.type === 'live') {
+            formDataToSend.live_meeting_date = lessonForm.live_meeting_date || null;
+            formDataToSend.live_meeting_link = lessonForm.live_meeting_link || null;
+        } else {
+            formDataToSend.live_meeting_date = null;
+            formDataToSend.live_meeting_link = null;
+        }
+        
+        console.log('Form data to send:', formDataToSend);
+        
+        // CRITICAL: When using forceFormData, Inertia creates FormData from lessonForm.data()
+        // We need to ensure ALL fields are set on lessonForm BEFORE calling .put()
+        // The transform function should use the form's data, but we need to ensure it's all there
+        
+        // CRITICAL: When forceFormData is true, we MUST set ALL fields individually on lessonForm
+        // lessonForm.set() might not work correctly with files, so we set everything explicitly
+        // This ensures all fields are in lessonForm.data() when Inertia creates FormData
+        
+        // Set all non-file fields individually - convert null to empty string for FormData
+        lessonForm.title = formDataToSend.title || '';
+        lessonForm.type = formDataToSend.type || '';
+        lessonForm.section_id = formDataToSend.section_id !== null && formDataToSend.section_id !== undefined 
+            ? String(formDataToSend.section_id) 
+            : '';
+        lessonForm.title_ar = formDataToSend.title_ar !== null ? (formDataToSend.title_ar || '') : '';
+        lessonForm.description = formDataToSend.description !== null ? (formDataToSend.description || '') : '';
+        lessonForm.description_ar = formDataToSend.description_ar !== null ? (formDataToSend.description_ar || '') : '';
+        lessonForm.content = formDataToSend.content !== null ? (formDataToSend.content || '') : '';
+        lessonForm.content_ar = formDataToSend.content_ar !== null ? (formDataToSend.content_ar || '') : '';
+        lessonForm.order = formDataToSend.order !== null && formDataToSend.order !== undefined 
+            ? String(formDataToSend.order) 
+            : '';
+        lessonForm.duration_minutes = formDataToSend.duration_minutes !== null && formDataToSend.duration_minutes !== undefined 
+            ? String(formDataToSend.duration_minutes) 
+            : '';
+        lessonForm.is_free = formDataToSend.is_free !== undefined ? formDataToSend.is_free : false;
+        lessonForm.video_url = formDataToSend.video_url !== null ? (formDataToSend.video_url || '') : '';
+        lessonForm.live_meeting_date = formDataToSend.live_meeting_date !== null ? (formDataToSend.live_meeting_date || '') : '';
+        lessonForm.live_meeting_link = formDataToSend.live_meeting_link !== null ? (formDataToSend.live_meeting_link || '') : '';
+        
+        // Set files explicitly - these MUST be File objects
+        if (videoFile instanceof File) {
+            lessonForm.video_file = videoFile;
+        } else {
+            // Clear video_file if not a File (FormData will skip null/undefined)
+            delete lessonForm.video_file;
+        }
+        if (imageFile instanceof File) {
+            lessonForm.image_file = imageFile;
+        } else {
+            delete lessonForm.image_file;
+        }
+        if (documentFile instanceof File) {
+            lessonForm.document_file = documentFile;
+        } else {
+            delete lessonForm.document_file;
+        }
+        
+        // Debug: Verify all data is set correctly
+        console.log('After setting form data:', {
+            hasVideoFile: lessonForm.video_file instanceof File,
+            hasImageFile: lessonForm.image_file instanceof File,
+            hasDocumentFile: lessonForm.document_file instanceof File,
+            title: lessonForm.title,
+            type: lessonForm.type,
+            section_id: lessonForm.section_id,
+            formDataKeys: Object.keys(lessonForm.data()),
+            formDataSample: {
+                title: lessonForm.data().title,
+                type: lessonForm.data().type,
+                section_id: lessonForm.data().section_id,
+            },
+        });
+        
+        // Use transform to ensure all data is included and properly formatted
+        // When forceFormData is true, Inertia creates FormData from the transform return value
+        // So we MUST return ALL fields in the transform function
         lessonForm.transform((data) => {
-            // Include all form data including files
-            const transformed = { ...data };
+            // CRITICAL: When forceFormData is true, the transform function's return value
+            // is used to create FormData, so we MUST return ALL fields explicitly
+            // Use formDataToSend as source of truth, but also merge with data parameter
+            // to ensure we don't miss anything that was set on the form
+            const transformed = {};
             
-            // Ensure required fields are ALWAYS included (even if empty string)
-            // This is critical when using FormData as it might filter out empty values
-            // Get title directly from lessonForm - always include it explicitly
-            let titleValue = '';
-            if (lessonForm.title !== undefined && lessonForm.title !== null) {
-                if (typeof lessonForm.title === 'string') {
-                    titleValue = lessonForm.title.trim();
+            // First, include all fields from the data parameter (lessonForm.data())
+            // This ensures we get any fields that were set on the form
+            if (data && typeof data === 'object') {
+                Object.keys(data).forEach(key => {
+                    if (data[key] !== undefined) {
+                        transformed[key] = data[key];
+                    }
+                });
+            }
+            
+            // Then, override/ensure all fields from formDataToSend (our source of truth)
+            Object.keys(formDataToSend).forEach(key => {
+                const value = formDataToSend[key];
+                
+                // For files, only include if it's a File object
+                if (key === 'video_file' || key === 'image_file' || key === 'document_file') {
+                    if (value instanceof File) {
+                        transformed[key] = value;
+                    }
+                    // Don't include null files in FormData - they'll be skipped
                 } else {
-                    titleValue = String(lessonForm.title);
+                    // Convert null to empty string for FormData - backend will handle conversion
+                    transformed[key] = value === null ? '' : value;
                 }
-            }
-            // ALWAYS include title - even if empty (backend will validate)
-            transformed.title = titleValue;
+            });
             
-            // Get type directly from lessonForm - always include it explicitly
-            let typeValue = '';
-            if (lessonForm.type !== undefined && lessonForm.type !== null) {
-                typeValue = String(lessonForm.type);
+            // Ensure critical fields are always present and properly formatted
+            // Title
+            if (transformed.title && typeof transformed.title === 'string') {
+                transformed.title = transformed.title.trim();
+            } else if (!transformed.title) {
+                transformed.title = '';
             }
-            transformed.type = typeValue;
             
-            // Section ID
-            if (lessonForm.section_id !== null && lessonForm.section_id !== undefined) {
-                transformed.section_id = lessonForm.section_id;
+            // Type
+            if (transformed.type !== undefined && transformed.type !== null) {
+                transformed.type = String(transformed.type);
             } else {
-                transformed.section_id = null;
+                transformed.type = '';
             }
             
-            // Include nullable fields - handle them based on type
-            // Title Arabic
-            if (lessonForm.title_ar !== null && lessonForm.title_ar !== undefined) {
-                transformed.title_ar = lessonForm.title_ar === '' ? null : lessonForm.title_ar;
-            }
-            
-            // Description fields
-            if (lessonForm.description !== null && lessonForm.description !== undefined) {
-                transformed.description = lessonForm.description === '' ? null : lessonForm.description;
-            }
-            if (lessonForm.description_ar !== null && lessonForm.description_ar !== undefined) {
-                transformed.description_ar = lessonForm.description_ar === '' ? null : lessonForm.description_ar;
-            }
-            
-            // Content fields (for text, assignment, test types)
-            if (lessonForm.content !== null && lessonForm.content !== undefined) {
-                transformed.content = lessonForm.content === '' ? null : lessonForm.content;
-            }
-            if (lessonForm.content_ar !== null && lessonForm.content_ar !== undefined) {
-                transformed.content_ar = lessonForm.content_ar === '' ? null : lessonForm.content_ar;
-            }
-            
-            // Order and duration
-            if (lessonForm.order !== null && lessonForm.order !== undefined) transformed.order = lessonForm.order;
-            if (lessonForm.duration_minutes !== null && lessonForm.duration_minutes !== undefined) transformed.duration_minutes = lessonForm.duration_minutes;
-            
-            // Video URL - handle based on type
-            const urlBasedTypes = ['youtube_video', 'google_drive_video', 'embed_frame'];
-            if (urlBasedTypes.includes(lessonForm.type)) {
-                // For URL-based types, include video_url (can be empty string for validation)
-                transformed.video_url = lessonForm.video_url || '';
-            } else if (isFileTypeLesson) {
-                // For file types, preserve video_url if exists (existing file path)
-                if (lessonForm.video_url) {
-                    transformed.video_url = lessonForm.video_url;
-                } else if (!hasFiles && editingLesson.value?.video_url) {
-                    // Preserve existing video_url if no new file uploaded
-                    transformed.video_url = editingLesson.value.video_url;
-                } else {
-                    // No video_url and no file - set to null
-                    transformed.video_url = null;
-                }
+            // Section ID - CRITICAL for admin users
+            if (transformed.section_id === null || transformed.section_id === undefined) {
+                transformed.section_id = '';
             } else {
-                // For other types (text, assignment, test), set to null if empty
-                transformed.video_url = lessonForm.video_url || null;
+                transformed.section_id = String(transformed.section_id);
             }
             
-            // Live meeting fields (only for live type)
-            if (lessonForm.type === 'live') {
-                transformed.live_meeting_date = lessonForm.live_meeting_date || null;
-                transformed.live_meeting_link = lessonForm.live_meeting_link || null;
+            // Order
+            if (transformed.order === null || transformed.order === undefined) {
+                transformed.order = '';
             } else {
-                // Clear live fields for non-live types
-                transformed.live_meeting_date = null;
-                transformed.live_meeting_link = null;
+                transformed.order = String(transformed.order);
             }
             
-            // Is free flag
-            if (lessonForm.is_free !== null && lessonForm.is_free !== undefined) transformed.is_free = lessonForm.is_free;
+            // Duration minutes
+            if (transformed.duration_minutes === null || transformed.duration_minutes === undefined) {
+                transformed.duration_minutes = '';
+            } else {
+                transformed.duration_minutes = String(transformed.duration_minutes);
+            }
             
-            // Always include files if they exist (as File objects)
-            if (videoFile) transformed.video_file = videoFile;
-            if (imageFile) transformed.image_file = imageFile;
-            if (documentFile) transformed.document_file = documentFile;
+            // Ensure is_free is boolean or string
+            if (transformed.is_free === undefined) {
+                transformed.is_free = false;
+            } else if (typeof transformed.is_free === 'boolean') {
+                transformed.is_free = transformed.is_free;
+            } else {
+                transformed.is_free = String(transformed.is_free);
+            }
+            
+            // Debug: Log the transformed data to see what's being sent
+            console.log('=== TRANSFORM FUNCTION ===');
+            console.log('Transformed data being sent:', transformed);
+            console.log('Transformed keys:', Object.keys(transformed));
+            console.log('Using FormData:', useFormData);
+            console.log('Has files:', hasFiles);
+            console.log('Form data on lessonForm:', lessonForm.data());
+            console.log('Data parameter in transform:', data);
+            console.log('==========================');
             
             return transformed;
         }).put(route('admin.courses.lessons.update', [props.course.slug || props.course.id, editingLesson.value.id]), {
@@ -1326,12 +1453,22 @@ const submitLesson = (formData) => {
             }
             transformed.type = typeValue;
             
-            // Section ID
-            if (lessonForm.section_id !== null && lessonForm.section_id !== undefined) {
-                transformed.section_id = lessonForm.section_id;
-            } else {
-                transformed.section_id = null;
+            // Section ID - always include it explicitly (even if null)
+            // This is critical when using FormData as it might filter out null values
+            // Get section_id directly from lessonForm to ensure it's always included
+            let sectionIdValue = null;
+            if (lessonForm.section_id !== null && lessonForm.section_id !== undefined && lessonForm.section_id !== '' && lessonForm.section_id !== 0) {
+                // Ensure it's a number
+                if (typeof lessonForm.section_id === 'string') {
+                    const parsed = parseInt(lessonForm.section_id);
+                    sectionIdValue = (!isNaN(parsed) && parsed > 0) ? parsed : null;
+                } else if (typeof lessonForm.section_id === 'number') {
+                    sectionIdValue = (lessonForm.section_id > 0) ? lessonForm.section_id : null;
+                }
             }
+            // ALWAYS include section_id - even if null (backend will validate for admin users)
+            // For FormData, we need to explicitly set it, even if null
+            transformed.section_id = sectionIdValue;
             
             // Include nullable fields - handle them based on type
             // Title Arabic

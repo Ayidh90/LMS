@@ -330,9 +330,13 @@ class CourseController extends Controller
         }
         
         $completedLessons = 0;
-        if (!empty($lessonIds)) {
+        if (!empty($lessonIds) && !empty($batchIds)) {
+            // Count all lesson completion records for enrolled students
+            // Only count completions for students enrolled in the course batches
+            $enrolledStudentIds = $enrollments->pluck('student_id')->unique()->toArray();
             $completedLessons = \App\Models\LessonCompletion::whereIn('lesson_id', $lessonIds)
-                ->distinct('student_id')
+                ->whereIn('batch_id', $batchIds)
+                ->whereIn('student_id', $enrolledStudentIds)
                 ->count();
         }
 

@@ -17,6 +17,9 @@ class UpdateLessonRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
+        // Match StoreLessonRequest behavior - keep data format consistent
+        // Convert empty strings to null for nullable fields (same as StoreLessonRequest)
+        
         // Convert empty strings to null for nullable fields
         $nullableFields = [
             'title_ar',
@@ -35,33 +38,67 @@ class UpdateLessonRequest extends FormRequest
             }
         }
 
-        // Convert section_id to integer if it's a string
-        if ($this->has('section_id') && $this->input('section_id') !== null && $this->input('section_id') !== '') {
-            $sectionId = $this->input('section_id');
-            if (is_string($sectionId)) {
+        // Ensure title is always present and trimmed (for FormData compatibility)
+        $title = $this->input('title');
+        if ($title !== null && $title !== '') {
+            $this->merge(['title' => is_string($title) ? trim($title) : $title]);
+        } else {
+            // Always merge title, even if empty, to ensure it's present for validation
+            $this->merge(['title' => '']);
+        }
+
+        // Ensure type is always present (for FormData compatibility)
+        $type = $this->input('type');
+        if ($type !== null && $type !== '') {
+            $this->merge(['type' => is_string($type) ? trim($type) : $type]);
+        } else {
+            // Always merge type, even if empty, to ensure it's present for validation
+            $this->merge(['type' => '']);
+        }
+
+        // Convert section_id to integer if it's a string (same as StoreLessonRequest)
+        // Always check input directly (don't rely on has() for FormData compatibility)
+        $sectionId = $this->input('section_id');
+        if ($sectionId !== null && $sectionId !== '') {
+            if (is_string($sectionId) && trim($sectionId) !== '') {
                 $this->merge(['section_id' => (int) $sectionId]);
+            } elseif (is_numeric($sectionId)) {
+                $this->merge(['section_id' => (int) $sectionId]);
+            } else {
+                $this->merge(['section_id' => null]);
             }
-        } elseif ($this->has('section_id') && ($this->input('section_id') === '' || $this->input('section_id') === null)) {
+        } else {
+            // Always merge section_id, even if null/empty, to ensure it's present for validation
             $this->merge(['section_id' => null]);
         }
 
-        // Convert order to integer if it's a string
-        if ($this->has('order') && $this->input('order') !== null && $this->input('order') !== '') {
-            $order = $this->input('order');
-            if (is_string($order)) {
+        // Convert order to integer if it's a string (same as StoreLessonRequest)
+        // Always check input directly (don't rely on has() for FormData compatibility)
+        $order = $this->input('order');
+        if ($order !== null && $order !== '') {
+            if (is_string($order) && trim($order) !== '') {
                 $this->merge(['order' => (int) $order]);
+            } elseif (is_numeric($order)) {
+                $this->merge(['order' => (int) $order]);
+            } else {
+                $this->merge(['order' => null]);
             }
-        } elseif ($this->has('order') && ($this->input('order') === '' || $this->input('order') === null)) {
+        } else {
             $this->merge(['order' => null]);
         }
 
-        // Convert duration_minutes to integer if it's a string
-        if ($this->has('duration_minutes') && $this->input('duration_minutes') !== null && $this->input('duration_minutes') !== '') {
-            $duration = $this->input('duration_minutes');
-            if (is_string($duration)) {
+        // Convert duration_minutes to integer if it's a string (same as StoreLessonRequest)
+        // Always check input directly (don't rely on has() for FormData compatibility)
+        $duration = $this->input('duration_minutes');
+        if ($duration !== null && $duration !== '') {
+            if (is_string($duration) && trim($duration) !== '') {
                 $this->merge(['duration_minutes' => (int) $duration]);
+            } elseif (is_numeric($duration)) {
+                $this->merge(['duration_minutes' => (int) $duration]);
+            } else {
+                $this->merge(['duration_minutes' => null]);
             }
-        } elseif ($this->has('duration_minutes') && ($this->input('duration_minutes') === '' || $this->input('duration_minutes') === null)) {
+        } else {
             $this->merge(['duration_minutes' => null]);
         }
 
@@ -78,14 +115,36 @@ class UpdateLessonRequest extends FormRequest
 
     public function rules(): array
     {
-        $type = $this->input('type');
+        // Get type after prepareForValidation has run
+        $type = $this->input('type', '');
         $user = $this->user();
         $isAdmin = $user && method_exists($user, 'isAdmin') && $user->isAdmin();
         
+        // Title and type are always required - use custom validation to handle both missing and empty values
         $rules = [
-            'title' => ['required', 'string', 'max:255'],
+            'title' => [
+                function ($attribute, $value, $fail) {
+                    // Use the value parameter if available, otherwise check input
+                    $title = $value !== null ? $value : $this->input('title', '');
+                    if (empty($title) || (is_string($title) && trim($title) === '')) {
+                        $fail(__('The lesson title is required.'));
+                    }
+                },
+                'string',
+                'max:255',
+            ],
             'title_ar' => ['nullable', 'string', 'max:255'],
-            'type' => ['required', 'in:text,google_drive_video,video_file,youtube_video,image,document_file,embed_frame,assignment,test,live'],
+            'type' => [
+                function ($attribute, $value, $fail) {
+                    // Use the value parameter if available, otherwise check input
+                    $type = $value !== null ? $value : $this->input('type', '');
+                    if (empty($type) || (is_string($type) && trim($type) === '')) {
+                        $fail(__('Please select a lesson type.'));
+                    }
+                },
+                'string',
+                'in:text,google_drive_video,video_file,youtube_video,image,document_file,embed_frame,assignment,test,live',
+            ],
             'description' => ['nullable', 'string'],
             'description_ar' => ['nullable', 'string'],
             'content' => ['nullable', 'string'],
@@ -164,13 +223,9 @@ class UpdateLessonRequest extends FormRequest
             $user = $this->user();
             $isAdmin = $user && method_exists($user, 'isAdmin') && $user->isAdmin();
             
-            // Validate section_id is required for admin users
-            if ($isAdmin) {
-                $sectionId = $this->input('section_id');
-                if (empty($sectionId) || $sectionId === null || $sectionId === '') {
-                    $validator->errors()->add('section_id', __('The section field is required for admin users.'));
-                }
-            }
+            // Note: section_id validation is handled by the 'required' rule in rules() method
+            // This custom validation is only needed if we need additional checks beyond required/integer/exists
+            // The standard Laravel validation rules should handle it correctly
             
             // Validate live lesson requirements
             if ($type === 'live') {

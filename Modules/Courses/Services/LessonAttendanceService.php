@@ -149,10 +149,14 @@ class LessonAttendanceService
         }
 
         $totalQuestions = $lesson->questions->count();
+        // Count distinct questions answered by the student
+        // Note: Since there's a unique constraint on (user_id, question_id), 
+        // we could skip distinct, but keeping it for safety
         $answeredQuestions = UserQuestionAnswer::where('user_id', $student->id)
             ->whereIn('question_id', $lesson->questions->pluck('id'))
-            ->distinct('question_id')
-            ->count('question_id');
+            ->select('question_id')
+            ->distinct()
+            ->count();
 
         if ($answeredQuestions < $totalQuestions) {
             return;

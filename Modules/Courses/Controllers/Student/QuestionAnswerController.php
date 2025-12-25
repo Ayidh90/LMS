@@ -9,6 +9,7 @@ use Modules\Courses\Models\Question;
 use Modules\Courses\Models\Answer;
 use Modules\Courses\Models\Lesson;
 use App\Models\Batch;
+use Modules\Courses\Services\LessonAttendanceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +17,8 @@ use Illuminate\Support\Facades\DB;
 class QuestionAnswerController extends Controller
 {
     public function __construct(
-        private EnrollmentService $enrollmentService
+        private EnrollmentService $enrollmentService,
+        private LessonAttendanceService $attendanceService
     ) {}
 
     public function store(Request $request, Lesson $lesson, Question $question)
@@ -32,7 +34,7 @@ class QuestionAnswerController extends Controller
         
         $result = $this->calculateResult($question, $validated);
 
-        DB::transaction(function () use ($student, $question, $validated, $result) {
+        DB::transaction(function () use ($student, $question, $validated, $result, $lesson) {
             UserQuestionAnswer::updateOrCreate(
                 [
                     'user_id' => $student->id,
@@ -46,6 +48,12 @@ class QuestionAnswerController extends Controller
                 ]
             );
         });
+
+        // Load course relationship for attendance service
+        $lesson->load('course');
+        
+        // Check if all questions are answered and mark attendance if so
+        $this->attendanceService->markAttendanceAfterQuestions($student, $lesson->course, $lesson);
 
         return back()->with('success', __('Answer submitted successfully.'));
     }

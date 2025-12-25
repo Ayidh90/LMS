@@ -86,8 +86,11 @@
                         <div class="card-body">
                             <!-- Course Completion Stats -->
                             <div v-if="progressStats.course_completion_stats && progressStats.course_completion_stats.length > 0" class="mb-4">
-                                <h6 class="fw-bold mb-3">{{ t('tracks.course_completion') || 'Course Completion' }}</h6>
-                                <div class="table-responsive">
+                                <div class="d-flex justify-content-between align-items-center mb-3 cursor-pointer" @click="toggleCourseCompletion" style="cursor: pointer;">
+                                    <h6 class="fw-bold mb-0">{{ t('tracks.course_completion') || 'Course Completion' }}</h6>
+                                    <i class="bi" :class="isCourseCompletionCollapsed ? 'bi-chevron-down' : 'bi-chevron-up'" style="transition: transform 0.3s ease"></i>
+                                </div>
+                                <div v-show="!isCourseCompletionCollapsed" class="table-responsive">
                                     <table class="table table-hover">
                                         <thead>
                                             <tr>
@@ -120,8 +123,11 @@
                             
                             <!-- Student Progress -->
                             <div v-if="progressStats.student_progress && progressStats.student_progress.length > 0">
-                                <h6 class="fw-bold mb-3">{{ t('tracks.student_progress') || 'Student Progress in Track' }}</h6>
-                                <div class="table-responsive">
+                                <div class="d-flex justify-content-between align-items-center mb-3 cursor-pointer" @click="toggleStudentProgress" style="cursor: pointer;">
+                                    <h6 class="fw-bold mb-0">{{ t('tracks.student_progress') || 'Student Progress in Track' }}</h6>
+                                    <i class="bi" :class="isStudentProgressCollapsed ? 'bi-chevron-down' : 'bi-chevron-up'" style="transition: transform 0.3s ease"></i>
+                                </div>
+                                <div v-show="!isStudentProgressCollapsed" class="table-responsive">
                                     <table class="table table-hover">
                                         <thead>
                                             <tr>
@@ -398,6 +404,18 @@ const getCourseCompletion = (courseId) => {
     if (!props.progressStats?.course_completion_stats) return null;
     const stat = props.progressStats.course_completion_stats.find(s => s.course_id === courseId);
     return stat ? stat.completion_percentage : null;
+};
+
+// Toggle states for sections
+const isCourseCompletionCollapsed = ref(false);
+const isStudentProgressCollapsed = ref(false);
+
+const toggleCourseCompletion = () => {
+    isCourseCompletionCollapsed.value = !isCourseCompletionCollapsed.value;
+};
+
+const toggleStudentProgress = () => {
+    isStudentProgressCollapsed.value = !isStudentProgressCollapsed.value;
 };
 </script>
 

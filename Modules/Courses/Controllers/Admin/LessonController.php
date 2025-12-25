@@ -388,8 +388,8 @@ class LessonController extends Controller
                 // For file types, preserve existing video_url if no new file is uploaded
                 if (!isset($data['video_url']) || $data['video_url'] === null || $data['video_url'] === '') {
                     // If video_url is not provided or is empty, preserve the old one
-                    if ($oldVideoUrl) {
-                        $data['video_url'] = $oldVideoUrl;
+                        if ($oldVideoUrl) {
+                            $data['video_url'] = $oldVideoUrl;
                     } else {
                         $data['video_url'] = null;
                     }
@@ -413,8 +413,8 @@ class LessonController extends Controller
                         } else {
                             // Couldn't parse URL, preserve old one
                             $data['video_url'] = $oldVideoUrl ?: null;
-                        }
                     }
+                }
                     // If it's not a formatted URL, it's already a file path - use it as is
                 }
             } elseif (in_array($lessonType, ['youtube_video', 'google_drive_video', 'embed_frame'])) {
