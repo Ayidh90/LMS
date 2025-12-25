@@ -24,17 +24,7 @@ return [
         'is_free' => 'درس مجاني',
         'section' => 'الفصل',
         'type' => 'النوع',
-    ],
-    
-    'actions' => [
-        'view' => 'عرض',
-        'edit' => 'تعديل',
-        'delete' => 'حذف',
-        'create' => 'إنشاء',
-        'update' => 'تحديث',
-        'cancel' => 'إلغاء',
-        'back' => 'رجوع للدورة',
-        'add_first' => 'إضافة أول درس',
+        'question_type' => 'نوع السؤال',
     ],
     
     'no_lessons' => 'لا توجد دروس بعد.',
@@ -45,6 +35,7 @@ return [
     // Questions
     'questions' => 'الأسئلة',
     'question' => 'السؤال',
+    'answers' => 'الإجابات',
     'points' => 'نقاط',
     'explanation' => 'شرح',
     'correct' => 'صحيح',
@@ -61,7 +52,7 @@ return [
     'submitted_at' => 'تم الإرسال في',
     'text_answer' => 'إجابة نصية مطلوبة',
     'select_lesson' => 'اختر درساً',
-    'no_video' => 'لا يوجد فيديو متاح',
+    'no_video' => 'لا يوجد فيديو متاح',    'video_not_supported' => 'متصفحك لا يدعم علامة الفيديو.',
     
     'types' => [
         'text' => 'نص',
@@ -113,6 +104,7 @@ return [
         'back' => 'رجوع للدورة',
         'add_first' => 'إضافة أول درس',
         'add_question' => 'إضافة سؤال',
+        'add_answer' => 'إضافة إجابة',
     ],
     
     // Attendance

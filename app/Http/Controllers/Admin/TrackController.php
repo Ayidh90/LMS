@@ -45,7 +45,7 @@ class TrackController extends Controller
     public function create(Request $request)
     {
         $programs = $this->programService->getPaginatedPrograms([], 100)->items();
-        $selectedProgramId = $request->input('program_id');
+        $selectedProgramId = $request->input('program_id') ? (int) $request->input('program_id') : null;
 
         return Inertia::render('Admin/Tracks/Create', [
             'programs' => $programs,

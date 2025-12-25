@@ -98,7 +98,7 @@ class LessonService
             'description_ar' => $lesson->description_ar,
             'content' => $lesson->translated_content ?? $lesson->content,
             'content_ar' => $lesson->content_ar,
-            'video_url' => $lesson->video_url,
+            'video_url' => $this->formatVideoUrl($lesson->video_url),
             'live_meeting_date' => $lesson->live_meeting_date,
             'live_meeting_link' => $lesson->live_meeting_link,
             'order' => $lesson->order ?? 0,
@@ -107,6 +107,52 @@ class LessonService
             'section_id' => $lesson->section_id,
             'questions' => $lesson->questions ? $lesson->questions->map(fn($q) => $this->formatQuestion($q, $userAnswers)) : [],
         ];
+    }
+
+    /**
+     * Format video URL - convert relative paths to full URLs
+     * This is public so it can be used by controllers that need to format URLs
+     *
+     * @param string|null $videoUrl
+     * @return string|null
+     */
+    public function formatVideoUrl(?string $videoUrl): ?string
+    {
+        if (!$videoUrl) {
+            return null;
+        }
+
+        // If it's already a full URL, return as is
+        if (filter_var($videoUrl, FILTER_VALIDATE_URL)) {
+            return $videoUrl;
+        }
+
+        // Remove leading slash if present
+        $videoUrl = ltrim($videoUrl, '/');
+
+        // Check if it's a storage path (starts with 'storage/')
+        // Try asset() first (in case symlink exists), but also provide route fallback
+        if (str_starts_with($videoUrl, 'storage/')) {
+            // Remove 'storage/' prefix for route
+            $cleanPath = substr($videoUrl, 8); // Remove 'storage/' (8 chars)
+            return route('videos.serve', ['path' => $cleanPath]);
+        }
+
+        // If it starts with 'storage' but not 'storage/', add the slash
+        if (str_starts_with($videoUrl, 'storage')) {
+            $cleanPath = substr($videoUrl, 7); // Remove 'storage' (7 chars)
+            return route('videos.serve', ['path' => $cleanPath]);
+        }
+
+        // Check if it's a path like 'lessons/videos/file.mp4' (from ImageService upload)
+        // These are stored in storage/app/public, so we serve through VideoController
+        if (str_contains($videoUrl, '/') && !str_starts_with($videoUrl, 'http')) {
+            // Use route to serve through VideoController for proper MIME types
+            return route('videos.serve', ['path' => $videoUrl]);
+        }
+
+        // For other relative paths, assume they're in storage
+        return route('videos.serve', ['path' => $videoUrl]);
     }
 
     private function formatQuestion($question, $userAnswers = null): array

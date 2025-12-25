@@ -55,16 +55,44 @@ class LessonController extends Controller
             return back()->withErrors(['section_id' => __('Invalid section selected.')]);
         }
 
-        // Handle file uploads
-        if ($request->hasFile('video_file') && $data['type'] === 'video_file') {
+        // Handle file uploads - check request directly, not validated data
+        // Clear video_url first if a file is being uploaded
+        if ($request->hasFile('video_file') && isset($data['type']) && $data['type'] === 'video_file') {
             $filePath = $this->imageService->upload($request->file('video_file'), 'lessons/videos');
-            $data['video_url'] = $filePath;
-        } elseif ($request->hasFile('image_file') && $data['type'] === 'image') {
+            if ($filePath) {
+                $data['video_url'] = $filePath;
+            } else {
+                // If upload failed, remove video_url to prevent storing invalid data
+                unset($data['video_url']);
+                return back()->withErrors(['video_file' => __('File upload failed. Please try again.')]);
+            }
+        } elseif ($request->hasFile('image_file') && isset($data['type']) && $data['type'] === 'image') {
             $filePath = $this->imageService->upload($request->file('image_file'), 'lessons/images');
-            $data['video_url'] = $filePath;
-        } elseif ($request->hasFile('document_file') && $data['type'] === 'document_file') {
+            if ($filePath) {
+                $data['video_url'] = $filePath;
+            } else {
+                // If upload failed, remove video_url to prevent storing invalid data
+                unset($data['video_url']);
+                return back()->withErrors(['image_file' => __('File upload failed. Please try again.')]);
+            }
+        } elseif ($request->hasFile('document_file') && isset($data['type']) && $data['type'] === 'document_file') {
             $filePath = $this->imageService->upload($request->file('document_file'), 'lessons/documents');
-            $data['video_url'] = $filePath;
+            if ($filePath) {
+                $data['video_url'] = $filePath;
+            } else {
+                // If upload failed, remove video_url to prevent storing invalid data
+                unset($data['video_url']);
+                return back()->withErrors(['document_file' => __('File upload failed. Please try again.')]);
+            }
+        } elseif (isset($data['type']) && in_array($data['type'], ['video_file', 'image', 'document_file'])) {
+            // For file types, if no file is uploaded and video_url is a URL (not a file path), clear it
+            // This prevents storing form action URLs or invalid URLs
+            if (isset($data['video_url']) && filter_var($data['video_url'], FILTER_VALIDATE_URL)) {
+                // If it's a full URL and not a file path, and no file was uploaded, clear it
+                if (!str_contains($data['video_url'], 'storage/') && !str_contains($data['video_url'], 'lessons/')) {
+                    unset($data['video_url']);
+                }
+            }
         }
 
         $this->lessonService->create($course, $data);
@@ -116,6 +144,50 @@ class LessonController extends Controller
         
         if (isset($data['section_id']) && !$this->sectionBelongsToCourse($data['section_id'], $course)) {
             return back()->withErrors(['section_id' => __('Invalid section selected.')]);
+        }
+
+        // Handle file uploads - delete old file if new one is uploaded
+        $oldVideoUrl = $lesson->video_url;
+        
+        // Only process file uploads if a new file is actually uploaded
+        if ($request->hasFile('video_file') && isset($data['type']) && $data['type'] === 'video_file') {
+            $filePath = $this->imageService->upload($request->file('video_file'), 'lessons/videos', $oldVideoUrl);
+            if ($filePath) {
+                $data['video_url'] = $filePath;
+            }
+        } elseif ($request->hasFile('image_file') && isset($data['type']) && $data['type'] === 'image') {
+            $filePath = $this->imageService->upload($request->file('image_file'), 'lessons/images', $oldVideoUrl);
+            if ($filePath) {
+                $data['video_url'] = $filePath;
+            }
+        } elseif ($request->hasFile('document_file') && isset($data['type']) && $data['type'] === 'document_file') {
+            $filePath = $this->imageService->upload($request->file('document_file'), 'lessons/documents', $oldVideoUrl);
+            if ($filePath) {
+                $data['video_url'] = $filePath;
+            }
+        } elseif (isset($data['type']) && in_array($data['type'], ['video_file', 'image', 'document_file'])) {
+            // If no new file is uploaded but type is a file type, preserve existing video_url
+            // But first check if video_url is a valid file path, not a URL
+            if (isset($data['video_url']) && $data['video_url'] !== '') {
+                // If video_url is a full URL (not a file path), clear it unless it's a valid file URL
+                if (filter_var($data['video_url'], FILTER_VALIDATE_URL)) {
+                    // If it's a full URL and not a file path, and no file was uploaded, preserve old one or clear
+                    if (!str_contains($data['video_url'], 'storage/') && !str_contains($data['video_url'], 'lessons/') && !str_contains($data['video_url'], 'videos.serve')) {
+                        // Invalid URL for file type - use old one or clear
+                        if ($oldVideoUrl) {
+                            $data['video_url'] = $oldVideoUrl;
+                        } else {
+                            unset($data['video_url']);
+                        }
+                    }
+                }
+                // If it's not a URL (it's a file path), keep it as is
+            } else {
+                // If video_url is not in data or is empty, preserve the old one
+                if ($oldVideoUrl) {
+                    $data['video_url'] = $oldVideoUrl;
+                }
+            }
         }
 
         $this->lessonService->update($lesson, $data);

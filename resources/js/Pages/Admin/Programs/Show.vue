@@ -152,7 +152,7 @@
                     <div class="card shadow-sm border-0">
                         <div class="card-header bg-light d-flex justify-content-between align-items-center">
                             <h5 class="mb-0">{{ t('programs.tracks') || 'Tracks' }}</h5>
-                            <Link :href="route('admin.tracks.create', { program_id: program?.id })" class="btn btn-sm btn-primary">
+                            <Link :href="`${route('admin.tracks.create')}?program_id=${program?.id}`" class="btn btn-sm btn-primary">
                                 <i class="bi bi-plus-circle me-1"></i>
                                 {{ t('tracks.create') || 'Create Track' }}
                             </Link>
@@ -198,7 +198,7 @@
                             <div v-else class="text-center py-4">
                                 <i class="bi bi-diagram-3 text-muted" style="font-size: 3rem;"></i>
                                 <p class="text-muted mt-3">{{ t('programs.no_tracks') || 'No tracks in this program' }}</p>
-                                <Link :href="route('admin.tracks.create', { program_id: program?.id })" class="btn btn-primary">
+                                <Link :href="`${route('admin.tracks.create')}?program_id=${program?.id}`" class="btn btn-primary">
                                     <i class="bi bi-plus-circle me-2"></i>
                                     {{ t('tracks.create') || 'Create Track' }}
                                 </Link>

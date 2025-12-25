@@ -5,14 +5,14 @@
             <!-- Page Header -->
             <div class="mb-8">
                 <div class="flex items-center gap-3 mb-4">
-                    <Link :href="route('admin.courses.lessons.index', course.slug || course.id)" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <Link v-if="course" :href="route('admin.courses.lessons.index', course.slug || course.id)" class="text-gray-400 hover:text-gray-600 transition-colors">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                         </svg>
                     </Link>
                     <div class="flex-1">
                         <h1 class="text-2xl font-bold text-gray-900">{{ lesson.translated_title || lesson.title }}</h1>
-                        <p class="text-sm text-gray-500">{{ course.translated_title || course.title }}</p>
+                        <p v-if="course" class="text-sm text-gray-500">{{ course.translated_title || course.title }}</p>
                     </div>
                     <button
                         @click="openLessonModal(lesson)"
@@ -160,9 +160,89 @@
                         <p class="text-gray-600">{{ lesson.translated_description || lesson.description }}</p>
                     </div>
                     
-                    <div v-if="lesson.video_url && lesson.type !== 'live'" class="px-6 py-4 border-t border-gray-100">
-                        <h4 class="text-sm font-medium text-gray-700 mb-2">{{ t('lessons.fields.video_url') || 'Video URL' }}</h4>
-                        <a :href="lesson.video_url" target="_blank" class="text-blue-600 hover:text-blue-700 break-all">{{ lesson.video_url }}</a>
+                    <!-- Video Player (for video types) -->
+                    <div v-if="lesson.video_url && ['video_file', 'youtube_video', 'google_drive_video', 'embed_frame'].includes(lesson.type)" class="px-6 py-4 border-t border-gray-100">
+                        <h4 class="text-sm font-medium text-gray-700 mb-4">{{ t('lessons.fields.video') || 'Video' }}</h4>
+                        <div v-if="isUploadedVideo" class="bg-black rounded-xl overflow-hidden" style="aspect-ratio: 16/9;">
+                            <!-- Uploaded video file -->
+                            <video
+                                :id="`video-player-${lesson.id}`"
+                                class="w-full h-full"
+                                controls
+                                preload="metadata"
+                                crossorigin="anonymous"
+                            >
+                                <!-- Primary source with MIME type -->
+                                <source v-if="getVideoMimeType(lesson.video_url)" :src="lesson.video_url" :type="getVideoMimeType(lesson.video_url)">
+                                <!-- Additional WMV sources for better browser compatibility -->
+                                <source v-if="isWMVFile(lesson.video_url)" :src="lesson.video_url" type="video/x-ms-wmv">
+                                <source v-if="isWMVFile(lesson.video_url)" :src="lesson.video_url" type="video/x-ms-asf">
+                                <source v-if="isWMVFile(lesson.video_url)" :src="lesson.video_url" type="application/vnd.ms-asf">
+                                <!-- Fallback source without type -->
+                                <source :src="lesson.video_url">
+                                {{ t('lessons.video_not_supported') || 'Your browser does not support the video tag.' }}
+                            </video>
+                        </div>
+                        <div v-else-if="lesson.type === 'embed_frame'" class="bg-black rounded-xl overflow-hidden" style="aspect-ratio: 16/9;">
+                            <!-- Embed frame -->
+                            <iframe
+                                :src="lesson.video_url"
+                                class="w-full h-full"
+                                frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen
+                            ></iframe>
+                        </div>
+                        <div v-else class="bg-black rounded-xl overflow-hidden" style="aspect-ratio: 16/9;">
+                            <!-- YouTube or Google Drive video -->
+                            <iframe
+                                :src="getEmbedUrl(lesson.video_url)"
+                                class="w-full h-full"
+                                frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen
+                            ></iframe>
+                        </div>
+                    </div>
+                    
+                    <!-- Image Display (for image type) -->
+                    <div v-if="lesson.video_url && lesson.type === 'image'" class="px-6 py-4 border-t border-gray-100">
+                        <h4 class="text-sm font-medium text-gray-700 mb-4">{{ t('lessons.fields.image') || 'Image' }}</h4>
+                        <div class="flex justify-center">
+                            <img 
+                                :src="lesson.video_url" 
+                                :alt="lesson.translated_title || lesson.title"
+                                class="max-w-full h-auto rounded-lg shadow-lg"
+                                @error="handleImageError"
+                            />
+                        </div>
+                        <a :href="lesson.video_url" target="_blank" class="mt-3 inline-block text-sm text-blue-600 hover:text-blue-700 break-all">
+                            {{ lesson.video_url }}
+                        </a>
+                    </div>
+                    
+                    <!-- Document Display (for document_file type) -->
+                    <div v-if="lesson.video_url && lesson.type === 'document_file'" class="px-6 py-4 border-t border-gray-100">
+                        <h4 class="text-sm font-medium text-gray-700 mb-4">{{ t('lessons.fields.document') || 'Document' }}</h4>
+                        <div class="bg-gray-50 rounded-lg p-6 border-2 border-dashed border-gray-300">
+                            <div class="text-center">
+                                <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                </svg>
+                                <p class="text-gray-600 mb-4">{{ t('lessons.document_preview') || 'Document Preview' }}</p>
+                                <a 
+                                    :href="lesson.video_url" 
+                                    target="_blank"
+                                    class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-semibold transition-all"
+                                >
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                    </svg>
+                                    {{ t('lessons.open_document') || 'Open Document' }}
+                                </a>
+                                <p class="text-xs text-gray-500 mt-3 break-all">{{ lesson.video_url }}</p>
+                            </div>
+                        </div>
                     </div>
                     <div v-if="lesson.type === 'live'" class="px-6 py-4 border-t border-gray-100 bg-gradient-to-r from-red-50 to-orange-50">
                         <h4 class="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
@@ -182,6 +262,12 @@
                             <p class="text-xs text-gray-500 mt-2 break-all">{{ lesson.live_meeting_link }}</p>
                         </div>
                         <p v-else class="text-sm text-gray-500">{{ t('lessons.live.meeting_link_generated') || 'Meeting link will be generated automatically' }}</p>
+                    </div>
+                    
+                    <!-- Content (for text type lessons) -->
+                    <div v-if="lesson.content && lesson.type === 'text'" class="px-6 py-4 border-t border-gray-100">
+                        <h4 class="text-sm font-medium text-gray-700 mb-4">{{ t('lessons.fields.content') || 'Content' }}</h4>
+                        <div class="prose max-w-none text-gray-700" v-html="formatContent(lesson.content)"></div>
                     </div>
                 </div>
             </div>
@@ -428,7 +514,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
@@ -497,8 +583,12 @@ const lessonForm = useForm({
     content: '',
     content_ar: '',
     video_url: '',
+    video_file: null,
+    image_file: null,
+    document_file: null,
     live_meeting_date: '',
     live_meeting_link: '',
+    is_free: false,
 });
 
 // Watch for type changes to initialize answers
@@ -681,8 +771,15 @@ const submitQuestion = (formData) => {
                 router.reload({ only: ['lesson'] });
             },
             onError: (errors) => {
+                console.error('Update lesson error:', errors);
                 if (errors.message) {
                     showError(errors.message, t('common.error') || 'Error');
+                } else {
+                    // Show validation errors
+                    const errorMessages = Object.values(errors).flat();
+                    if (errorMessages.length > 0) {
+                        showError(errorMessages[0], t('common.error') || 'Validation Error');
+                    }
                 }
             },
         });
@@ -699,8 +796,15 @@ const submitQuestion = (formData) => {
                 router.reload({ only: ['lesson'] });
             },
             onError: (errors) => {
+                console.error('Update lesson error:', errors);
                 if (errors.message) {
                     showError(errors.message, t('common.error') || 'Error');
+                } else {
+                    // Show validation errors
+                    const errorMessages = Object.values(errors).flat();
+                    if (errorMessages.length > 0) {
+                        showError(errorMessages[0], t('common.error') || 'Validation Error');
+                    }
                 }
             },
         });
@@ -712,21 +816,68 @@ const openLessonModal = (lesson = null) => {
     // Clear any existing errors first
     lessonForm.clearErrors();
     
+    // Always reset form first to ensure clean state
+    lessonForm.reset();
+    
     editingLesson.value = lesson;
     if (lesson) {
         // Get section_id from lesson - check both section relationship and direct section_id property
         const sectionId = lesson.section?.id || lesson.section_id || null;
-        lessonForm.title = lesson.title || '';
-        lessonForm.title_ar = lesson.title_ar || '';
-        lessonForm.type = lesson.type || '';
-        lessonForm.section_id = sectionId;
-        lessonForm.order = lesson.order || 1;
-        lessonForm.duration_minutes = lesson.duration_minutes || 0;
+        
+        // Use original title field for editing (not translated_title which is for display only)
+        // The backend now provides both 'title' (original English) and 'translated_title' (for display)
+        const titleValue = (lesson.title && lesson.title.trim() !== '') ? lesson.title.trim() : '';
+        lessonForm.title = titleValue;
+        lessonForm.title_ar = (lesson.title_ar && lesson.title_ar.trim() !== '') ? lesson.title_ar.trim() : '';
+        
+        // Clear title error if title has a value
+        if (titleValue && titleValue.trim() !== '' && lessonForm.errors.title) {
+            lessonForm.clearErrors('title');
+        }
+        
+        // Ensure type is set - it's required and must be a valid type
+        const typeValue = (lesson.type && lesson.type.trim() !== '') ? lesson.type : '';
+        lessonForm.type = typeValue;
+        
+        // Clear type error if type has a value
+        if (typeValue && typeValue.trim() !== '' && lessonForm.errors.type) {
+            lessonForm.clearErrors('type');
+        }
+        
+        // Ensure section_id is set - it's required for admin
+        // Convert to number if it's a string, ensure it's not empty string
+        let sectionIdValue = null;
+        if (sectionId !== null && sectionId !== undefined && sectionId !== '') {
+            sectionIdValue = typeof sectionId === 'string' ? parseInt(sectionId) : sectionId;
+        }
+        lessonForm.section_id = sectionIdValue;
+        
+        // Clear section_id error if section_id has a value
+        if (sectionIdValue !== null && sectionIdValue !== '' && sectionIdValue !== undefined && lessonForm.errors.section_id) {
+            lessonForm.clearErrors('section_id');
+        }
+        
+        lessonForm.order = (lesson.order !== null && lesson.order !== undefined) ? lesson.order : 1;
+        lessonForm.duration_minutes = (lesson.duration_minutes !== null && lesson.duration_minutes !== undefined) ? lesson.duration_minutes : 0;
+        
+        // Use original description/content fields for editing (not translated versions)
+        // The backend provides both 'description' (original) and 'translated_description' (for display)
         lessonForm.description = lesson.description || '';
         lessonForm.description_ar = lesson.description_ar || '';
         lessonForm.content = lesson.content || '';
         lessonForm.content_ar = lesson.content_ar || '';
+        
+        // For video_url, use the original video_url from backend (file path or URL)
+        // The backend provides both 'video_url' (original) and 'translated_video_url' (formatted for display)
+        // We use the original for editing so it can be sent back correctly when updating
+        // For file types, this will be the file path (e.g., 'lessons/videos/file.mp4')
+        // For URL types, this will be the original URL
         lessonForm.video_url = lesson.video_url || '';
+        
+        // Clear file fields when editing (user can upload new file if needed)
+        lessonForm.video_file = null;
+        lessonForm.image_file = null;
+        lessonForm.document_file = null;
         
         // Format live_meeting_date for datetime-local input (YYYY-MM-DDTHH:mm)
         // Parse the date string directly without timezone conversion to preserve the stored time
@@ -783,36 +934,107 @@ const openLessonModal = (lesson = null) => {
             lessonForm.live_meeting_date = '';
         }
         lessonForm.live_meeting_link = lesson.live_meeting_link || '';
+        lessonForm.is_free = lesson.is_free || false;
     } else {
         // It's a new lesson - create mode
-        lessonForm.reset();
         lessonForm.clearErrors();
         lessonForm.order = 1;
         lessonForm.duration_minutes = 0;
         lessonForm.live_meeting_date = '';
         lessonForm.live_meeting_link = '';
         lessonForm.type = ''; // Reset type for new lessons
+        lessonForm.is_free = false;
     }
-    showLessonModal.value = true;
+    // Use nextTick to ensure form data is set before modal opens
+    nextTick(() => {
+        showLessonModal.value = true;
+    });
 };
 
 const closeLessonModal = () => {
     showLessonModal.value = false;
     editingLesson.value = null;
-    lessonForm.reset();
+    // Clear errors before resetting to prevent stale errors
     lessonForm.clearErrors();
+    lessonForm.reset();
     // Reset form defaults
     lessonForm.order = 1;
     lessonForm.duration_minutes = 0;
     lessonForm.live_meeting_date = '';
     lessonForm.live_meeting_link = '';
+    lessonForm.video_file = null;
+    lessonForm.image_file = null;
+    lessonForm.document_file = null;
 };
 
 const submitLesson = (formData) => {
-    // Validate section is required for admin users
-    if (isAdmin.value && (!lessonForm.section_id || lessonForm.section_id === null || lessonForm.section_id === '')) {
+    // Update lessonForm with formData values (including files)
+    // Handle files separately to ensure they're properly set
+    Object.keys(formData).forEach(key => {
+        // Special handling for files - ensure they're File objects
+        if (key === 'video_file' || key === 'image_file' || key === 'document_file') {
+            if (formData[key] instanceof File) {
+                lessonForm[key] = formData[key];
+                // Clear video_url when a new file is uploaded - backend will set it to the file path
+                lessonForm.video_url = '';
+            }
+        } else if (key === 'title') {
+            // Always set title, even if empty (will be validated)
+            // Trim title to remove leading/trailing whitespace
+            lessonForm[key] = (formData[key] !== undefined && formData[key] !== null && typeof formData[key] === 'string') 
+                ? formData[key].trim() 
+                : (formData[key] || '');
+        } else if (key === 'type') {
+            // Always set type, even if empty (will be validated)
+            lessonForm[key] = formData[key] || '';
+        } else if (key === 'section_id') {
+            // For section_id, ensure it's a number or null
+            if (formData[key] !== null && formData[key] !== undefined && formData[key] !== '') {
+                lessonForm[key] = typeof formData[key] === 'string' ? parseInt(formData[key]) : formData[key];
+            } else {
+                lessonForm[key] = null;
+            }
+        } else {
+            // For all other fields, set them if they're not undefined
+            if (formData[key] !== undefined) {
+                lessonForm[key] = formData[key];
+            }
+        }
+    });
+    
+    // Ensure title is always set (even if formData didn't include it)
+    if (lessonForm.title === undefined || lessonForm.title === null) {
+        lessonForm.title = '';
+    }
+    
+    // Ensure type is always set (even if formData didn't include it)
+    if (lessonForm.type === undefined || lessonForm.type === null) {
+        lessonForm.type = '';
+    }
+    
+    // Validate section is required for admin users - check after updating formData
+    const sectionId = lessonForm.section_id;
+    if (isAdmin.value && (!sectionId || sectionId === null || sectionId === '')) {
         showError(
             t('lessons.validation.section_required') || 'Section is required for admin users. Please select a section.',
+            t('common.error') || 'Validation Error'
+        );
+        return;
+    }
+    
+    // Validate title is required
+    if (!lessonForm.title || lessonForm.title.trim() === '') {
+        showError(
+            t('lessons.validation.title_required') || 'Title is required.',
+            t('common.error') || 'Validation Error'
+        );
+        return;
+    }
+    
+    // Validate type is required
+    if (!lessonForm.type || lessonForm.type.trim() === '') {
+        showError(
+            t('lessons.validation.type_required') || 'Lesson type is required.',
             t('common.error') || 'Validation Error'
         );
         return;
@@ -825,12 +1047,66 @@ const submitLesson = (formData) => {
         lessonForm.section_id = parseInt(lessonForm.section_id);
     }
     
-    // Convert empty strings to null for other nullable fields
-    ['description', 'description_ar', 'content', 'content_ar', 'video_url', 'title_ar', 'live_meeting_link'].forEach(field => {
+    // Check if we have files to upload (File objects) - do this after setting files in lessonForm
+    // Also check if this is a file type lesson (might need FormData even without new file for updates)
+    const fileTypesList = ['video_file', 'image', 'document_file'];
+    const isFileTypeLesson = fileTypesList.includes(lessonForm.type);
+    
+    // If files are present, ensure video_url is cleared (will be set by backend)
+    if (isFileTypeLesson && (lessonForm.video_file instanceof File || lessonForm.image_file instanceof File || lessonForm.document_file instanceof File)) {
+        // Clear video_url when uploading a new file - backend will set it to the uploaded file path
+        lessonForm.video_url = '';
+    }
+    const hasFiles = (lessonForm.video_file instanceof File) || 
+                     (lessonForm.image_file instanceof File) || 
+                     (lessonForm.document_file instanceof File);
+    
+    // For file types, always use FormData to ensure proper handling
+    const useFormData = hasFiles || (isFileTypeLesson && editingLesson.value);
+    
+    // Debug: Log file detection (only in development)
+    if (import.meta.env.DEV) {
+        console.log('File upload check:', {
+            hasFiles,
+            isFileTypeLesson,
+            useFormData,
+            type: lessonForm.type,
+            video_file: lessonForm.video_file instanceof File ? 'File' : (lessonForm.video_file ? 'Other' : 'null'),
+            image_file: lessonForm.image_file instanceof File ? 'File' : (lessonForm.image_file ? 'Other' : 'null'),
+            document_file: lessonForm.document_file instanceof File ? 'File' : (lessonForm.document_file ? 'Other' : 'null'),
+        });
+    }
+    
+    // Convert empty strings to null for other nullable fields (but not files or video_url for file types)
+    // For file types, preserve video_url if it exists (it might be an existing file path)
+    
+    ['description', 'description_ar', 'content', 'content_ar', 'title_ar', 'live_meeting_link'].forEach(field => {
         if (lessonForm[field] === '') {
             lessonForm[field] = null;
         }
     });
+    
+    // Handle video_url separately based on lesson type
+    const urlBasedTypes = ['youtube_video', 'google_drive_video', 'embed_frame'];
+    
+    if (urlBasedTypes.includes(lessonForm.type)) {
+        // For URL-based types, preserve video_url (can be empty for validation)
+        // Don't convert to null - let backend validate
+        if (lessonForm.video_url === '' && editingLesson.value?.video_url && !hasFiles) {
+            // If empty and editing, preserve existing URL
+            lessonForm.video_url = editingLesson.value.video_url;
+        }
+    } else if (isFileTypeLesson) {
+        // For file types when editing, preserve existing video_url if no new file is uploaded
+        if (lessonForm.video_url === '' && editingLesson.value && !hasFiles && editingLesson.value.video_url) {
+            lessonForm.video_url = editingLesson.value.video_url;
+        }
+    } else {
+        // For other types (text, assignment, test), convert empty to null
+        if (lessonForm.video_url === '') {
+            lessonForm.video_url = null;
+        }
+    }
     
     // Handle live_meeting_date separately - format and validate for live lessons
     if (lessonForm.type === 'live') {
@@ -893,33 +1169,247 @@ const submitLesson = (formData) => {
     
     if (editingLesson.value) {
         // Update existing lesson
-        lessonForm.put(route('admin.courses.lessons.update', [props.course.slug || props.course.id, editingLesson.value.id]), {
+        // Store files reference before transform
+        const videoFile = lessonForm.video_file instanceof File ? lessonForm.video_file : null;
+        const imageFile = lessonForm.image_file instanceof File ? lessonForm.image_file : null;
+        const documentFile = lessonForm.document_file instanceof File ? lessonForm.document_file : null;
+        
+        lessonForm.transform((data) => {
+            // Include all form data including files
+            const transformed = { ...data };
+            
+            // Ensure required fields are ALWAYS included (even if empty string)
+            // This is critical when using FormData as it might filter out empty values
+            // Get title directly from lessonForm - always include it explicitly
+            let titleValue = '';
+            if (lessonForm.title !== undefined && lessonForm.title !== null) {
+                if (typeof lessonForm.title === 'string') {
+                    titleValue = lessonForm.title.trim();
+                } else {
+                    titleValue = String(lessonForm.title);
+                }
+            }
+            // ALWAYS include title - even if empty (backend will validate)
+            transformed.title = titleValue;
+            
+            // Get type directly from lessonForm - always include it explicitly
+            let typeValue = '';
+            if (lessonForm.type !== undefined && lessonForm.type !== null) {
+                typeValue = String(lessonForm.type);
+            }
+            transformed.type = typeValue;
+            
+            // Section ID
+            if (lessonForm.section_id !== null && lessonForm.section_id !== undefined) {
+                transformed.section_id = lessonForm.section_id;
+            } else {
+                transformed.section_id = null;
+            }
+            
+            // Include nullable fields - handle them based on type
+            // Title Arabic
+            if (lessonForm.title_ar !== null && lessonForm.title_ar !== undefined) {
+                transformed.title_ar = lessonForm.title_ar === '' ? null : lessonForm.title_ar;
+            }
+            
+            // Description fields
+            if (lessonForm.description !== null && lessonForm.description !== undefined) {
+                transformed.description = lessonForm.description === '' ? null : lessonForm.description;
+            }
+            if (lessonForm.description_ar !== null && lessonForm.description_ar !== undefined) {
+                transformed.description_ar = lessonForm.description_ar === '' ? null : lessonForm.description_ar;
+            }
+            
+            // Content fields (for text, assignment, test types)
+            if (lessonForm.content !== null && lessonForm.content !== undefined) {
+                transformed.content = lessonForm.content === '' ? null : lessonForm.content;
+            }
+            if (lessonForm.content_ar !== null && lessonForm.content_ar !== undefined) {
+                transformed.content_ar = lessonForm.content_ar === '' ? null : lessonForm.content_ar;
+            }
+            
+            // Order and duration
+            if (lessonForm.order !== null && lessonForm.order !== undefined) transformed.order = lessonForm.order;
+            if (lessonForm.duration_minutes !== null && lessonForm.duration_minutes !== undefined) transformed.duration_minutes = lessonForm.duration_minutes;
+            
+            // Video URL - handle based on type
+            const urlBasedTypes = ['youtube_video', 'google_drive_video', 'embed_frame'];
+            if (urlBasedTypes.includes(lessonForm.type)) {
+                // For URL-based types, include video_url (can be empty string for validation)
+                transformed.video_url = lessonForm.video_url || '';
+            } else if (isFileTypeLesson) {
+                // For file types, preserve video_url if exists (existing file path)
+                if (lessonForm.video_url) {
+                    transformed.video_url = lessonForm.video_url;
+                } else if (!hasFiles && editingLesson.value?.video_url) {
+                    // Preserve existing video_url if no new file uploaded
+                    transformed.video_url = editingLesson.value.video_url;
+                } else {
+                    // No video_url and no file - set to null
+                    transformed.video_url = null;
+                }
+            } else {
+                // For other types (text, assignment, test), set to null if empty
+                transformed.video_url = lessonForm.video_url || null;
+            }
+            
+            // Live meeting fields (only for live type)
+            if (lessonForm.type === 'live') {
+                transformed.live_meeting_date = lessonForm.live_meeting_date || null;
+                transformed.live_meeting_link = lessonForm.live_meeting_link || null;
+            } else {
+                // Clear live fields for non-live types
+                transformed.live_meeting_date = null;
+                transformed.live_meeting_link = null;
+            }
+            
+            // Is free flag
+            if (lessonForm.is_free !== null && lessonForm.is_free !== undefined) transformed.is_free = lessonForm.is_free;
+            
+            // Always include files if they exist (as File objects)
+            if (videoFile) transformed.video_file = videoFile;
+            if (imageFile) transformed.image_file = imageFile;
+            if (documentFile) transformed.document_file = documentFile;
+            
+            return transformed;
+        }).put(route('admin.courses.lessons.update', [props.course.slug || props.course.id, editingLesson.value.id]), {
             preserveScroll: true,
             preserveState: true,
+            forceFormData: useFormData, // Use FormData if files are present or for file type updates
             onSuccess: () => {
                 showSuccess(t('lessons.updated_successfully') || 'Lesson updated successfully!', t('common.success') || 'Success');
                 closeLessonModal();
                 router.reload({ only: ['lesson'] });
             },
             onError: (errors) => {
+                console.error('Update lesson error:', errors);
                 if (errors.message) {
                     showError(errors.message, t('common.error') || 'Error');
+                } else {
+                    // Show validation errors
+                    const errorMessages = Object.values(errors).flat();
+                    if (errorMessages.length > 0) {
+                        showError(errorMessages[0], t('common.error') || 'Validation Error');
+                    }
                 }
             },
         });
     } else {
         // Create new lesson
-        lessonForm.post(route('admin.courses.lessons.store', props.course.slug || props.course.id), {
+        // Store files reference before transform
+        const videoFile = lessonForm.video_file instanceof File ? lessonForm.video_file : null;
+        const imageFile = lessonForm.image_file instanceof File ? lessonForm.image_file : null;
+        const documentFile = lessonForm.document_file instanceof File ? lessonForm.document_file : null;
+        
+        lessonForm.transform((data) => {
+            // Include all form data including files
+            const transformed = { ...data };
+            
+            // Ensure required fields are ALWAYS included (even if empty string)
+            // This is critical when using FormData as it might filter out empty values
+            // Get title directly from lessonForm - always include it explicitly
+            let titleValue = '';
+            if (lessonForm.title !== undefined && lessonForm.title !== null) {
+                if (typeof lessonForm.title === 'string') {
+                    titleValue = lessonForm.title.trim();
+                } else {
+                    titleValue = String(lessonForm.title);
+                }
+            }
+            // ALWAYS include title - even if empty (backend will validate)
+            transformed.title = titleValue;
+            
+            // Get type directly from lessonForm - always include it explicitly
+            let typeValue = '';
+            if (lessonForm.type !== undefined && lessonForm.type !== null) {
+                typeValue = String(lessonForm.type);
+            }
+            transformed.type = typeValue;
+            
+            // Section ID
+            if (lessonForm.section_id !== null && lessonForm.section_id !== undefined) {
+                transformed.section_id = lessonForm.section_id;
+            } else {
+                transformed.section_id = null;
+            }
+            
+            // Include nullable fields - handle them based on type
+            // Title Arabic
+            if (lessonForm.title_ar !== null && lessonForm.title_ar !== undefined) {
+                transformed.title_ar = lessonForm.title_ar === '' ? null : lessonForm.title_ar;
+            }
+            
+            // Description fields
+            if (lessonForm.description !== null && lessonForm.description !== undefined) {
+                transformed.description = lessonForm.description === '' ? null : lessonForm.description;
+            }
+            if (lessonForm.description_ar !== null && lessonForm.description_ar !== undefined) {
+                transformed.description_ar = lessonForm.description_ar === '' ? null : lessonForm.description_ar;
+            }
+            
+            // Content fields (for text, assignment, test types)
+            if (lessonForm.content !== null && lessonForm.content !== undefined) {
+                transformed.content = lessonForm.content === '' ? null : lessonForm.content;
+            }
+            if (lessonForm.content_ar !== null && lessonForm.content_ar !== undefined) {
+                transformed.content_ar = lessonForm.content_ar === '' ? null : lessonForm.content_ar;
+            }
+            
+            // Order and duration
+            if (lessonForm.order !== null && lessonForm.order !== undefined) transformed.order = lessonForm.order;
+            if (lessonForm.duration_minutes !== null && lessonForm.duration_minutes !== undefined) transformed.duration_minutes = lessonForm.duration_minutes;
+            
+            // Video URL - handle based on type
+            const urlBasedTypes = ['youtube_video', 'google_drive_video', 'embed_frame'];
+            if (urlBasedTypes.includes(lessonForm.type)) {
+                // For URL-based types, include video_url (can be empty string for validation)
+                transformed.video_url = lessonForm.video_url || '';
+            } else if (isFileTypeLesson) {
+                // For file types, video_url will be set by backend after upload
+                transformed.video_url = lessonForm.video_url || null;
+            } else {
+                // For other types (text, assignment, test), set to null if empty
+                transformed.video_url = lessonForm.video_url || null;
+            }
+            
+            // Live meeting fields (only for live type)
+            if (lessonForm.type === 'live') {
+                transformed.live_meeting_date = lessonForm.live_meeting_date || null;
+                transformed.live_meeting_link = lessonForm.live_meeting_link || null;
+            } else {
+                // Clear live fields for non-live types
+                transformed.live_meeting_date = null;
+                transformed.live_meeting_link = null;
+            }
+            
+            // Is free flag
+            if (lessonForm.is_free !== null && lessonForm.is_free !== undefined) transformed.is_free = lessonForm.is_free;
+            
+            // Always include files if they exist (as File objects)
+            if (videoFile) transformed.video_file = videoFile;
+            if (imageFile) transformed.image_file = imageFile;
+            if (documentFile) transformed.document_file = documentFile;
+            
+            return transformed;
+        }).post(route('admin.courses.lessons.store', props.course.slug || props.course.id), {
             preserveScroll: true,
             preserveState: true,
+            forceFormData: useFormData, // Use FormData if files are present or for file type updates
             onSuccess: () => {
                 showSuccess(t('lessons.created_successfully') || 'Lesson created successfully!', t('common.success') || 'Success');
                 closeLessonModal();
                 router.reload({ only: ['lesson'] });
             },
             onError: (errors) => {
+                console.error('Update lesson error:', errors);
                 if (errors.message) {
                     showError(errors.message, t('common.error') || 'Error');
+                } else {
+                    // Show validation errors
+                    const errorMessages = Object.values(errors).flat();
+                    if (errorMessages.length > 0) {
+                        showError(errorMessages[0], t('common.error') || 'Validation Error');
+                    }
                 }
             },
         });
@@ -1032,6 +1522,91 @@ const formatAttendanceStatus = (status) => {
     };
     
     return statusMap[status] || status;
+};
+
+// Check if video is uploaded file
+const isUploadedVideo = computed(() => {
+    return props.lesson?.type === 'video_file';
+});
+
+// Convert YouTube URL to embed format
+const getEmbedUrl = (url) => {
+    if (!url) return '';
+    
+    // If already embed URL, return as is
+    if (url.includes('youtube.com/embed') || url.includes('youtu.be/embed')) {
+        return url;
+    }
+    
+    // Extract video ID from various YouTube URL formats
+    let videoId = '';
+    
+    // Standard YouTube URL: https://www.youtube.com/watch?v=VIDEO_ID
+    const watchMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
+    if (watchMatch) {
+        videoId = watchMatch[1];
+    }
+    
+    // Short URL: https://youtu.be/VIDEO_ID
+    const shortMatch = url.match(/youtu\.be\/([^&\n?#]+)/);
+    if (shortMatch) {
+        videoId = shortMatch[1];
+    }
+    
+    // If we found a video ID, return embed URL
+    if (videoId) {
+        return `https://www.youtube.com/embed/${videoId}`;
+    }
+    
+    // If no match, return original URL (might be other video platform or Google Drive)
+    return url;
+};
+
+// Check if file is WMV format
+const isWMVFile = (url) => {
+    if (!url) return false;
+    const urlPath = url.split('?')[0];
+    const extension = urlPath.split('.').pop()?.toLowerCase();
+    return extension === 'wmv';
+};
+
+// Get MIME type from video URL extension
+const getVideoMimeType = (url) => {
+    if (!url) return '';
+    
+    // Extract extension from URL (handle query strings)
+    const urlPath = url.split('?')[0];
+    const extension = urlPath.split('.').pop()?.toLowerCase();
+    
+    if (!extension) return '';
+    
+    const mimeTypes = {
+        'mp4': 'video/mp4',
+        'webm': 'video/webm',
+        'ogg': 'video/ogg',
+        'ogv': 'video/ogg',
+        'mov': 'video/quicktime',
+        'avi': 'video/x-msvideo',
+        'wmv': 'video/x-ms-wmv', // Primary WMV MIME type
+        'flv': 'video/x-flv',
+        'mkv': 'video/x-matroska',
+        'm3u8': 'application/x-mpegURL',
+        'm4v': 'video/x-m4v',
+    };
+    
+    return mimeTypes[extension] || '';
+};
+
+// Handle image loading errors
+const handleImageError = (event) => {
+    event.target.src = '/images/default-image.png';
+    event.target.onerror = null; // Prevent infinite loop
+};
+
+// Format content for display
+const formatContent = (content) => {
+    if (!content) return '';
+    return content.replace(/\n/g, '<br>');
 };
 
 const formatDateTime = (dateTime) => {

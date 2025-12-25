@@ -24,6 +24,7 @@ return [
         'is_free' => 'Free Lesson',
         'section' => 'Section',
         'type' => 'Type',
+        'question_type' => 'Question Type',
     ],
     
     'actions' => [
@@ -45,6 +46,7 @@ return [
     // Questions
     'questions' => 'Questions',
     'question' => 'Question',
+    'answers' => 'Answers',
     'points' => 'Points',
     'explanation' => 'Explanation',
     'correct' => 'Correct',
@@ -62,6 +64,7 @@ return [
     'text_answer' => 'Text answer required',
     'select_lesson' => 'Select a lesson',
     'no_video' => 'No video available',
+    'video_not_supported' => 'Your browser does not support the video tag.',
     
     'types' => [
         'text' => 'Text',
@@ -113,6 +116,7 @@ return [
         'back' => 'Back to Course',
         'add_first' => 'Add first lesson',
         'add_question' => 'Add Question',
+        'add_answer' => 'Add Answer',
     ],
     
     // Attendance

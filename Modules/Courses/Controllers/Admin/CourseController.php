@@ -13,6 +13,7 @@ use Modules\Courses\Requests\StoreCourseRequest;
 use Modules\Courses\Requests\UpdateCourseRequest;
 use Modules\Courses\Services\CourseService;
 use Modules\Courses\Services\SectionService;
+use Modules\Courses\Services\LessonService;
 use Modules\Courses\Services\LessonAttendanceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -28,6 +29,7 @@ class CourseController extends Controller
         private CourseService $courseService,
         private CourseRepository $courseRepository,
         private SectionService $sectionService,
+        private LessonService $lessonService,
         private TrackService $trackService,
         private LessonAttendanceService $attendanceService
     ) {}
@@ -273,7 +275,7 @@ class CourseController extends Controller
     }
 
     /**
-     * Make translated fields visible for lessons
+     * Make translated fields visible for lessons and format video_url
      */
     private function makeLessonsVisible($lessons): void
     {
@@ -283,6 +285,13 @@ class CourseController extends Controller
 
         foreach ($lessons as $lesson) {
             $lesson->makeVisible(['translated_title', 'translated_description', 'translated_content']);
+            
+            // Format video_url to full path using LessonService
+            if ($lesson->video_url) {
+                $formattedUrl = $this->lessonService->formatVideoUrl($lesson->video_url);
+                // Set the formatted URL on the model
+                $lesson->setAttribute('video_url', $formattedUrl);
+            }
 
             if ($lesson->questions) {
                 foreach ($lesson->questions as $question) {

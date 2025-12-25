@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\Courses\Controllers\CourseController;
 use Modules\Courses\Controllers\LessonController;
 use Modules\Courses\Controllers\CoursePlayerController;
+use Modules\Courses\Controllers\VideoController;
 use Modules\Courses\Controllers\Admin\CourseController as AdminCourseController;
 use Modules\Courses\Controllers\Admin\BatchController as AdminBatchController;
 use Modules\Courses\Controllers\Admin\SectionController as AdminSectionController;
@@ -182,3 +183,13 @@ Route::middleware('auth')->group(function () {
 // Public Routes
 // ============================================
 Route::get('/courses/{course}', [CourseController::class, 'show'])->name('courses.show');
+
+// ============================================
+// Video Serving Route (Public - for authenticated users)
+// ============================================
+// This route serves videos from storage with proper MIME types
+// Handles paths like: lessons/videos/file.mp4
+// Using /videos/ prefix to avoid conflicts with storage symlink
+Route::middleware('auth')->get('/videos/{path}', [VideoController::class, 'serve'])
+    ->where('path', '.+')
+    ->name('videos.serve');

@@ -230,6 +230,9 @@ const lessonForm = useForm({
     video_url: '',
     live_meeting_date: '',
     live_meeting_link: '',
+    video_file: null,
+    image_file: null,
+    document_file: null,
 });
 
 // Watch for live_meeting_date changes to clear errors when date is filled
@@ -462,17 +465,38 @@ const closeLessonModal = () => {
     lessonForm.duration_minutes = 0;
     lessonForm.live_meeting_date = '';
     lessonForm.live_meeting_link = '';
+    lessonForm.video_file = null;
+    lessonForm.image_file = null;
+    lessonForm.document_file = null;
 };
 
 const submitLesson = (formData) => {
-    // Validate section is required for admin users
-    if (isAdmin.value && (!lessonForm.section_id || lessonForm.section_id === null || lessonForm.section_id === '')) {
+    // Validate section is required for admin users - check formData first
+    const sectionId = formData.section_id || lessonForm.section_id;
+    if (isAdmin.value && (!sectionId || sectionId === null || sectionId === '')) {
         showError(
             t('lessons.validation.section_required') || 'Section is required for admin users. Please select a section.',
             t('common.error') || 'Validation Error'
         );
         return;
     }
+    
+    // Update lessonForm with formData values (including files)
+    // Handle files separately to ensure they're properly set
+    Object.keys(formData).forEach(key => {
+        if (formData[key] !== undefined && formData[key] !== null) {
+            // Special handling for files - ensure they're File objects
+            if (key === 'video_file' || key === 'image_file' || key === 'document_file') {
+                if (formData[key] instanceof File) {
+                    lessonForm[key] = formData[key];
+                    // Clear video_url when a new file is uploaded - backend will set it to the file path
+                    lessonForm.video_url = '';
+                }
+            } else {
+                lessonForm[key] = formData[key];
+            }
+        }
+    });
     
     // Convert empty strings to null for nullable fields
     if (lessonForm.section_id === '' || lessonForm.section_id === null) {
@@ -481,12 +505,35 @@ const submitLesson = (formData) => {
         lessonForm.section_id = parseInt(lessonForm.section_id);
     }
     
-    // Convert empty strings to null for other nullable fields
-    ['description', 'description_ar', 'content', 'content_ar', 'video_url', 'title_ar', 'live_meeting_link'].forEach(field => {
+    // Check if we have files to upload (File objects) - do this after setting files in lessonForm
+    const fileTypesList = ['video_file', 'image', 'document_file'];
+    const isFileTypeLesson = fileTypesList.includes(lessonForm.type);
+    
+    // If files are present, ensure video_url is cleared (will be set by backend)
+    if (isFileTypeLesson && (lessonForm.video_file instanceof File || lessonForm.image_file instanceof File || lessonForm.document_file instanceof File)) {
+        // Clear video_url when uploading a new file - backend will set it to the uploaded file path
+        lessonForm.video_url = '';
+    }
+    
+    // Convert empty strings to null for other nullable fields (but not files or video_url for file types)
+    ['description', 'description_ar', 'content', 'content_ar', 'title_ar', 'live_meeting_link'].forEach(field => {
         if (lessonForm[field] === '') {
             lessonForm[field] = null;
         }
     });
+    
+    // Handle video_url separately - only clear if it's not a file type or if it's explicitly empty
+    if (!isFileTypeLesson && lessonForm.video_url === '') {
+        lessonForm.video_url = null;
+    } else if (isFileTypeLesson && lessonForm.video_url === '' && editingLesson.value) {
+        // For file types when editing, preserve existing video_url if no new file is uploaded
+        const hasFiles = (lessonForm.video_file instanceof File) || 
+                         (lessonForm.image_file instanceof File) || 
+                         (lessonForm.document_file instanceof File);
+        if (!hasFiles && editingLesson.value.video_url) {
+            lessonForm.video_url = editingLesson.value.video_url;
+        }
+    }
     
     // Handle live_meeting_date separately - format and validate for live lessons
     if (lessonForm.type === 'live') {
@@ -547,31 +594,78 @@ const submitLesson = (formData) => {
         lessonForm.duration_minutes = isNaN(parsed) ? 0 : parsed;
     }
     
+    // Check if we have files to upload (File objects)
+    const hasFiles = (lessonForm.video_file instanceof File) || 
+                     (lessonForm.image_file instanceof File) || 
+                     (lessonForm.document_file instanceof File);
+    
+    // For file types, always use FormData to ensure proper handling
+    const useFormData = hasFiles || (isFileTypeLesson && editingLesson.value);
+    
+    // Store files reference before transform
+    const videoFile = lessonForm.video_file instanceof File ? lessonForm.video_file : null;
+    const imageFile = lessonForm.image_file instanceof File ? lessonForm.image_file : null;
+    const documentFile = lessonForm.document_file instanceof File ? lessonForm.document_file : null;
+    
     if (editingLesson.value) {
         // Update existing lesson
-        lessonForm.put(route('admin.courses.lessons.update', [props.course.slug || props.course.id, editingLesson.value.id]), {
+        lessonForm.transform((data) => {
+            // Include files in the transform
+            const transformed = { ...data };
+            // Always include files if they exist (as File objects)
+            if (videoFile) transformed.video_file = videoFile;
+            if (imageFile) transformed.image_file = imageFile;
+            if (documentFile) transformed.document_file = documentFile;
+            return transformed;
+        }).put(route('admin.courses.lessons.update', [props.course.slug || props.course.id, editingLesson.value.id]), {
             preserveScroll: true,
+            preserveState: true,
+            forceFormData: useFormData, // Use FormData if files are present or for file type updates
             onSuccess: () => {
                 showSuccess(t('lessons.updated_successfully') || 'Lesson updated successfully!', t('common.success') || 'Success');
                 closeLessonModal();
             },
             onError: (errors) => {
+                console.error('Update lesson error:', errors);
                 if (errors.message) {
                     showError(errors.message, t('common.error') || 'Error');
+                } else {
+                    // Show validation errors
+                    const errorMessages = Object.values(errors).flat();
+                    if (errorMessages.length > 0) {
+                        showError(errorMessages[0], t('common.error') || 'Validation Error');
+                    }
                 }
             },
         });
     } else {
         // Create new lesson
-        lessonForm.post(route('admin.courses.lessons.store', props.course.slug || props.course.id), {
+        lessonForm.transform((data) => {
+            // Include files in the transform
+            const transformed = { ...data };
+            // Always include files if they exist (as File objects)
+            if (videoFile) transformed.video_file = videoFile;
+            if (imageFile) transformed.image_file = imageFile;
+            if (documentFile) transformed.document_file = documentFile;
+            return transformed;
+        }).post(route('admin.courses.lessons.store', props.course.slug || props.course.id), {
             preserveScroll: true,
+            preserveState: true,
+            forceFormData: useFormData, // Use FormData if files are present or for file type updates
             onSuccess: () => {
                 showSuccess(t('lessons.created_successfully') || 'Lesson created successfully!', t('common.success') || 'Success');
                 closeLessonModal();
             },
             onError: (errors) => {
+                console.error('Create lesson error:', errors);
                 if (errors.message) {
                     showError(errors.message, t('common.error') || 'Error');
+                } else {
+                    // Show validation errors
+                    const errorMessages = Object.values(errors).flat();
+                    if (errorMessages.length > 0) {
+                        showError(errorMessages[0], t('common.error') || 'Validation Error');
+                    }
                 }
             },
         });

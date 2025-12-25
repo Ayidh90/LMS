@@ -169,7 +169,7 @@
                             <div v-if="form.type === 'multiple_choice' || form.type === 'true_false'" class="border-t-2 border-gray-200 pt-8">
                                 <div class="flex items-center justify-between mb-6">
                                     <label class="block text-sm font-semibold text-gray-900">
-                                        {{ t('lessons.questions') }} <span class="text-red-500">*</span>
+                                        {{ t('lessons.answers') }} <span class="text-red-500">*</span>
                                     </label>
                                     <button
                                         type="button"
@@ -179,7 +179,7 @@
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                         </svg>
-                                        {{ t('lessons.actions.add_question') }}
+                                        {{ t('lessons.actions.add_answer') }}
                                     </button>
                                 </div>
                                 <div v-if="errors.answers" class="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-600 flex items-center gap-2">
@@ -198,7 +198,7 @@
                                         <div class="flex items-start justify-between mb-4">
                                             <div class="flex items-center gap-3">
                                                 <span class="px-3 py-1 bg-white border-2 border-gray-300 rounded-full text-sm font-semibold text-gray-700">
-                                                    {{ t('lessons.question') }} {{ index + 1 }}
+                                                    {{ t('lessons.answer') }} {{ index + 1 }}
                                                 </span>
                                                 <span v-if="answer.is_correct" class="px-3 py-1 bg-blue-600 text-white rounded-full text-xs font-semibold flex items-center gap-1">
                                                     <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
@@ -221,12 +221,12 @@
                                         </div>
                                         <div class="space-y-4">
                                             <div>
-                                                <label class="block text-xs font-semibold text-gray-700 mb-2">{{ t('lessons.question') }}</label>
+                                                <label class="block text-xs font-semibold text-gray-700 mb-2">{{ t('lessons.answer') }}</label>
                                                 <input
                                                     v-model="answer.answer"
                                                     type="text"
                                                     required
-                                                    :placeholder="t('lessons.question')"
+                                                    :placeholder="t('lessons.answer')"
                                                     class="w-full border-2 border-gray-300 rounded-xl px-4 py-3 text-gray-900 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all hover:border-gray-400"
                                                 />
                                             </div>

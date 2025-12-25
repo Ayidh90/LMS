@@ -146,14 +146,14 @@ import { Head, Link, useForm, router } from '@inertiajs/vue3';
 
 const props = defineProps({
     programs: Array,
-    selectedProgramId: Number,
+    selectedProgramId: [Number, String],
 });
 
 const { t } = useTranslation();
 const { route } = useRoute();
 
 const form = useForm({
-    program_id: props.selectedProgramId || null,
+    program_id: props.selectedProgramId ? Number(props.selectedProgramId) : null,
     name: '',
     name_ar: '',
     description: '',

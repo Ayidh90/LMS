@@ -9,12 +9,17 @@ use Modules\Courses\Models\Course;
 use Modules\Courses\Models\Lesson;
 use Modules\Courses\Requests\StoreLessonRequest;
 use Modules\Courses\Requests\UpdateLessonRequest;
+use Modules\Courses\Services\LessonService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class LessonController extends Controller
 {
+    public function __construct(
+        private LessonService $lessonService
+    ) {}
+
     public function index(Course $course)
     {
         $this->authorize('view', $course);
@@ -101,58 +106,26 @@ class LessonController extends Controller
                 ->keyBy('question_id');
         }
 
-        // Format lesson data with proper localization
-        $formattedLesson = [
-            'id' => $lesson->id,
-            'title' => $lesson->translated_title ?? $lesson->title,
-            'title_ar' => $lesson->title_ar,
-            'type' => $lesson->type,
-            'description' => $lesson->translated_description ?? $lesson->description,
-            'description_ar' => $lesson->description_ar,
-            'content' => $lesson->translated_content ?? $lesson->content,
-            'content_ar' => $lesson->content_ar,
-            'video_url' => $lesson->video_url,
-            'live_meeting_date' => $lesson->live_meeting_date,
-            'live_meeting_link' => $lesson->live_meeting_link,
-            'order' => $lesson->order,
-            'duration_minutes' => $lesson->duration_minutes,
-            'is_free' => $lesson->is_free,
-            'questions' => $lesson->questions->map(function ($question) use ($userAnswers) {
-                $userAnswer = $userAnswers->get($question->id);
-                
-                return [
-                    'id' => $question->id,
-                    'type' => $question->type,
-                    'question' => $question->translated_question ?? $question->question,
-                    'question_ar' => $question->question_ar,
-                    'explanation' => $question->translated_explanation ?? $question->explanation,
-                    'explanation_ar' => $question->explanation_ar,
-                    'points' => $question->points,
-                    'order' => $question->order,
-                    'answers' => $question->answers->map(function ($answer) {
-                        return [
-                            'id' => $answer->id,
-                            'answer' => $answer->translated_answer ?? $answer->answer,
-                            'answer_ar' => $answer->answer_ar,
-                            'is_correct' => $answer->is_correct,
-                            'order' => $answer->order,
-                        ];
-                    }),
-                    'user_answer' => $userAnswer ? [
-                        'id' => $userAnswer->id,
-                        'answer_id' => $userAnswer->answer_id,
-                        'answer_text' => $userAnswer->answer_text,
-                        'selected_answer' => $userAnswer->answer ? [
+        // Format lesson data with proper localization using LessonService
+        // This automatically formats video_url to full path using formatVideoUrl
+        $formattedLesson = $this->lessonService->formatForFrontend($lesson, $userAnswers);
+        
+        // Add user_answer with selected_answer for better frontend compatibility
+        if ($formattedLesson['questions']) {
+            $formattedLesson['questions'] = collect($formattedLesson['questions'])->map(function ($question) use ($userAnswers) {
+                $userAnswer = $userAnswers->get($question['id']);
+                if ($userAnswer && $userAnswer->answer) {
+                    $question['user_answer'] = array_merge($question['user_answer'] ?? [], [
+                        'selected_answer' => [
                             'id' => $userAnswer->answer->id,
                             'answer' => $userAnswer->answer->translated_answer ?? $userAnswer->answer->answer,
-                        ] : null,
-                        'is_correct' => $userAnswer->is_correct,
-                        'points_earned' => $userAnswer->points_earned,
+                        ],
                         'submitted_at' => $userAnswer->created_at,
-                    ] : null,
-                ];
-            }),
-        ];
+                    ]);
+                }
+                return $question;
+            })->toArray();
+        }
 
         // Format course data with proper localization
         $formattedCourse = [

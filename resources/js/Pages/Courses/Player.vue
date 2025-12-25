@@ -37,16 +37,40 @@
 
                         <!-- Video Player (only show if lesson has video) -->
                         <div v-if="lesson?.video_url && lesson?.type !== 'live'" class="bg-black rounded-xl overflow-hidden mb-6" style="aspect-ratio: 16/9;">
-                            <div v-if="isUploadedVideo" class="w-full h-full">
+                            <div v-if="isUploadedVideo" class="w-full h-full relative">
                                 <!-- Uploaded video file -->
                                 <video
                                     :id="`video-player-${lesson?.id}`"
-                                    :src="lesson.video_url"
                                     class="w-full h-full"
                                     controls
+                                    preload="metadata"
+                                    crossorigin="anonymous"
                                     @timeupdate="onVideoTimeUpdate"
                                     @loadedmetadata="onVideoLoaded"
-                                ></video>
+                                    @error="onVideoError"
+                                    @canplay="onVideoCanPlay"
+                                    @loadstart="onVideoLoadStart"
+                                >
+                                    <!-- Primary source with MIME type -->
+                                    <source v-if="getVideoMimeType(lesson.video_url)" :src="lesson.video_url" :type="getVideoMimeType(lesson.video_url)">
+                                    <!-- Additional WMV sources for better browser compatibility -->
+                                    <source v-if="isWMVFile(lesson.video_url)" :src="lesson.video_url" type="video/x-ms-wmv">
+                                    <source v-if="isWMVFile(lesson.video_url)" :src="lesson.video_url" type="video/x-ms-asf">
+                                    <source v-if="isWMVFile(lesson.video_url)" :src="lesson.video_url" type="application/vnd.ms-asf">
+                                    <!-- Fallback source without type -->
+                                    <source :src="lesson.video_url">
+                                    {{ t('lessons.video_not_supported') || 'Your browser does not support the video tag.' }}
+                                </video>
+                                <div v-if="videoError" class="absolute inset-0 flex items-center justify-center bg-gray-900 text-white p-4 z-10">
+                                    <div class="text-center max-w-md">
+                                        <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <p class="text-lg font-semibold mb-2">{{ t('lessons.video_error') || 'Video Error' }}</p>
+                                        <p class="text-sm text-gray-300 mb-2">{{ videoError }}</p>
+                                        <p v-if="lesson.video_url" class="text-xs text-gray-500 break-all mt-2">{{ lesson.video_url }}</p>
+                                    </div>
+                                </div>
                             </div>
                             <div v-else class="w-full h-full">
                                 <!-- YouTube or other video links -->
@@ -557,7 +581,7 @@
                     </div>
 
                     <!-- Sidebar - Sections with Lessons -->
-                    <div class="col-lg-3 col-md-4 d-none d-md-block">
+                    <div v-if="!showAttendanceModal" class="col-lg-3 col-md-4 d-none d-md-block">
                         <div class="card shadow-sm border-0 sticky-top" style="top: 20px;">
                             <div class="card-body p-0">
                                 <!-- Header -->
@@ -794,10 +818,10 @@
                      class="fixed inset-0 z-50 overflow-y-auto" 
                      @click.self="closeAttendanceModal">
                     <!-- Backdrop -->
-                    <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity"></div>
+                    <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-40"></div>
                     
                     <!-- Modal Container -->
-                    <div class="flex min-h-full items-center justify-center p-4">
+                    <div class="flex min-h-full items-center justify-center p-4 relative z-50">
                         <div class="relative bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden transform transition-all" 
                              :dir="direction">
                             <!-- Header -->
@@ -870,12 +894,17 @@
                                                         </div>
                                                     </td>
                                                     <td class="px-5 py-4 whitespace-nowrap">
-                                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                            {{ student.batch_name }}
-                                                        </span>
+                                                        <button 
+                                                            type="button"
+                                                            class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                                                            disabled
+                                                        >
+                                                            {{ student.batch_name || t('lessons.batch') || 'Batch' }}
+                                                        </button>
                                                     </td>
                                                     <td class="px-5 py-4 whitespace-nowrap">
                                                         <select 
+                                                            v-if="attendanceForm[student.id]"
                                                             v-model="attendanceForm[student.id].status"
                                                             class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-sm transition-all"
                                                         >
@@ -884,13 +913,28 @@
                                                             <option value="late">{{ t('lessons.late') || 'Late' }}</option>
                                                             <option value="excused">{{ t('lessons.excused') || 'Excused' }}</option>
                                                         </select>
+                                                        <select 
+                                                            v-else
+                                                            class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-sm transition-all"
+                                                            disabled
+                                                        >
+                                                            <option>{{ t('common.loading') || 'Loading...' }}</option>
+                                                        </select>
                                                     </td>
                                                     <td class="px-5 py-4">
                                                         <input 
                                                             type="text"
+                                                            v-if="attendanceForm[student.id]"
                                                             v-model="attendanceForm[student.id].notes"
                                                             :placeholder="t('lessons.notes_placeholder') || 'Optional notes...'"
                                                             class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-sm transition-all"
+                                                        />
+                                                        <input 
+                                                            v-else
+                                                            type="text"
+                                                            :placeholder="t('lessons.notes_placeholder') || 'Optional notes...'"
+                                                            class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 text-sm transition-all"
+                                                            disabled
                                                         />
                                                     </td>
                                                 </tr>
@@ -1075,6 +1119,7 @@ const youtubePlayer = ref(null);
 const videoPlayer = ref(null);
 const videoCheckInterval = ref(null);
 const videoDuration = ref(0);
+const videoError = ref(null);
 
 // Initialize forms for questions that don't have answers yet
 if (props.lesson?.questions) {
@@ -1327,21 +1372,25 @@ const submitAnswer = async (question) => {
 // Attendance Modal
 const showAttendanceModal = ref(false);
 const isSubmittingAttendance = ref(false);
-const attendanceForm = ref({});
+const attendanceForm = reactive({});
 
 const openAttendanceModal = () => {
     if (!props.lesson || !props.instructorStudents || props.instructorStudents.length === 0) {
         return;
     }
     
+    // Clear previous form data
+    Object.keys(attendanceForm).forEach(key => {
+        delete attendanceForm[key];
+    });
+    
     // Initialize attendance form with current attendance data or defaults
-    const form = {};
     props.instructorStudents.forEach(student => {
         const existingAttendance = props.instructorAttendances?.find(
             a => a.student_id === student.id && a.batch_id === student.batch_id
         );
         
-        form[student.id] = {
+        attendanceForm[student.id] = {
             student_id: student.id,
             batch_id: student.batch_id,
             status: existingAttendance?.status || 'present',
@@ -1350,13 +1399,15 @@ const openAttendanceModal = () => {
         };
     });
     
-    attendanceForm.value = form;
     showAttendanceModal.value = true;
 };
 
 const closeAttendanceModal = () => {
     showAttendanceModal.value = false;
-    attendanceForm.value = {};
+    // Clear form data
+    Object.keys(attendanceForm).forEach(key => {
+        delete attendanceForm[key];
+    });
 };
 
 const markAttendance = async () => {
@@ -1364,7 +1415,7 @@ const markAttendance = async () => {
     
     isSubmittingAttendance.value = true;
     
-    const attendances = Object.values(attendanceForm.value).map(form => ({
+    const attendances = Object.values(attendanceForm).map(form => ({
         student_id: form.student_id,
         batch_id: form.batch_id,
         status: form.status,
@@ -1575,6 +1626,7 @@ const onVideoLoaded = () => {
     if (videoElement) {
         videoDuration.value = videoElement.duration;
         videoPlayer.value = videoElement;
+        videoError.value = null; // Clear any previous errors
     }
 };
 
@@ -1601,6 +1653,96 @@ const onVideoTimeUpdate = () => {
             markLessonCompleted();
         }
     }
+};
+
+const onVideoError = (event) => {
+    const videoElement = event.target;
+    videoError.value = null;
+    
+    if (videoElement.error) {
+        let errorMessage = t('lessons.video_load_error') || 'Failed to load video.';
+        
+        switch (videoElement.error.code) {
+            case videoElement.error.MEDIA_ERR_ABORTED:
+                errorMessage = t('lessons.video_error_aborted') || 'Video loading was aborted.';
+                break;
+            case videoElement.error.MEDIA_ERR_NETWORK:
+                errorMessage = t('lessons.video_error_network') || 'Network error while loading video.';
+                break;
+            case videoElement.error.MEDIA_ERR_DECODE:
+                errorMessage = t('lessons.video_error_decode') || 'Video decoding error. The file may be corrupted or in an unsupported format.';
+                break;
+            case videoElement.error.MEDIA_ERR_SRC_NOT_SUPPORTED:
+                errorMessage = t('lessons.video_error_unsupported') || 'Video format not supported or MIME type not found. Please check the video file format and URL.';
+                break;
+        }
+        
+        videoError.value = errorMessage;
+        console.error('Video error:', errorMessage, videoElement.error, 'Video URL:', props.lesson?.video_url);
+        
+        // Try to fetch the video URL to check if it's accessible
+        if (props.lesson?.video_url) {
+            fetch(props.lesson.video_url, { method: 'HEAD' })
+                .then(response => {
+                    if (!response.ok) {
+                        console.error('Video URL not accessible:', response.status, response.statusText);
+                        videoError.value = `${errorMessage} (HTTP ${response.status})`;
+                    } else {
+                        const contentType = response.headers.get('content-type');
+                        console.log('Video Content-Type:', contentType);
+                        if (!contentType || !contentType.startsWith('video/')) {
+                            console.warn('Video URL does not have video Content-Type:', contentType);
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.error('Error checking video URL:', err);
+                });
+        }
+    }
+};
+
+const onVideoCanPlay = () => {
+    videoError.value = null; // Clear error when video can play
+};
+
+const onVideoLoadStart = () => {
+    videoError.value = null; // Clear error when video starts loading
+};
+
+// Check if file is WMV format
+const isWMVFile = (url) => {
+    if (!url) return false;
+    const urlPath = url.split('?')[0];
+    const extension = urlPath.split('.').pop()?.toLowerCase();
+    return extension === 'wmv';
+};
+
+// Get MIME type from video URL extension
+const getVideoMimeType = (url) => {
+    if (!url) return '';
+    
+    // Extract extension from URL (handle query strings)
+    const urlPath = url.split('?')[0];
+    const extension = urlPath.split('.').pop()?.toLowerCase();
+    
+    if (!extension) return '';
+    
+    const mimeTypes = {
+        'mp4': 'video/mp4',
+        'webm': 'video/webm',
+        'ogg': 'video/ogg',
+        'ogv': 'video/ogg',
+        'mov': 'video/quicktime',
+        'avi': 'video/x-msvideo',
+        'wmv': 'video/x-ms-wmv', // Primary WMV MIME type
+        'flv': 'video/x-flv',
+        'mkv': 'video/x-matroska',
+        'm3u8': 'application/x-mpegURL',
+        'm4v': 'video/x-m4v',
+    };
+    
+    return mimeTypes[extension] || '';
 };
 
 // Handle live meeting link click - mark attendance
@@ -1711,6 +1853,7 @@ watch(() => props.lesson?.id, (newLessonId, oldLessonId) => {
     
     // Reset video tracking
     videoWatchPercentage.value = 0;
+    videoError.value = null; // Reset video error
     
     // Clear previous interval
     if (videoCheckInterval.value) {
@@ -1742,6 +1885,8 @@ watch(() => props.lesson?.id, (newLessonId, oldLessonId) => {
                     videoPlayer.value = videoElement;
                     videoElement.addEventListener('loadedmetadata', onVideoLoaded);
                     videoElement.addEventListener('timeupdate', onVideoTimeUpdate);
+                    videoElement.addEventListener('error', onVideoError);
+                    videoElement.addEventListener('canplay', onVideoCanPlay);
                 }
             }, 500);
         }
