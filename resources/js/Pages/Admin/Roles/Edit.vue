@@ -119,6 +119,20 @@
                         </div>
                     </div>
 
+                    <!-- Admin Access Section -->
+                    <div class="p-6 space-y-6 bg-gray-50/50 border-t border-gray-100">
+                        <div class="flex items-center gap-3 p-4 bg-white rounded-xl border border-gray-200">
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input v-model="form.is_admin" type="checkbox" class="sr-only peer" />
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                            <div class="flex-1">
+                                <p class="font-medium text-gray-900">{{ t('roles.fields.is_admin') || 'Admin Dashboard Access' }}</p>
+                                <p class="text-sm text-gray-500">{{ t('roles.is_admin_description') || 'This role allows access to admin dashboard. Users with this role must also have is_admin = 1 in their user profile.' }}</p>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Permissions Section -->
                     <div class="p-6 space-y-6">
                         <div class="flex items-center justify-between">
@@ -154,27 +168,35 @@
                             <span class="font-medium">{{ form.permissions.length }} {{ t('roles.permissions_selected') }}</span>
                         </div>
 
-                        <!-- Permissions Grid -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                            <label
-                                v-for="permission in permissions"
-                                :key="permission.id"
-                                class="relative flex items-start gap-3 p-4 border rounded-xl cursor-pointer transition-all"
-                                :class="form.permissions.includes(permission.id) ? 'border-blue-500 bg-blue-50/50 ring-1 ring-blue-500' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'"
-                            >
-                                        <input
-                                            v-model="form.permissions"
-                                            type="checkbox"
-                                            :value="permission.id"
-                                    class="mt-0.5 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                                        />
-                                <div class="flex-1 min-w-0">
-                                    <p class="font-medium text-gray-900 text-sm">{{ getPermissionName(permission) }}</p>
-                                    <p class="text-xs text-gray-500 truncate">{{ permission.slug }}</p>
-                                    <p v-if="locale === 'ar' && permission.name" class="text-xs text-gray-400 italic mt-0.5">({{ permission.name }})</p>
-                                    <p v-else-if="locale === 'en' && permission.name_ar" class="text-xs text-gray-400 italic mt-0.5">({{ permission.name_ar }})</p>
-                                </div>
-                            </label>
+                        <!-- Permissions by Category -->
+                        <div v-for="(groupPermissions, groupName) in groupedPermissions" :key="groupName" class="mb-8">
+                            <h3 class="text-md font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                                <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                {{ getGroupName(groupName) }}
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                <label
+                                    v-for="permission in groupPermissions"
+                                    :key="permission.id"
+                                    class="relative flex items-start gap-3 p-4 border rounded-xl cursor-pointer transition-all"
+                                    :class="form.permissions.includes(permission.id) ? 'border-blue-500 bg-blue-50/50 ring-1 ring-blue-500' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'"
+                                >
+                                    <input
+                                        v-model="form.permissions"
+                                        type="checkbox"
+                                        :value="permission.id"
+                                        class="mt-0.5 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                    />
+                                    <div class="flex-1 min-w-0">
+                                        <p class="font-medium text-gray-900 text-sm">{{ getPermissionName(permission) }}</p>
+                                        <p class="text-xs text-gray-500 truncate">{{ permission.slug }}</p>
+                                        <p v-if="locale === 'ar' && permission.name" class="text-xs text-gray-400 italic mt-0.5">({{ permission.name }})</p>
+                                        <p v-else-if="locale === 'en' && permission.name_ar" class="text-xs text-gray-400 italic mt-0.5">({{ permission.name_ar }})</p>
+                                    </div>
+                                </label>
+                            </div>
                         </div>
 
                         <div v-if="permissions.length === 0" class="text-center py-8 bg-gray-50 rounded-xl">
@@ -240,6 +262,7 @@ const form = useForm({
     description: props.role.description || '',
     description_ar: props.role.description_ar || '',
     permissions: props.role.permissions?.map(p => p.id) || [],
+    is_admin: props.role.is_admin || false,
 });
 
 // Get role name based on locale
@@ -258,6 +281,77 @@ const getPermissionName = (permission) => {
         return permission.name_ar;
     }
     return permission.name || '';
+};
+
+// Group permissions by category (prefix before dot in slug)
+const groupedPermissions = computed(() => {
+    const groups = {};
+    const groupOrder = [
+        'categories',
+        'courses',
+        'sections',
+        'lessons',
+        'questions',
+        'batches',
+        'enrollments',
+        'users',
+        'roles',
+        'permissions',
+        'settings',
+        'dashboard',
+        'attendance',
+        'faqs',
+    ];
+
+    // Group permissions
+    props.permissions?.forEach(permission => {
+        const slug = permission.slug || '';
+        const groupName = slug.split('.')[0] || 'other';
+        
+        if (!groups[groupName]) {
+            groups[groupName] = [];
+        }
+        groups[groupName].push(permission);
+    });
+
+    // Sort groups by predefined order
+    const sortedGroups = {};
+    groupOrder.forEach(groupName => {
+        if (groups[groupName]) {
+            sortedGroups[groupName] = groups[groupName];
+        }
+    });
+
+    // Add any remaining groups not in the order list
+    Object.keys(groups).forEach(groupName => {
+        if (!sortedGroups[groupName]) {
+            sortedGroups[groupName] = groups[groupName];
+        }
+    });
+
+    return sortedGroups;
+});
+
+// Get group display name
+const getGroupName = (groupName) => {
+    const groupNames = {
+        categories: locale.value === 'ar' ? 'الفئات' : 'Categories',
+        courses: locale.value === 'ar' ? 'الدورات' : 'Courses',
+        sections: locale.value === 'ar' ? 'الأقسام' : 'Sections',
+        lessons: locale.value === 'ar' ? 'الدروس' : 'Lessons',
+        questions: locale.value === 'ar' ? 'الأسئلة' : 'Questions',
+        batches: locale.value === 'ar' ? 'الدفعات' : 'Batches',
+        enrollments: locale.value === 'ar' ? 'التسجيلات' : 'Enrollments',
+        users: locale.value === 'ar' ? 'المستخدمين' : 'Users',
+        roles: locale.value === 'ar' ? 'الأدوار' : 'Roles',
+        permissions: locale.value === 'ar' ? 'الصلاحيات' : 'Permissions',
+        settings: locale.value === 'ar' ? 'الإعدادات' : 'Settings',
+        dashboard: locale.value === 'ar' ? 'لوحات التحكم' : 'Dashboards',
+        attendance: locale.value === 'ar' ? 'الحضور' : 'Attendance',
+        faqs: locale.value === 'ar' ? 'الأسئلة الشائعة' : 'FAQs',
+        other: locale.value === 'ar' ? 'أخرى' : 'Other',
+    };
+    return groupNames[groupName] || groupName;
 };
 
 const getRoleColor = (slug) => {

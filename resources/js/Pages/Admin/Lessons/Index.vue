@@ -127,15 +127,7 @@
                                                     <i class="bi bi-eye"></i>
                                                     <span class="action-btn-text">{{ t('common.view') || t('lessons.actions.view') || 'View' }}</span>
                                                 </Link>
-                                                <button
-                                                    @click="openLessonModal(lesson)"
-                                                    type="button"
-                                                    class="btn btn-sm btn-outline-warning action-btn action-btn-edit"
-                                                    :title="t('common.edit') || t('lessons.actions.edit') || 'Edit'"
-                                                >
-                                                    <i class="bi bi-pencil"></i>
-                                                    <span class="action-btn-text">{{ t('common.edit') || t('lessons.actions.edit') || 'Edit' }}</span>
-                                                </button>
+                                                <!-- Edit Lesson button hidden -->
                                                 <Link
                                                     :href="route('admin.courses.lessons.questions.index', [course.slug || course.id, lesson.id])"
                                                     class="btn btn-sm btn-outline-info action-btn action-btn-questions"

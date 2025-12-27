@@ -1388,6 +1388,43 @@ const page = usePage();
 const auth = computed(() => page.props.auth?.user);
 const layout = computed(() => auth.value ? AuthenticatedLayout : AppLayout);
 
+// Get effective role (selectedRole if multiple roles, otherwise default role)
+const effectiveRole = computed(() => {
+    if (!auth.value) return null;
+    
+    const availableRoles = page.props.auth?.availableRoles || [];
+    const selectedRole = page.props.auth?.selectedRole;
+    
+    // If user has multiple roles, use selectedRole
+    if (availableRoles.length > 1) {
+        return selectedRole || auth.value.role;
+    }
+    
+    // If user has single role, use that role
+    return auth.value.role;
+});
+
+// Check if user is student based on effective role
+const isStudent = computed(() => {
+    if (!auth.value) return false;
+    // Check if effective role is student
+    if (effectiveRole.value !== 'student') return false;
+    // Also verify user actually has student role
+    const userRoles = page.props.auth?.roles || [];
+    return userRoles.includes('student') || auth.value.role === 'student';
+});
+
+// Check if user is instructor based on effective role
+const isInstructor = computed(() => {
+    if (props.isInstructor) return true;
+    if (!auth.value) return false;
+    // Check if effective role is instructor
+    if (effectiveRole.value !== 'instructor') return false;
+    // Also verify user actually has instructor role
+    const userRoles = page.props.auth?.roles || [];
+    return userRoles.includes('instructor') || auth.value.role === 'instructor';
+});
+
 // Settings and permissions
 const settings = computed(() => page.props.settings);
 const canCreateSection = computed(() => {

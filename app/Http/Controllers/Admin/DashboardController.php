@@ -18,9 +18,46 @@ class DashboardController extends Controller
         private DashboardService $dashboardService
     ) {
         $this->middleware(function ($request, $next) {
+            /** @var User $user */
             $user = Auth::user();
             
-            if (!$user || (!$user->isAdmin() && !$user->hasPermission('dashboard.admin'))) {
+            // Super admin can always access (no checks needed)
+            if ($user->isSuperAdmin()) {
+                return $next($request);
+            }
+            
+            // Regular admin needs is_admin == 1
+            // Check 1: User must have is_admin == 1
+            if (!$user || !$user->is_admin || $user->is_admin == 0) {
+                abort(403, __('messages.forbidden'));
+            }
+            
+            // Check 2: User must have a role with is_admin == 1
+            $hasAdminRole = false;
+            $userRoles = $user->roles()->get();
+            
+            foreach ($userRoles as $role) {
+                if ($role->is_admin == 1) {
+                    $hasAdminRole = true;
+                    break;
+                }
+            }
+            
+            // Also check legacy role field if it's admin
+            if (!$hasAdminRole && $user->role === 'admin') {
+                $legacyRole = Role::where('slug', 'admin')
+                    ->orWhere('name', 'admin')
+                    ->first();
+                if ($legacyRole && $legacyRole->is_admin == 1) {
+                    $hasAdminRole = true;
+                }
+            }
+            
+            if (!$hasAdminRole) {
+                abort(403, __('messages.forbidden'));
+            }
+            
+            if (!$user->isAdmin() && !$user->hasPermission('dashboard.admin')) {
                 abort(403, __('messages.forbidden'));
             }
             

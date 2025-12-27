@@ -13,10 +13,10 @@ use App\Http\Controllers\Student\DashboardController as StudentDashboardControll
 use App\Http\Controllers\DirectionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\RoleSelectionController;
 use Modules\Roles\Controllers\RoleController;
 use Modules\Roles\Controllers\PermissionController;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
 
 /*
 |--------------------------------------------------------------------------
@@ -24,18 +24,9 @@ use Illuminate\Support\Facades\Auth;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', function () {
-    if (Auth::check()) {
-        $user = Auth::user();
-        return match(true) {
-            $user->isAdmin() => redirect()->route('admin.dashboard'),
-            $user->isInstructor() => redirect()->route('instructor.dashboard'),
-            $user->isStudent() => redirect()->route('student.dashboard'),
-            default => redirect()->route('profile.show'),
-        };
-    }
-    return redirect()->route('login');
-})->name('welcome');
+Route::get('/')
+    ->middleware(\App\Http\Middleware\RedirectToDashboard::class)
+    ->name('welcome');
 
 Route::post('/direction', [DirectionController::class, 'setDirection'])->name('direction.set');
 Route::post('/locale', [LocaleController::class, 'setLocale'])->name('locale.set');
@@ -57,6 +48,11 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
     
+    // Role Selection (for users with multiple roles)
+    Route::get('/role-selection', [RoleSelectionController::class, 'index'])->name('role-selection');
+    Route::post('/role-selection', [RoleSelectionController::class, 'store'])->name('role-selection.store');
+    Route::get('/role-selection/switch', [RoleSelectionController::class, 'switch'])->name('role-selection.switch');
+    
     // Profile
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -64,15 +60,18 @@ Route::middleware('auth')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| Admin Routes (Non-Course Related)
+| Admin Routes
+| Note: All admin routes require:
+|   - Super admin: always allowed
+|   - Regular admin: user->is_admin == 1 AND role->is_admin == 1
 |--------------------------------------------------------------------------
 */
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     // Dashboard
-    Route::middleware('permission:dashboard.admin')->group(function () {
-        Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
-    });
+    Route::middleware('permission:dashboard.admin')
+        ->get('/dashboard', [AdminDashboardController::class, 'index'])
+        ->name('dashboard');
     
     // Users Management
     Route::middleware('permission:users.manage')->group(function () {
@@ -81,56 +80,58 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     });
     
     // Roles and Permissions
-    Route::middleware('permission:roles.manage')->group(function () {
-        Route::resource('roles', RoleController::class);
-    });
-    Route::middleware('permission:permissions.manage')->group(function () {
-        Route::resource('permissions', PermissionController::class)->except(['create', 'edit', 'show']);
-    });
+    Route::middleware('permission:roles.manage')
+        ->resource('roles', RoleController::class);
+    
+    Route::middleware('permission:permissions.manage')
+        ->resource('permissions', PermissionController::class)
+        ->except(['create', 'edit', 'show']);
     
     // Settings
-    Route::middleware('permission:settings.view')->group(function () {
-        Route::get('/settings', [AdminSettingsController::class, 'index'])->name('settings.index');
-    });
-    Route::middleware('permission:settings.edit')->group(function () {
-        Route::match(['put', 'post'], '/settings', [AdminSettingsController::class, 'update'])->name('settings.update');
-    });
+    Route::middleware('permission:settings.view')
+        ->get('/settings', [AdminSettingsController::class, 'index'])
+        ->name('settings.index');
+    
+    Route::middleware('permission:settings.edit')
+        ->match(['put', 'post'], '/settings', [AdminSettingsController::class, 'update'])
+        ->name('settings.update');
     
     // Programs Management
-    Route::middleware('permission:programs.manage')->group(function () {
-        Route::resource('programs', AdminProgramController::class);
-    });
+    Route::middleware('permission:programs.manage')
+        ->resource('programs', AdminProgramController::class);
     
     // Tracks Management
     Route::middleware('permission:tracks.manage')->group(function () {
-        Route::post('tracks/{track}/courses', [AdminTrackController::class, 'addCourses'])->name('tracks.add-courses');
-        Route::delete('tracks/{track}/courses/{course}', [AdminTrackController::class, 'removeCourse'])->name('tracks.remove-course');
+        Route::post('tracks/{track}/courses', [AdminTrackController::class, 'addCourses'])
+            ->name('tracks.add-courses');
+        Route::delete('tracks/{track}/courses/{course}', [AdminTrackController::class, 'removeCourse'])
+            ->name('tracks.remove-course');
         Route::resource('tracks', AdminTrackController::class);
     });
 });
 
 /*
 |--------------------------------------------------------------------------
-| Instructor Routes (Non-Course Related)
+| Instructor Routes
 |--------------------------------------------------------------------------
 */
 
 Route::middleware(['auth', 'role:instructor'])->prefix('instructor')->name('instructor.')->group(function () {
-    Route::middleware('permission:dashboard.instructor')->group(function () {
-        Route::get('/dashboard', [InstructorDashboardController::class, 'index'])->name('dashboard');
-    });
+    Route::middleware('permission:dashboard.instructor')
+        ->get('/dashboard', [InstructorDashboardController::class, 'index'])
+        ->name('dashboard');
 });
 
 /*
 |--------------------------------------------------------------------------
-| Student Routes (Non-Course Related)
+| Student Routes
 |--------------------------------------------------------------------------
 */
 
 Route::middleware(['auth', 'role:student'])->prefix('student')->name('student.')->group(function () {
-    Route::middleware('permission:dashboard.student')->group(function () {
-        Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
-    });
+    Route::middleware('permission:dashboard.student')
+        ->get('/dashboard', [StudentDashboardController::class, 'index'])
+        ->name('dashboard');
 });
 
 /*

@@ -22,7 +22,12 @@ class StoreBatchRequest extends FormRequest
             'instructor_id' => [
                 'required',
                 'exists:users,id',
-                Rule::exists('users', 'id')->where('role', 'instructor')->where('is_active', true),
+                function ($attribute, $value, $fail) {
+                    $user = \App\Models\User::find($value);
+                    if (!$user || !$user->isInstructor() || !$user->is_active) {
+                        $fail(__('The selected instructor is invalid or inactive.'));
+                    }
+                },
             ],
             'start_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],

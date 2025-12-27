@@ -17,11 +17,13 @@ class Role extends SpatieRole
         'description',
         'description_ar',
         'guard_name',
+        'is_admin',
     ];
 
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'is_admin' => 'boolean',
     ];
 
     /**

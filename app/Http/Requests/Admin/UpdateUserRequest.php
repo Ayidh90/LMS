@@ -32,11 +32,23 @@ class UpdateUserRequest extends FormRequest
                 Rule::unique('users', 'national_id')->ignore($userId),
             ],
             'password' => ['nullable', 'string', 'min:8', 'confirmed'],
-            'role_id' => ['required', 'exists:roles,id'],
-            'role' => ['nullable', 'string'], // Keep for backward compatibility, will be set from role_id
+            'role_id' => ['nullable', 'exists:roles,id'], // Single role (for backward compatibility)
+            'role_ids' => ['nullable', 'array', 'min:1'], // Multiple roles - at least one required
+            'role_ids.*' => ['exists:roles,id'], // Each role must exist
+            'role' => ['nullable', 'string'], // Keep for backward compatibility
             'is_admin' => ['nullable', 'boolean'],
             'is_active' => ['nullable', 'boolean'],
         ];
+    }
+    
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            // Ensure at least one role is selected (either role_id or role_ids)
+            if (empty($this->role_ids) && empty($this->role_id)) {
+                $validator->errors()->add('role_ids', __('Please select at least one role.'));
+            }
+        });
     }
 
     public function messages(): array

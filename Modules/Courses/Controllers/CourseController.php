@@ -59,6 +59,7 @@ class CourseController extends Controller
 
     public function show(Course $course)
     {
+        /** @var \App\Models\User|null $user */
         $user = Auth::user();
         
         // Validate course access
@@ -101,16 +102,19 @@ class CourseController extends Controller
             }
         }
 
+        // Check user's selected role if they have multiple roles
+        $effectiveRole = $this->getEffectiveRole($user);
+        
         // User permissions and status
-        $canEdit = $user && $user->isAdmin();
-        $isEnrolled = $user && $user->isStudent() 
+        $canEdit = $user instanceof \App\Models\User && $user->isAdmin();
+        $isEnrolled = $user instanceof \App\Models\User && $effectiveRole === 'student' && $user->isStudent() 
             && $user->enrolledCourses()->where('courses.id', $courseData->id)->exists();
         $isFavorited = $user ? $this->favoriteService->isFavorited($courseData) : false;
         
-        // Check if user is instructor through batches
+        // Check if user is instructor through batches (only if selected role is instructor)
         $isInstructor = false;
         $instructorBatches = collect();
-        if ($user && $user->isInstructor()) {
+        if ($user instanceof \App\Models\User && $effectiveRole === 'instructor' && $user->isInstructor()) {
             $instructorBatches = \App\Models\Batch::where('course_id', $course->id)
                 ->where('instructor_id', $user->id)
                 ->get();
@@ -144,6 +148,27 @@ class CourseController extends Controller
     }
 
     /**
+     * Get effective role for user (selected_role if multiple roles, otherwise default role)
+     */
+    private function getEffectiveRole(?\App\Models\User $user): ?string
+    {
+        if (!$user) {
+            return null;
+        }
+        
+        // Get available roles
+        $availableRoles = $user->getAvailableRolesForSelection();
+        
+        // If user has multiple roles, use selected_role
+        if (count($availableRoles) > 1) {
+            return $user->selected_role ?? $user->role;
+        }
+        
+        // If user has single role, use that role
+        return $user->role;
+    }
+
+    /**
      * Get batches for course based on user role
      */
     private function getCourseBatches(Course $course, ?\App\Models\User $user, bool $isInstructor, $instructorBatches)
@@ -152,7 +177,11 @@ class CourseController extends Controller
             return null;
         }
 
-        if ($user->isStudent()) {
+        // Get effective role
+        $effectiveRole = $this->getEffectiveRole($user);
+        
+        // Only show batches if user's selected role is student
+        if ($effectiveRole === 'student' && $user->isStudent()) {
             return \App\Models\Batch::where('course_id', $course->id)
                 ->whereHas('enrollments', fn($q) => $q->where('student_id', $user->id))
                 ->with('instructor:id,name,email')
@@ -160,7 +189,8 @@ class CourseController extends Controller
                 ->map(fn($batch) => $this->formatBatchForStudent($batch));
         }
 
-        if ($isInstructor) {
+        // Only show instructor batches if user's selected role is instructor
+        if ($effectiveRole === 'instructor' && $isInstructor) {
             return $instructorBatches->map(fn($batch) => $this->formatBatchForInstructor($batch));
         }
 

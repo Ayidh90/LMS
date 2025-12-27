@@ -50,17 +50,22 @@ class UserController extends Controller
             'is_active' => $validated['is_active'] ?? true,
         ]);
 
-        // Assign role using Spatie Permission
-        if (!empty($validated['role_id'])) {
+        // Assign roles using Spatie Permission (support multiple roles)
+        if (!empty($validated['role_ids']) && is_array($validated['role_ids'])) {
+            // Multiple roles - sync all roles
+            $roles = \Modules\Roles\Models\Role::whereIn('id', $validated['role_ids'])->get();
+            $user->syncRoles($roles);
+        } elseif (!empty($validated['role_id'])) {
+            // Single role - assign it (add to existing roles, not replace)
             $role = $this->roleService->getRoleById($validated['role_id']);
-            $this->roleService->assignRoleToUser($user, $role);
+            $user->assignRole($role);
         } elseif (!empty($validated['role'])) {
             // Fallback: try to find role by name or slug
             $role = \Modules\Roles\Models\Role::where('name', $validated['role'])
                 ->orWhere('slug', $validated['role'])
                 ->first();
             if ($role) {
-                $this->roleService->assignRoleToUser($user, $role);
+                $user->assignRole($role);
             }
         }
 
@@ -100,8 +105,13 @@ class UserController extends Controller
 
         $user->update($updateData);
 
-        // Update role using Spatie Permission
-        if (!empty($validated['role_id'])) {
+        // Update roles using Spatie Permission (support multiple roles)
+        if (!empty($validated['role_ids']) && is_array($validated['role_ids'])) {
+            // Multiple roles - sync all roles (replace existing)
+            $roles = \Modules\Roles\Models\Role::whereIn('id', $validated['role_ids'])->get();
+            $user->syncRoles($roles);
+        } elseif (!empty($validated['role_id'])) {
+            // Single role - sync to this role only (replace existing)
             $role = $this->roleService->getRoleById($validated['role_id']);
             $user->syncRoles([$role]);
         } elseif (!empty($validated['role'])) {

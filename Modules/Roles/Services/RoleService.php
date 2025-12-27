@@ -39,6 +39,7 @@ class RoleService
                 'description' => $data['description'] ?? null,
                 'description_ar' => $data['description_ar'] ?? null,
                 'guard_name' => $data['guard_name'] ?? 'web',
+                'is_admin' => $data['is_admin'] ?? false,
             ]);
 
             if (!empty($permissionIds)) {
@@ -62,6 +63,7 @@ class RoleService
                 'description' => $data['description'] ?? $role->description,
                 'description_ar' => $data['description_ar'] ?? $role->description_ar,
                 'guard_name' => $data['guard_name'] ?? $role->guard_name,
+                'is_admin' => $data['is_admin'] ?? $role->is_admin,
             ]);
 
             if ($permissionIds !== null) {

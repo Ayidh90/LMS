@@ -51,6 +51,7 @@ class RoleController extends Controller
             'slug' => ['nullable', 'string', 'max:255', 'unique:roles,slug'],
             'description' => ['nullable', 'string'],
             'description_ar' => ['nullable', 'string'],
+            'is_admin' => ['nullable', 'boolean'],
             'permissions' => ['nullable', 'array'],
             'permissions.*' => ['exists:permissions,id'],
         ]);
@@ -105,6 +106,7 @@ class RoleController extends Controller
             'slug' => ['nullable', 'string', 'max:255', 'unique:roles,slug,' . $role->id],
             'description' => ['nullable', 'string'],
             'description_ar' => ['nullable', 'string'],
+            'is_admin' => ['nullable', 'boolean'],
             'permissions' => ['nullable', 'array'],
             'permissions.*' => ['exists:permissions,id'],
         ]);

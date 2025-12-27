@@ -45,7 +45,17 @@ class CoursePolicy
 
     public function create(User $user): bool
     {
-        return $user->isAdmin();
+        // Admin can always create courses
+        if ($user->isAdmin()) {
+            return true;
+        }
+        
+        // Instructor can create courses only if they have the permission
+        if ($user->isInstructor()) {
+            return $user->hasPermission('courses.create');
+        }
+        
+        return false;
     }
 
     public function update(User $user, Course $course): bool

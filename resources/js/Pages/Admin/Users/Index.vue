@@ -20,149 +20,205 @@
             </div>
 
             <!-- Search and Filters -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
                 <div class="flex flex-col sm:flex-row gap-4">
                     <div class="flex-1 relative">
-                        <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                         <input
                             v-model="search"
                             type="text"
-                            :placeholder="t('common.search') || 'Search users...'"
-                            class="w-full pr-10 pl-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                            :placeholder="t('common.search') || 'Search users by name or email...'"
+                            class="w-full pr-12 pl-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-gray-50 focus:bg-white"
                             @input="debouncedSearch"
                         />
                     </div>
-                    <select
-                        v-model="roleFilter"
-                        @change="applyFilters"
-                        class="px-4 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white min-w-[150px]"
-                    >
-                        <option value="">{{ t('users.all_roles') || 'All Roles' }}</option>
-                        <option value="student">{{ t('users.roles.student') }}</option>
-                        <option value="instructor">{{ t('users.roles.instructor') }}</option>
-                        <option value="admin">{{ t('users.roles.admin') }}</option>
-                        <option value="super_admin">{{ t('users.roles.super_admin') }}</option>
-                    </select>
+                    <div class="relative">
+                        <select
+                            v-model="roleFilter"
+                            @change="applyFilters"
+                            class="w-full sm:w-auto px-4 py-3 pr-10 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 focus:bg-white min-w-[180px] appearance-none cursor-pointer transition-all"
+                        >
+                            <option value="">{{ t('users.all_roles') || 'All Roles' }}</option>
+                            <option value="student">{{ t('users.roles.student') }}</option>
+                            <option value="instructor">{{ t('users.roles.instructor') }}</option>
+                            <option value="admin">{{ t('users.roles.admin') }}</option>
+                            <option value="super_admin">{{ t('users.roles.super_admin') }}</option>
+                        </select>
+                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
                 </div>
             </div>
 
-            <!-- Users Table -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <!-- Users List -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50/50">
-                        <tr>
-                                <th class="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <table class="table table-hover mb-0 w-100">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col" class="text-right text-uppercase fw-bold text-muted small border-bottom-2">
                                     {{ t('users.fields.name') }}
                                 </th>
-                                <th class="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                <th scope="col" class="text-right text-uppercase fw-bold text-muted small border-bottom-2">
                                     {{ t('users.fields.email') }}
                                 </th>
-                                <th class="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    {{ t('users.fields.role') }}
+                                <th scope="col" class="text-right text-uppercase fw-bold text-muted small border-bottom-2">
+                                    {{ t('users.fields.roles') || t('users.fields.role') }}
                                 </th>
-                                <th class="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                <th scope="col" class="text-right text-uppercase fw-bold text-muted small border-bottom-2">
                                     {{ t('users.fields.status') }}
                                 </th>
-                                <th class="px-6 py-4 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                <th scope="col" class="text-right text-uppercase fw-bold text-muted small border-bottom-2">
                                     {{ t('common.actions') }}
                                 </th>
-                        </tr>
-                    </thead>
-                        <tbody class="bg-white divide-y divide-gray-100">
-                            <tr v-for="user in users.data" :key="user.id" class="hover:bg-gray-50/50 transition-colors">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm"
-                                            :class="getAvatarColor(user.role)">
-                                            {{ getInitials(user.name) }}
+                            </tr>
+                        </thead>
+                        <tbody class="table-group-divider">
+                            <tr 
+                                v-for="user in users.data" 
+                                :key="user.id" 
+                                class="table-row-hover align-middle"
+                            >
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <div class="flex items-center gap-4">
+                                        <div class="relative">
+                                            <div 
+                                                class="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-md group-hover:shadow-lg transition-all transform group-hover:scale-105"
+                                                :class="getAvatarColor(getPrimaryRole(user))"
+                                            >
+                                                {{ getInitials(user.name) }}
+                                            </div>
+                                            <div 
+                                                v-if="user.is_active"
+                                                class="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 border-2 border-white rounded-full"
+                                            ></div>
+                                            <div 
+                                                v-else
+                                                class="absolute -bottom-1 -right-1 w-4 h-4 bg-red-500 border-2 border-white rounded-full"
+                                            ></div>
                                         </div>
-                                        <div>
-                                            <div class="text-sm font-semibold text-gray-900">{{ user.name }}</div>
-                                            <div class="text-xs text-gray-500">{{ t('common.joined') }} {{ formatDate(user.created_at) }}</div>
+                                        <div class="flex-1 min-w-0">
+                                            <div class="text-sm font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+                                                {{ user.name }}
+                                            </div>
+                                            <div class="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                </svg>
+                                                {{ t('common.joined') }} {{ formatDate(user.created_at) }}
+                                            </div>
                                         </div>
                                     </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-600">{{ user.email }}</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full"
-                                        :class="getRoleBadgeClass(user.role)">
-                                        <span class="w-1.5 h-1.5 rounded-full" :class="getRoleDotClass(user.role)"></span>
-                                        {{ t('users.roles.' + user.role) || user.role }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full"
-                                        :class="user.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'">
-                                        <span class="w-1.5 h-1.5 rounded-full" :class="user.is_active ? 'bg-emerald-500' : 'bg-red-500'"></span>
-                                    {{ user.is_active ? t('users.active') : t('users.inactive') }}
-                                </span>
-                            </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center gap-2">
-                                    <Link
-                                        :href="route('admin.users.edit', user.id)"
-                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <div class="d-flex align-items-center gap-2 text-muted small">
+                                        <svg class="w-4 h-4 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                        </svg>
+                                        <span class="text-truncate d-inline-block" style="max-width: 200px;">{{ user.email }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <div class="flex flex-wrap gap-2">
+                                        <!-- Display all user roles -->
+                                        <span
+                                            v-for="role in getUserRoles(user)"
+                                            :key="role.id || role.slug || role"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg shadow-sm border transition-all hover:scale-105"
+                                            :class="getRoleBadgeClass(role.slug || role)"
+                                        >
+                                            <span class="w-2 h-2 rounded-full" :class="getRoleDotClass(role.slug || role)"></span>
+                                            {{ getRoleDisplayName(role) }}
+                                        </span>
+                                        <!-- Fallback to legacy role if no roles found -->
+                                        <span
+                                            v-if="!user.roles || user.roles.length === 0"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg shadow-sm border transition-all hover:scale-105"
+                                            :class="getRoleBadgeClass(user.role)"
+                                        >
+                                            <span class="w-2 h-2 rounded-full" :class="getRoleDotClass(user.role)"></span>
+                                            {{ t('users.roles.' + user.role) || user.role }}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <span 
+                                        class="badge d-inline-flex align-items-center gap-2"
+                                        :class="user.is_active ? 'bg-success bg-opacity-10 text-success border border-success border-opacity-25' : 'bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25'"
                                     >
+                                        <span class="badge-dot" :class="user.is_active ? 'bg-success' : 'bg-danger'"></span>
+                                        {{ user.is_active ? t('users.active') : t('users.inactive') }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <Link
+                                            :href="route('admin.users.edit', user.id)"
+                                            class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1"
+                                            title="Edit User"
+                                        >
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                             </svg>
-                                        {{ t('common.edit') }}
-                                    </Link>
-                                    <button
+                                            <span class="d-none d-sm-inline">{{ t('common.edit') }}</span>
+                                        </Link>
+                                        <button
                                             @click="confirmDelete(user)"
-                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
-                                    >
+                                            class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1"
+                                            title="Delete User"
+                                        >
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                             </svg>
-                                        {{ t('common.delete') }}
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr v-if="users.data.length === 0">
-                                <td colspan="5" class="px-6 py-12 text-center">
-                                    <div class="flex flex-col items-center">
-                                        <svg class="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                                        </svg>
-                                        <p class="text-gray-500 font-medium">{{ t('users.no_users') }}</p>
+                                            <span class="d-none d-sm-inline">{{ t('common.delete') }}</span>
+                                        </button>
                                     </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                                </td>
+                            </tr>
+                            <tr v-if="users.data.length === 0">
+                                <td colspan="5" class="px-6 py-16 text-center">
+                                    <div class="d-flex flex-column align-items-center">
+                                        <div class="w-20 h-20 rounded-circle bg-light d-flex align-items-center justify-content-center mb-4">
+                                            <svg class="w-10 h-10 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                            </svg>
+                                        </div>
+                                        <p class="text-muted fw-semibold fs-5 mb-1">{{ t('users.no_users') }}</p>
+                                        <p class="text-muted small">{{ t('users.no_users_description') || 'No users found matching your criteria' }}</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
 
                 <!-- Pagination -->
-                <div v-if="users.links && users.links.length > 3" class="px-6 py-4 border-t border-gray-100 bg-gray-50/30">
+                <div v-if="users.links && users.links.length > 3" class="px-6 py-4 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100/50">
                     <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <div class="text-sm text-gray-600">
-                            {{ t('common.showing') }} <span class="font-medium">{{ users.from }}</span> {{ t('common.to') }} <span class="font-medium">{{ users.to }}</span> {{ t('common.of') }} <span class="font-medium">{{ users.total }}</span>
+                        <div class="text-sm text-gray-600 font-medium">
+                            {{ t('common.showing') }} <span class="text-gray-900 font-bold">{{ users.from }}</span> {{ t('common.to') }} <span class="text-gray-900 font-bold">{{ users.to }}</span> {{ t('common.of') }} <span class="text-gray-900 font-bold">{{ users.total }}</span> {{ t('users.total_users') || 'users' }}
                         </div>
                         <nav class="flex items-center gap-1">
                             <template v-for="(link, index) in users.links" :key="index">
-                            <Link
+                                <Link
                                     v-if="link.url"
                                     :href="link.url"
-                                :class="[
-                                        'px-3 py-2 rounded-lg text-sm font-medium transition-all',
-                                    link.active
-                                            ? 'bg-blue-600 text-white shadow-sm'
-                                            : 'text-gray-600 hover:bg-gray-100'
+                                    :class="[
+                                        'px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200',
+                                        link.active
+                                            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/30'
+                                            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 border border-gray-200'
                                     ]"
                                 >
                                     <span v-html="link.label"></span>
                                 </Link>
                                 <span
                                     v-else
-                                    class="px-3 py-2 text-sm text-gray-400"
-                                v-html="link.label"
+                                    class="px-4 py-2 text-sm text-gray-400 font-semibold"
+                                    v-html="link.label"
                                 ></span>
                             </template>
                         </nav>
@@ -223,7 +279,7 @@ defineProps({
     users: Object,
 });
 
-const { t } = useTranslation();
+const { t, locale } = useTranslation();
 const { route } = useRoute();
 
 const search = ref('');
@@ -258,22 +314,30 @@ const getInitials = (name) => {
 
 const getAvatarColor = (role) => {
     const colors = {
-        'super_admin': 'bg-gradient-to-br from-purple-500 to-purple-700',
-        'admin': 'bg-gradient-to-br from-red-500 to-red-700',
-        'instructor': 'bg-gradient-to-br from-blue-500 to-blue-700',
-        'student': 'bg-gradient-to-br from-emerald-500 to-emerald-700',
+        'super_admin': 'bg-gradient-to-br from-purple-500 via-purple-600 to-purple-700',
+        'admin': 'bg-gradient-to-br from-red-500 via-red-600 to-red-700',
+        'instructor': 'bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700',
+        'student': 'bg-gradient-to-br from-emerald-500 via-emerald-600 to-emerald-700',
     };
-    return colors[role] || 'bg-gradient-to-br from-gray-500 to-gray-700';
+    return colors[role] || 'bg-gradient-to-br from-gray-500 via-gray-600 to-gray-700';
+};
+
+// Get primary role for avatar color (first role or legacy role)
+const getPrimaryRole = (user) => {
+    if (user.roles && user.roles.length > 0) {
+        return user.roles[0].slug || user.roles[0].name;
+    }
+    return user.role || 'student';
 };
 
 const getRoleBadgeClass = (role) => {
     const classes = {
-        'super_admin': 'bg-purple-50 text-purple-700',
-        'admin': 'bg-red-50 text-red-700',
-        'instructor': 'bg-blue-50 text-blue-700',
-        'student': 'bg-emerald-50 text-emerald-700',
+        'super_admin': 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100',
+        'admin': 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100',
+        'instructor': 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100',
+        'student': 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100',
     };
-    return classes[role] || 'bg-gray-50 text-gray-700';
+    return classes[role] || 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100';
 };
 
 const getRoleDotClass = (role) => {
@@ -284,6 +348,29 @@ const getRoleDotClass = (role) => {
         'student': 'bg-emerald-500',
     };
     return classes[role] || 'bg-gray-500';
+};
+
+// Get all roles for a user
+const getUserRoles = (user) => {
+    if (user.roles && user.roles.length > 0) {
+        return user.roles;
+    }
+    // Fallback to legacy role
+    if (user.role) {
+        return [{ slug: user.role, name: user.role }];
+    }
+    return [];
+};
+
+// Get role display name
+const getRoleDisplayName = (role) => {
+    if (typeof role === 'string') {
+        return t('users.roles.' + role) || role;
+    }
+    if (role.name_ar && locale.value === 'ar') {
+        return role.name_ar;
+    }
+    return t('users.roles.' + (role.slug || role.name)) || role.name || role.slug || '';
 };
 
 const formatDate = (date) => {
@@ -307,3 +394,111 @@ const deleteUser = () => {
     }
 };
 </script>
+
+<style scoped>
+/* Bootstrap Table Styles */
+.table {
+    margin-bottom: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.table thead {
+    background: linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.table thead th {
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    padding: 1rem 1.5rem;
+    color: #495057;
+    vertical-align: middle;
+}
+
+.table tbody tr {
+    transition: all 0.15s ease-in-out;
+    border-bottom: 1px solid #f1f3f5;
+}
+
+.table tbody tr:hover {
+    background-color: #f8f9fa;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.table td {
+    padding: 1rem 1.5rem;
+    vertical-align: middle;
+    border-top: 1px solid #f1f3f5;
+}
+
+.table-group-divider {
+    border-top: 2px solid #dee2e6;
+}
+
+.table-light {
+    background-color: #f8f9fa;
+    color: #495057;
+}
+
+.border-bottom-2 {
+    border-bottom: 2px solid #dee2e6 !important;
+}
+
+/* Badge Styles */
+.badge-dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+/* Button Styles */
+.btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    border-radius: 0.375rem;
+}
+
+.btn-outline-primary {
+    border: 1px solid #0d6efd;
+    color: #0d6efd;
+    background-color: transparent;
+}
+
+.btn-outline-primary:hover {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    color: #fff;
+}
+
+.btn-outline-danger {
+    border: 1px solid #dc3545;
+    color: #dc3545;
+    background-color: transparent;
+}
+
+.btn-outline-danger:hover {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: #fff;
+}
+
+/* RTL Support */
+[dir="rtl"] .table thead th,
+[dir="rtl"] .table td {
+    text-align: right;
+}
+
+[dir="ltr"] .table thead th,
+[dir="ltr"] .table td {
+    text-align: left;
+}
+</style>

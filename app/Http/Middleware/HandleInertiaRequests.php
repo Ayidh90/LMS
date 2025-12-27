@@ -84,6 +84,8 @@ class HandleInertiaRequests extends Middleware
                 ] : null,
                 'can' => $user?->getPermissionArray(),
                 'roles' => $user ? array_values($user->getRoleNames()->toArray()) : [],
+                'availableRoles' => $user ? $user->getAvailableRolesForSelection() : [],
+                'selectedRole' => $user ? ($user->selected_role ?? $user->role) : null,
             ],
             'settings' => [
                 'instructor_permissions' => $instructorPermissions,

@@ -29,11 +29,28 @@ class RedirectIfAuthenticated
                     continue;
                 }
                 
-                // Redirect based on user role to their respective dashboard
-                return match(true) {
-                    $user->isAdmin() => redirect()->route('admin.dashboard'),
-                    $user->isInstructor() => redirect()->route('instructor.dashboard'),
-                    $user->isStudent() => redirect()->route('student.dashboard'),
+                // Use same redirect logic as RedirectToDashboard middleware
+                // Refresh to get latest data from database
+                $user->refresh();
+                
+                // Get available roles for selection first
+                $availableRoles = $user->getAvailableRolesForSelection();
+                
+                // If user has multiple roles, always show role selection page
+                // Even if they have selected_role saved (to allow switching)
+                if (count($availableRoles) > 1) {
+                    return redirect()->route('role-selection');
+                }
+                
+                // Single role - use user's default role and save to database
+                $selectedRole = $user->role;
+                $user->update(['selected_role' => $selectedRole]);
+                session(['selected_role' => $selectedRole]);
+                
+                return match ($selectedRole) {
+                    'admin', 'super_admin' => redirect()->route('admin.dashboard'),
+                    'instructor' => redirect()->route('instructor.dashboard'),
+                    'student' => redirect()->route('student.dashboard'),
                     default => redirect()->route('profile.show'),
                 };
             }

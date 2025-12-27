@@ -596,7 +596,15 @@ const submit = () => {
     if (urlBasedTypes.includes(props.formData.type)) {
         submitData.video_url = props.formData.video_url || '';
     } else if (fileBasedTypes.includes(props.formData.type)) {
-        submitData.video_url = props.formData.video_url || null;
+        // For file types, clear video_url if a new file is being uploaded
+        // Backend will set it to the uploaded file path
+        if (props.formData.video_file instanceof File || 
+            props.formData.image_file instanceof File || 
+            props.formData.document_file instanceof File) {
+            submitData.video_url = null;
+        } else {
+            submitData.video_url = props.formData.video_url || null;
+        }
     } else {
         submitData.video_url = null;
     }
@@ -610,13 +618,34 @@ const submit = () => {
         submitData.live_meeting_link = null;
     }
     
-    // Always include ALL file fields (even if null) to match StoreLessonRequest format
-    // This ensures the backend receives them in the same format
-    submitData.video_file = props.formData.video_file instanceof File ? props.formData.video_file : null;
-    submitData.image_file = props.formData.image_file instanceof File ? props.formData.image_file : null;
-    submitData.document_file = props.formData.document_file instanceof File ? props.formData.document_file : null;
+    // CRITICAL: Always include file fields - pass File objects directly, not null
+    // This ensures files are properly included in FormData when sent to backend
+    if (props.formData.video_file instanceof File) {
+        submitData.video_file = props.formData.video_file;
+    } else {
+        // Only set to null if not a File - don't include the field at all if null
+        // This prevents issues with FormData handling
+        submitData.video_file = null;
+    }
     
-    console.log('Form.vue - Submitting data:', submitData);
+    if (props.formData.image_file instanceof File) {
+        submitData.image_file = props.formData.image_file;
+    } else {
+        submitData.image_file = null;
+    }
+    
+    if (props.formData.document_file instanceof File) {
+        submitData.document_file = props.formData.document_file;
+    } else {
+        submitData.document_file = null;
+    }
+    
+    console.log('Form.vue - Submitting data:', {
+        ...submitData,
+        video_file: submitData.video_file instanceof File ? `File: ${submitData.video_file.name}` : submitData.video_file,
+        image_file: submitData.image_file instanceof File ? `File: ${submitData.image_file.name}` : submitData.image_file,
+        document_file: submitData.document_file instanceof File ? `File: ${submitData.document_file.name}` : submitData.document_file,
+    });
     emit('submit', submitData);
 };
 </script>

@@ -101,9 +101,22 @@ class CourseController extends Controller
             ]);
             
             // Get instructors for batch modals
-            $instructors = User::where('role', 'instructor')
+            // Check both legacy role field and Spatie roles (supports multiple roles)
+            $instructors = User::where(function($query) {
+                    $query->where('role', 'instructor')
+                          ->orWhereHas('roles', function($q) {
+                              $q->where('slug', 'instructor')
+                                ->orWhere('name', 'instructor');
+                          });
+                })
+                ->where('is_active', true)
                 ->orderBy('name')
-                ->get(['id', 'name', 'email']);
+                ->get(['id', 'name', 'email'])
+                ->filter(function($user) {
+                    // Filter to ensure user has instructor role using isInstructor() method
+                    return $user->isInstructor();
+                })
+                ->values();
             
             // Check if there's an existing batch that hasn't ended yet
             $existingBatch = \App\Models\Batch::where('course_id', $course->id)

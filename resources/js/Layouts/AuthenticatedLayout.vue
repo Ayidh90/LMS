@@ -5,7 +5,7 @@
                 <div class="flex justify-between h-16">
                     <div class="flex">
                         <div class="flex-shrink-0 flex items-center">
-                            <Link :href="homeRoute" class="text-xl font-bold text-indigo-600">
+                            <Link :href="homeRoute" class="text-xl font-bold text-indigo-600 hover:text-indigo-700 transition-colors">
                                 {{ navbarTitle }}
                             </Link>
                         </div>
@@ -54,31 +54,56 @@ const page = usePage();
 
 const user = computed(() => page.props.auth?.user);
 
-const homeRoute = computed(() => {
-    if (!user.value) return route('welcome');
+// Get route for a specific role
+const getRouteForRole = (roleSlug) => {
+    if (!roleSlug) return route('welcome');
     
-    const role = user.value.role;
-    const isAdmin = user.value.is_admin === 1 || user.value.is_admin === true;
+    const isAdmin = user.value?.is_admin === 1 || user.value?.is_admin === true;
     
-    // Route to appropriate dashboard based on role
-    if ((role === 'super_admin' || role === 'admin') && isAdmin) {
-        return route('admin.dashboard');
-    } else if (role === 'student') {
+    // Map role to route
+    if (roleSlug === 'student') {
         return route('student.dashboard');
-    } else if (role === 'instructor') {
+    } else if (roleSlug === 'instructor') {
         return route('instructor.dashboard');
+    } else if ((roleSlug === 'super_admin' || roleSlug === 'admin') && isAdmin) {
+        return route('admin.dashboard');
     }
     
     return route('welcome');
+};
+
+const homeRoute = computed(() => {
+    if (!user.value) return route('welcome');
+    
+    // Get available roles and selected role
+    const availableRoles = page.props.auth?.availableRoles || [];
+    const selectedRole = page.props.auth?.selectedRole;
+    
+    // If user has multiple roles, use selectedRole; otherwise use default role
+    let role = user.value.role;
+    if (availableRoles.length > 1 && selectedRole) {
+        role = selectedRole;
+    }
+    
+    return getRouteForRole(role);
 });
 
 const navbarTitle = computed(() => {
     if (!user.value) return 'LMS';
     
-    const role = user.value.role;
+    // Get available roles and selected role
+    const availableRoles = page.props.auth?.availableRoles || [];
+    const selectedRole = page.props.auth?.selectedRole;
+    
+    // If user has multiple roles, use selectedRole; otherwise use default role
+    let role = user.value.role;
+    if (availableRoles.length > 1 && selectedRole) {
+        role = selectedRole;
+    }
+    
     const isAdmin = user.value.is_admin === 1 || user.value.is_admin === true;
     
-    // Show "Dashboard" for students and instructors, "LMS" for others
+    // Show dashboard name based on role
     if (role === 'student') {
         return t('student.dashboard') || 'Dashboard';
     } else if (role === 'instructor') {
@@ -93,14 +118,17 @@ const navbarTitle = computed(() => {
 const dashboardRoute = computed(() => {
     if (!user.value) return route('welcome');
     
-    const role = user.value.role;
-    const isAdmin = user.value.is_admin === 1 || user.value.is_admin === true;
+    // Get available roles and selected role
+    const availableRoles = page.props.auth?.availableRoles || [];
+    const selectedRole = page.props.auth?.selectedRole;
     
-    // Only admins with is_admin == 1 get dashboard, students and instructors don't have dashboard
-    if ((role === 'super_admin' || role === 'admin') && isAdmin) {
-        return route('admin.dashboard');
+    // If user has multiple roles, use selectedRole; otherwise use default role
+    let role = user.value.role;
+    if (availableRoles.length > 1 && selectedRole) {
+        role = selectedRole;
     }
-    return route('welcome');
+    
+    return getRouteForRole(role);
 });
 
 const showDashboard = computed(() => {

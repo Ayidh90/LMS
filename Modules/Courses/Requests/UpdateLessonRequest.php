@@ -14,9 +14,17 @@ class UpdateLessonRequest extends FormRequest
     /**
      * Prepare the data for validation.
      * Transform empty strings to null and convert types.
+     * CRITICAL: When FormData is used with files, we need to check request()->all() 
+     * to ensure all fields are accessible, not just input().
      */
     protected function prepareForValidation(): void
     {
+        // CRITICAL: Get all request data first (for FormData compatibility)
+        // When FormData is used with files, some fields might not be accessible via input()
+        // So we check request()->all() to get all form fields
+        $allData = $this->request->all();
+        
+        dd($allData);
         // Match StoreLessonRequest behavior - keep data format consistent
         // Convert empty strings to null for nullable fields (same as StoreLessonRequest)
         
@@ -33,13 +41,18 @@ class UpdateLessonRequest extends FormRequest
         ];
 
         foreach ($nullableFields as $field) {
-            if ($this->has($field) && $this->input($field) === '') {
+            // Check both input() and allData for FormData compatibility
+            $value = $this->input($field) ?? ($allData[$field] ?? null);
+            if ($value === '') {
                 $this->merge([$field => null]);
+            } elseif ($value !== null && !isset($allData[$field])) {
+                // If value exists but not in allData, merge it
+                $this->merge([$field => $value]);
             }
         }
 
         // Ensure title is always present and trimmed (for FormData compatibility)
-        $title = $this->input('title');
+        $title = $this->input('title') ?? ($allData['title'] ?? null);
         if ($title !== null && $title !== '') {
             $this->merge(['title' => is_string($title) ? trim($title) : $title]);
         } else {
@@ -48,7 +61,7 @@ class UpdateLessonRequest extends FormRequest
         }
 
         // Ensure type is always present (for FormData compatibility)
-        $type = $this->input('type');
+        $type = $this->input('type') ?? ($allData['type'] ?? null);
         if ($type !== null && $type !== '') {
             $this->merge(['type' => is_string($type) ? trim($type) : $type]);
         } else {
@@ -56,12 +69,14 @@ class UpdateLessonRequest extends FormRequest
             $this->merge(['type' => '']);
         }
 
-        // Convert section_id to integer if it's a string (same as StoreLessonRequest)
-        // Always check input directly (don't rely on has() for FormData compatibility)
-        $sectionId = $this->input('section_id');
+        // CRITICAL: Convert section_id to integer if it's a string
+        // Check both input() and allData for FormData compatibility
+        // When FormData is used with files, section_id might be in allData but not accessible via input()
+        $sectionId = $this->input('section_id') ?? ($allData['section_id'] ?? null);
+        
         if ($sectionId !== null && $sectionId !== '') {
             if (is_string($sectionId) && trim($sectionId) !== '') {
-                $this->merge(['section_id' => (int) $sectionId]);
+                $this->merge(['section_id' => (int) trim($sectionId)]);
             } elseif (is_numeric($sectionId)) {
                 $this->merge(['section_id' => (int) $sectionId]);
             } else {
@@ -69,15 +84,16 @@ class UpdateLessonRequest extends FormRequest
             }
         } else {
             // Always merge section_id, even if null/empty, to ensure it's present for validation
+            // This is critical for admin users where section_id is required
             $this->merge(['section_id' => null]);
         }
 
         // Convert order to integer if it's a string (same as StoreLessonRequest)
-        // Always check input directly (don't rely on has() for FormData compatibility)
-        $order = $this->input('order');
+        // Check both input() and allData for FormData compatibility
+        $order = $this->input('order') ?? ($allData['order'] ?? null);
         if ($order !== null && $order !== '') {
             if (is_string($order) && trim($order) !== '') {
-                $this->merge(['order' => (int) $order]);
+                $this->merge(['order' => (int) trim($order)]);
             } elseif (is_numeric($order)) {
                 $this->merge(['order' => (int) $order]);
             } else {
@@ -88,11 +104,11 @@ class UpdateLessonRequest extends FormRequest
         }
 
         // Convert duration_minutes to integer if it's a string (same as StoreLessonRequest)
-        // Always check input directly (don't rely on has() for FormData compatibility)
-        $duration = $this->input('duration_minutes');
+        // Check both input() and allData for FormData compatibility
+        $duration = $this->input('duration_minutes') ?? ($allData['duration_minutes'] ?? null);
         if ($duration !== null && $duration !== '') {
             if (is_string($duration) && trim($duration) !== '') {
-                $this->merge(['duration_minutes' => (int) $duration]);
+                $this->merge(['duration_minutes' => (int) trim($duration)]);
             } elseif (is_numeric($duration)) {
                 $this->merge(['duration_minutes' => (int) $duration]);
             } else {
@@ -103,20 +119,26 @@ class UpdateLessonRequest extends FormRequest
         }
 
         // Convert is_free to boolean if it's a string
-        if ($this->has('is_free')) {
-            $isFree = $this->input('is_free');
+        // Check both input() and allData for FormData compatibility
+        $isFree = $this->input('is_free') ?? ($allData['is_free'] ?? null);
+        if ($isFree !== null) {
             if (is_string($isFree)) {
                 $this->merge(['is_free' => filter_var($isFree, FILTER_VALIDATE_BOOLEAN)]);
-            } elseif ($isFree === null || $isFree === '') {
+            } elseif ($isFree === '') {
                 $this->merge(['is_free' => null]);
+            } else {
+                $this->merge(['is_free' => (bool) $isFree]);
             }
         }
     }
 
     public function rules(): array
     {
-        // Get type after prepareForValidation has run
-        $type = $this->input('type', '');
+        // CRITICAL: Get type after prepareForValidation has run
+        // Check both input() and request()->all() for FormData compatibility
+        // When FormData is used with files, some fields might not be accessible via input()
+        $allData = $this->request->all();
+        $type = $this->input('type', '') ?: ($allData['type'] ?? '');
         $user = $this->user();
         $isAdmin = $user && method_exists($user, 'isAdmin') && $user->isAdmin();
         
@@ -219,7 +241,9 @@ class UpdateLessonRequest extends FormRequest
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
-            $type = $this->input('type');
+            // CRITICAL: Check both input() and request()->all() for FormData compatibility
+            $allData = $this->request->all();
+            $type = $this->input('type') ?: ($allData['type'] ?? '');
             $user = $this->user();
             $isAdmin = $user && method_exists($user, 'isAdmin') && $user->isAdmin();
             
@@ -229,7 +253,7 @@ class UpdateLessonRequest extends FormRequest
             
             // Validate live lesson requirements
             if ($type === 'live') {
-                $meetingDate = $this->input('live_meeting_date');
+                $meetingDate = $this->input('live_meeting_date') ?: ($allData['live_meeting_date'] ?? null);
                 // Check if date is empty, null, or just whitespace
                 if (empty($meetingDate) || $meetingDate === null || (is_string($meetingDate) && trim($meetingDate) === '')) {
                     $validator->errors()->add('live_meeting_date', __('lessons.validation.live_meeting_date_required'));
@@ -247,7 +271,7 @@ class UpdateLessonRequest extends FormRequest
             
             // Validate URL-based types have video_url
             if (in_array($type, ['youtube_video', 'google_drive_video', 'embed_frame'])) {
-                $videoUrl = $this->input('video_url');
+                $videoUrl = $this->input('video_url') ?: ($allData['video_url'] ?? null);
                 if (empty($videoUrl) || (is_string($videoUrl) && trim($videoUrl) === '')) {
                     $validator->errors()->add('video_url', __('The video URL is required for this lesson type.'));
                 } elseif (!filter_var($videoUrl, FILTER_VALIDATE_URL)) {

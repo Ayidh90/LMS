@@ -20,6 +20,7 @@ class User extends Authenticatable
         'password',
         'role',
         'is_admin',
+        'selected_role',
         'avatar',
         'bio',
         'is_active',
@@ -122,16 +123,15 @@ class User extends Authenticatable
     {
         return $this->hasRole('super_admin') || 
                $this->hasRoleBySlug('super_admin') || 
-               $this->role === 'super_admin' || 
-               ($this->is_admin && $this->role === 'admin');
+               $this->role === 'super_admin';
     }
 
     public function isAdmin(): bool
     {
         return $this->hasRole('admin') || 
                $this->hasRoleBySlug('admin') || 
-               ($this->is_admin && ($this->role === 'admin' || $this->role === 'super_admin')) || 
-               $this->role === 'super_admin';
+               $this->isSuperAdmin() ||
+               ($this->role === 'admin' || $this->role === 'super_admin');
     }
 
     public function isInstructor(): bool
@@ -171,15 +171,31 @@ class User extends Authenticatable
             return true;
         }
 
-        // Check using Spatie's permission system
+        // Check using Spatie's permission system - this automatically checks all roles
         $permission = Permission::where('slug', $permissionSlug)->first();
         if ($permission && $this->hasPermissionTo($permission)) {
             return true;
         }
 
-        // Check permissions through roles (custom method)
-        foreach ($this->roles as $role) {
-            if (method_exists($role, 'hasPermissionBySlug') && $role->hasPermissionBySlug($permissionSlug)) {
+        // Also check by name (Spatie uses name by default)
+        if ($permission && $this->hasPermissionTo($permission->name)) {
+            return true;
+        }
+
+        // Check permissions through all roles manually (for slug-based checks)
+        $roles = $this->roles()->with('permissions')->get();
+        foreach ($roles as $role) {
+            foreach ($role->permissions as $rolePermission) {
+                if ($rolePermission->slug === $permissionSlug || $rolePermission->name === $permissionSlug) {
+                    return true;
+                }
+            }
+        }
+
+        // Check direct permissions assigned to user
+        $directPermissions = $this->permissions;
+        foreach ($directPermissions as $directPermission) {
+            if ($directPermission->slug === $permissionSlug || $directPermission->name === $permissionSlug) {
                 return true;
             }
         }
@@ -191,6 +207,7 @@ class User extends Authenticatable
     /**
      * Get all permissions as an associative array (slug => true)
      * Used for frontend permission checking
+     * Concatenates permissions from ALL user roles
      */
     public function getPermissionArray(): array
     {
@@ -218,33 +235,54 @@ class User extends Authenticatable
             return $permissions;
         }
 
-        // Get permissions through Spatie roles
+        // Get permissions through ALL Spatie roles (concatenate from all roles)
+        // Method 1: Get permissions via Spatie's built-in method (automatically concatenates from all roles)
+        try {
+            $spatiePermissions = $this->getPermissionsViaRoles();
+            foreach ($spatiePermissions as $permission) {
+                $key = $permission->slug ?? $permission->name;
+                if ($key) {
+                    $permissions[$key] = true;
+                }
+            }
+        } catch (\Exception $e) {
+            // If getPermissionsViaRoles() doesn't exist, fall back to manual method
+        }
+
+        // Method 2: Manually get permissions from all roles (backup method)
         $roles = $this->roles()->with('permissions')->get();
         foreach ($roles as $role) {
             foreach ($role->permissions as $permission) {
-                if ($permission->slug) {
-                    $permissions[$permission->slug] = true;
+                // Use slug if available, otherwise use name
+                $key = $permission->slug ?: $permission->name;
+                if ($key) {
+                    $permissions[$key] = true;
                 }
             }
         }
 
-        // Also get direct permissions (Spatie supports direct user permissions)
+        // Also get direct permissions assigned to user (Spatie supports direct user permissions)
         $directPermissions = $this->permissions;
         foreach ($directPermissions as $permission) {
-            if ($permission->slug) {
-                $permissions[$permission->slug] = true;
+            $key = $permission->slug ?: $permission->name;
+            if ($key) {
+                $permissions[$key] = true;
             }
         }
 
         // Fallback to old system for backward compatibility
-        $legacyPermissions = DB::table('role_permissions')
-            ->join('permissions', 'role_permissions.permission_id', '=', 'permissions.id')
-            ->where('role_permissions.role', $this->role)
-            ->pluck('permissions.slug')
-            ->toArray();
+        if ($this->role) {
+            $legacyPermissions = DB::table('role_permissions')
+                ->join('permissions', 'role_permissions.permission_id', '=', 'permissions.id')
+                ->where('role_permissions.role', $this->role)
+                ->pluck('permissions.slug')
+                ->toArray();
 
-        foreach ($legacyPermissions as $slug) {
-            $permissions[$slug] = true;
+            foreach ($legacyPermissions as $slug) {
+                if ($slug) {
+                    $permissions[$slug] = true;
+                }
+            }
         }
 
         return $permissions;
@@ -269,6 +307,131 @@ class User extends Authenticatable
         }
         
         return collect($roles);
+    }
+
+    /**
+     * Get available roles for role selection
+     * Returns roles that user can switch to
+     * Includes admin roles if is_admin == 1
+     * Always includes current role even if not in roles relationship
+     */
+    public function getAvailableRolesForSelection()
+    {
+        $roles = $this->roles()->get();
+        $availableRoles = [];
+        $addedSlugs = [];
+        
+        foreach ($roles as $role) {
+            $slug = $role->slug ?? $role->name;
+            // Super admin is always available (no checks needed)
+            if ($slug === 'super_admin') {
+                $availableRoles[] = [
+                    'id' => $role->id,
+                    'name' => $role->name,
+                    'name_ar' => $role->name_ar ?? null,
+                    'slug' => $slug,
+                    'description' => $role->description ?? null,
+                    'description_ar' => $role->description_ar ?? null,
+                ];
+                $addedSlugs[] = $slug;
+            }
+            // Regular admin needs both user->is_admin == 1 and role->is_admin == 1
+            elseif ($slug === 'admin') {
+                if ($this->is_admin == 1 && $role->is_admin == 1) {
+                    $availableRoles[] = [
+                        'id' => $role->id,
+                        'name' => $role->name,
+                        'name_ar' => $role->name_ar ?? null,
+                        'slug' => $slug,
+                        'description' => $role->description ?? null,
+                        'description_ar' => $role->description_ar ?? null,
+                    ];
+                    $addedSlugs[] = $slug;
+                }
+            } else {
+                // Include all non-admin roles
+                $availableRoles[] = [
+                    'id' => $role->id,
+                    'name' => $role->name,
+                    'name_ar' => $role->name_ar ?? null,
+                    'slug' => $slug,
+                    'description' => $role->description ?? null,
+                    'description_ar' => $role->description_ar ?? null,
+                ];
+                $addedSlugs[] = $slug;
+            }
+        }
+        
+        // Add current role if it's not already in the list
+        if ($this->role && !in_array($this->role, $addedSlugs)) {
+            $currentRoleModel = \Modules\Roles\Models\Role::where('slug', $this->role)
+                ->orWhere('name', $this->role)
+                ->first();
+            
+            if ($currentRoleModel) {
+                // Role exists in database, add it
+                $slug = $currentRoleModel->slug ?? $currentRoleModel->name;
+                if ($slug === 'super_admin') {
+                    $availableRoles[] = [
+                        'id' => $currentRoleModel->id,
+                        'name' => $currentRoleModel->name,
+                        'name_ar' => $currentRoleModel->name_ar ?? null,
+                        'slug' => $slug,
+                        'description' => $currentRoleModel->description ?? null,
+                        'description_ar' => $currentRoleModel->description_ar ?? null,
+                    ];
+                } elseif ($slug === 'admin') {
+                    if ($this->is_admin == 1 && $currentRoleModel->is_admin == 1) {
+                        $availableRoles[] = [
+                            'id' => $currentRoleModel->id,
+                            'name' => $currentRoleModel->name,
+                            'name_ar' => $currentRoleModel->name_ar ?? null,
+                            'slug' => $slug,
+                            'description' => $currentRoleModel->description ?? null,
+                            'description_ar' => $currentRoleModel->description_ar ?? null,
+                        ];
+                    }
+                } else {
+                    $availableRoles[] = [
+                        'id' => $currentRoleModel->id,
+                        'name' => $currentRoleModel->name,
+                        'name_ar' => $currentRoleModel->name_ar ?? null,
+                        'slug' => $slug,
+                        'description' => $currentRoleModel->description ?? null,
+                        'description_ar' => $currentRoleModel->description_ar ?? null,
+                    ];
+                }
+            } else {
+                // Role doesn't exist in database, add it as a simple entry
+                $availableRoles[] = [
+                    'id' => null,
+                    'name' => ucfirst($this->role),
+                    'name_ar' => null,
+                    'slug' => $this->role,
+                    'description' => null,
+                    'description_ar' => null,
+                ];
+            }
+        }
+        
+        return $availableRoles;
+    }
+
+    /**
+     * Get all user roles including admin roles
+     */
+    public function getAllRoles()
+    {
+        return $this->roles()->get();
+    }
+
+    /**
+     * Check if user has multiple roles (more than one)
+     */
+    public function hasMultipleRoles(): bool
+    {
+        return $this->roles()->count() > 1 || 
+               ($this->roles()->count() === 1 && $this->role && $this->role !== $this->roles()->first()?->slug);
     }
 }
 

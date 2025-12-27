@@ -32,9 +32,9 @@
                             <Link :href="route('login')" class="text-sm text-gray-700 hover:text-gray-900 font-medium">
                                 {{ t('common.login') }}
                             </Link>
-                            <Link :href="route('register')" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors">
+                            <!-- <Link :href="route('register')" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors">
                                 {{ t('common.register') }}
-                            </Link>
+                            </Link> -->
                         </template>
                     </div>
                 </div>

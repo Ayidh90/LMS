@@ -18,16 +18,26 @@ class EnrollmentService
     {
         $added = 0;
 
-        // Get students in one query
+        // Get students in one query - check both legacy role field and Spatie roles
         $students = User::whereIn('id', $studentIds)
-            ->where('role', 'student')
+            ->where(function($query) {
+                $query->where('role', 'student')
+                      ->orWhereHas('roles', function($q) {
+                          $q->where('slug', 'student')
+                            ->orWhere('name', 'student');
+                      });
+            })
             ->where('is_active', true)
-            ->pluck('id')
-            ->toArray();
+            ->get();
+        
+        // Filter to ensure user has student role using isStudent() method
+        $validStudentIds = $students->filter(function($user) {
+            return $user->isStudent();
+        })->pluck('id')->toArray();
 
         // Get existing enrollments in one query
         $existingEnrollments = Enrollment::where('batch_id', $batch->id)
-            ->whereIn('student_id', $students)
+            ->whereIn('student_id', $validStudentIds)
             ->pluck('student_id')
             ->toArray();
 
@@ -35,7 +45,7 @@ class EnrollmentService
         $enrollmentsToCreate = [];
         $now = now();
 
-        foreach ($students as $studentId) {
+        foreach ($validStudentIds as $studentId) {
             if (!in_array($studentId, $existingEnrollments)) {
                 $enrollmentsToCreate[] = [
                     'student_id' => $studentId,

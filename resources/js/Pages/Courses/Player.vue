@@ -188,16 +188,16 @@
                                                 <div class="d-flex align-items-center gap-2 mb-1">
                                                     <div class="progress flex-grow-1" style="height: 8px;">
                                                         <div class="progress-bar bg-success" role="progressbar" 
-                                                            :style="`width: ${currentStudentProgress.attendance_rate}%`"
-                                                            :aria-valuenow="currentStudentProgress.attendance_rate" 
+                                                            :style="`width: ${(currentStudentProgress?.attendance_rate || 0)}%`"
+                                                            :aria-valuenow="currentStudentProgress?.attendance_rate || 0" 
                                                             aria-valuemin="0" 
                                                             aria-valuemax="100"
                                                             style="transition: width 0.5s ease;">
                                                         </div>
                                                     </div>
-                                                    <span class="small fw-bold text-success">{{ currentStudentProgress.attendance_rate }}%</span>
+                                                    <span class="small fw-bold text-success">{{ currentStudentProgress?.attendance_rate || 0 }}%</span>
                                                 </div>
-                                                <p class="mb-0 small text-muted">{{ currentStudentProgress.attended_lessons }} / {{ currentStudentProgress.total_lessons }} {{ t('lessons.attended') || 'Attended' }}</p>
+                                                <p class="mb-0 small text-muted">{{ currentStudentProgress?.attended_lessons || 0 }} / {{ currentStudentProgress?.total_lessons || 0 }} {{ t('lessons.attended') || 'Attended' }}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -213,16 +213,16 @@
                                                 <div class="d-flex align-items-center gap-2 mb-1">
                                                     <div class="progress flex-grow-1" style="height: 8px;">
                                                         <div class="progress-bar bg-primary" role="progressbar" 
-                                                            :style="`width: ${currentStudentProgress.progress_percentage}%`"
-                                                            :aria-valuenow="currentStudentProgress.progress_percentage" 
+                                                            :style="`width: ${(currentStudentProgress?.progress_percentage || 0)}%`"
+                                                            :aria-valuenow="currentStudentProgress?.progress_percentage || 0" 
                                                             aria-valuemin="0" 
                                                             aria-valuemax="100"
                                                             style="transition: width 0.5s ease;">
                                                         </div>
                                                     </div>
-                                                    <span class="small fw-bold text-primary">{{ currentStudentProgress.progress_percentage }}%</span>
+                                                    <span class="small fw-bold text-primary">{{ currentStudentProgress?.progress_percentage || 0 }}%</span>
                                                 </div>
-                                                <p class="mb-0 small text-muted">{{ currentStudentProgress.completed_lessons }} / {{ currentStudentProgress.total_lessons }} {{ t('lessons.title') || 'Lessons' }}</p>
+                                                <p class="mb-0 small text-muted">{{ currentStudentProgress?.completed_lessons || 0 }} / {{ currentStudentProgress?.total_lessons || 0 }} {{ t('lessons.title') || 'Lessons' }}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -1014,8 +1014,41 @@ const page = usePage();
 
 const auth = computed(() => page.props.auth?.user);
 const layout = computed(() => auth.value ? AuthenticatedLayout : AppLayout);
-const isStudent = computed(() => auth.value?.role === 'student');
-const isInstructor = computed(() => props.isInstructor || auth.value?.role === 'instructor');
+
+// Get effective role (selectedRole if multiple roles, otherwise default role)
+const effectiveRole = computed(() => {
+    if (!auth.value) return null;
+    
+    const availableRoles = page.props.auth?.availableRoles || [];
+    const selectedRole = page.props.auth?.selectedRole;
+    
+    // If user has multiple roles, use selectedRole
+    if (availableRoles.length > 1) {
+        return selectedRole || auth.value.role;
+    }
+    
+    // If user has single role, use that role
+    return auth.value.role;
+});
+
+const isStudent = computed(() => {
+    if (!auth.value) return false;
+    // Check if effective role is student
+    if (effectiveRole.value !== 'student') return false;
+    // Also verify user actually has student role
+    const userRoles = page.props.auth?.roles || [];
+    return userRoles.includes('student') || auth.value.role === 'student';
+});
+
+const isInstructor = computed(() => {
+    if (props.isInstructor) return true;
+    if (!auth.value) return false;
+    // Check if effective role is instructor
+    if (effectiveRole.value !== 'instructor') return false;
+    // Also verify user actually has instructor role
+    const userRoles = page.props.auth?.roles || [];
+    return userRoles.includes('instructor') || auth.value.role === 'instructor';
+});
 
 // Computed property to get current lesson attendance - updates when lesson changes
 const currentStudentAttendance = computed(() => {
@@ -1070,6 +1103,7 @@ const currentStudentAttendance = computed(() => {
 
 // Computed property to ensure studentProgress is always available and updated
 const currentStudentProgress = computed(() => {
+    // Check if user is student based on effective role
     if (!isStudent.value) {
         return null;
     }
@@ -1079,6 +1113,9 @@ const currentStudentProgress = computed(() => {
         // Debug: log progress data
         if (process.env.NODE_ENV === 'development') {
             console.log('Student Progress from server:', props.studentProgress);
+            console.log('Effective Role:', effectiveRole.value);
+            console.log('Is Student:', isStudent.value);
+            console.log('Selected Role:', page.props.auth?.selectedRole);
         }
         return props.studentProgress;
     }
@@ -1901,6 +1938,32 @@ watch(() => props.lesson?.id, (newLessonId, oldLessonId) => {
                 });
             }, 300);
         }
+    }
+}, { immediate: false });
+
+// Watch for effectiveRole changes to reload progress when role switches
+watch(() => effectiveRole.value, (newRole, oldRole) => {
+    // If role changed and user is now a student, reload progress
+    if (newRole === 'student' && oldRole !== 'student' && isStudent.value) {
+        setTimeout(() => {
+            router.reload({ 
+                only: ['studentProgress', 'studentAttendance', 'lessons', 'sections'],
+                preserveScroll: true 
+            });
+        }, 300);
+    }
+}, { immediate: false });
+
+// Watch for selectedRole changes to reload progress when role switches
+watch(() => page.props.auth?.selectedRole, (newSelectedRole, oldSelectedRole) => {
+    // If selected role changed and user is now a student, reload progress
+    if (newSelectedRole === 'student' && oldSelectedRole !== 'student' && isStudent.value) {
+        setTimeout(() => {
+            router.reload({ 
+                only: ['studentProgress', 'studentAttendance', 'lessons', 'sections'],
+                preserveScroll: true 
+            });
+        }, 300);
     }
 }, { immediate: false });
 

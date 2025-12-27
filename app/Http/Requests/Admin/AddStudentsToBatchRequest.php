@@ -19,7 +19,12 @@ class AddStudentsToBatchRequest extends FormRequest
             'student_ids.*' => [
                 'required',
                 'exists:users,id',
-                Rule::exists('users', 'id')->where('role', 'student')->where('is_active', true),
+                function ($attribute, $value, $fail) {
+                    $user = \App\Models\User::find($value);
+                    if (!$user || !$user->isStudent() || !$user->is_active) {
+                        $fail(__('One or more selected users do not have student role or are inactive.'));
+                    }
+                },
             ],
         ];
     }

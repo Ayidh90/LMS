@@ -588,22 +588,7 @@
                                 class="d-flex gap-2 align-items-center flex-wrap"
                                 @click.stop
                               >
-                                <button
-                                  @click.stop="
-                                    openLessonModal({
-                                      ...lesson,
-                                      section_id:
-                                        lesson.section_id || section.id,
-                                    })
-                                  "
-                                  class="btn btn-sm btn-outline-warning"
-                                  :title="t('common.edit') || 'Edit Lesson'"
-                                >
-                                  <i class="bi bi-pencil me-1"></i>
-                                  <span class="d-none d-sm-inline">{{
-                                    t("common.edit") || "Edit"
-                                  }}</span>
-                                </button>
+                                <!-- Edit Lesson button hidden -->
                                 <button
                                   @click.stop="openQuestionModal(lesson.id)"
                                   class="btn btn-sm lesson-action-btn-add"
@@ -1298,6 +1283,12 @@ const openLessonModal = (lessonOrSectionId = null) => {
     lessonForm.content = lessonOrSectionId.content || "";
     lessonForm.content_ar = lessonOrSectionId.content_ar || "";
     lessonForm.video_url = lessonOrSectionId.video_url || "";
+    
+    // CRITICAL: Reset file fields when opening edit modal
+    // This ensures no stale File objects from previous edits
+    lessonForm.video_file = null;
+    lessonForm.image_file = null;
+    lessonForm.document_file = null;
     // Format live_meeting_date for datetime-local input (YYYY-MM-DDTHH:mm)
     // Parse the date string directly without timezone conversion to preserve the stored time
     if (lessonOrSectionId.live_meeting_date) {
@@ -1368,6 +1359,11 @@ const openLessonModal = (lessonOrSectionId = null) => {
     lessonForm.live_meeting_date = "";
     lessonForm.live_meeting_link = "";
     lessonForm.type = ""; // Reset type for new lessons
+    
+    // CRITICAL: Reset file fields for new lessons
+    lessonForm.video_file = null;
+    lessonForm.image_file = null;
+    lessonForm.document_file = null;
   }
   showLessonModal.value = true;
 };
@@ -1383,6 +1379,10 @@ const closeLessonModal = () => {
   lessonForm.duration_minutes = 0;
   lessonForm.live_meeting_date = "";
   lessonForm.live_meeting_link = "";
+  // CRITICAL: Reset file fields when closing modal
+  lessonForm.video_file = null;
+  lessonForm.image_file = null;
+  lessonForm.document_file = null;
 };
 
 // Handle lesson type changes
@@ -1454,33 +1454,84 @@ const submitLesson = (formData) => {
     return;
   }
 
-  // Update lessonForm with formData values (including files)
-  // Handle files separately to ensure they're properly set
+  // CRITICAL: Store files FIRST before updating other form fields
+  // Files must be preserved as File objects for FormData
+  const videoFile = formData.video_file instanceof File ? formData.video_file : null;
+  const imageFile = formData.image_file instanceof File ? formData.image_file : null;
+  const documentFile = formData.document_file instanceof File ? formData.document_file : null;
+
+  // Update lessonForm with formData values (excluding files - we'll add them separately)
   Object.keys(formData).forEach((key) => {
-    if (formData[key] !== undefined && formData[key] !== null) {
-      // Special handling for files - ensure they're File objects
-      if (
-        key === "video_file" ||
-        key === "image_file" ||
-        key === "document_file"
-      ) {
-        if (formData[key] instanceof File) {
-          lessonForm[key] = formData[key];
-          // Clear video_url when a new file is uploaded - backend will set it to the file path
-          lessonForm.video_url = "";
-        }
-      } else {
+    // Skip file fields - we handle them separately
+    if (
+      key === "video_file" ||
+      key === "image_file" ||
+      key === "document_file"
+    ) {
+      return; // Skip file fields
+    }
+    
+    // CRITICAL: Handle section_id specially - it can be null but must be included for admin users
+    if (key === "section_id") {
+      // section_id can be null, but we need to ensure it's set (even if null)
+      if (formData[key] !== undefined) {
         lessonForm[key] = formData[key];
       }
+      return; // Skip the general assignment below
+    }
+    
+    if (formData[key] !== undefined && formData[key] !== null) {
+      lessonForm[key] = formData[key];
     }
   });
 
-  // Convert empty strings to null for nullable fields
-  if (lessonForm.section_id === "" || lessonForm.section_id === null) {
-    lessonForm.section_id = null;
-  } else if (lessonForm.section_id) {
-    lessonForm.section_id = parseInt(lessonForm.section_id);
+  // CRITICAL: Set files directly on lessonForm - this ensures they're tracked by useForm
+  // Only set if they're actual File objects, otherwise set to null
+  // Files will be accessed directly from lessonForm in the transform function
+  lessonForm.video_file = videoFile instanceof File ? videoFile : null;
+  lessonForm.image_file = imageFile instanceof File ? imageFile : null;
+  lessonForm.document_file = documentFile instanceof File ? documentFile : null;
+  
+  // Clear video_url when a new file is uploaded - backend will set it to the file path
+  if (videoFile instanceof File || imageFile instanceof File || documentFile instanceof File) {
+    lessonForm.video_url = "";
   }
+
+  // CRITICAL: Handle section_id conversion - ensure it's properly set
+  // For admin users, section_id is required, so we need to ensure it's included
+  if (formData.section_id !== undefined) {
+    // Convert string to integer if it's a valid number, otherwise keep as is
+    if (formData.section_id === "" || formData.section_id === null || formData.section_id === "null") {
+      lessonForm.section_id = null;
+    } else {
+      const parsed = parseInt(formData.section_id);
+      lessonForm.section_id = isNaN(parsed) ? null : parsed;
+    }
+    console.log('Show.vue - section_id from formData:', formData.section_id, '->', lessonForm.section_id);
+  } else if (lessonForm.section_id !== undefined) {
+    // If formData doesn't have section_id, ensure lessonForm's value is properly formatted
+    if (lessonForm.section_id === "" || lessonForm.section_id === null) {
+      lessonForm.section_id = null;
+    } else if (typeof lessonForm.section_id === "string") {
+      const parsed = parseInt(lessonForm.section_id);
+      lessonForm.section_id = isNaN(parsed) ? null : parsed;
+    }
+    console.log('Show.vue - section_id from lessonForm:', lessonForm.section_id);
+  }
+  
+  // For admin users, if section_id is still null/undefined, try to get it from the original lesson
+  if (isAdmin.value && (lessonForm.section_id === null || lessonForm.section_id === undefined)) {
+    if (editingLesson.value) {
+      const originalSectionId = editingLesson.value.section?.id || editingLesson.value.section_id;
+      if (originalSectionId) {
+        lessonForm.section_id = originalSectionId;
+        console.log('Show.vue - Using original section_id from editingLesson:', originalSectionId);
+      }
+    }
+  }
+  
+  // Final check: Log section_id before submission
+  console.log('Show.vue - Final section_id before submission:', lessonForm.section_id, 'isAdmin:', isAdmin.value);
 
   // Check if we have files to upload (File objects) - do this after setting files in lessonForm
   const fileTypesList = ["video_file", "image", "document_file"];
@@ -1600,26 +1651,129 @@ const submitLesson = (formData) => {
     lessonForm.document_file instanceof File;
 
   // For file types, always use FormData to ensure proper handling
-  const useFormData = hasFiles || (isFileTypeLesson && editingLesson.value);
+  // CRITICAL: Always use FormData when:
+  // 1. Files are present (new file being uploaded)
+  // 2. It's a file-based lesson type (even if no new file, we might need FormData for proper handling)
+  // 3. When editing a file-based lesson (to ensure backend can process correctly)
+  const useFormData = hasFiles || (isFileTypeLesson && editingLesson.value) || isFileTypeLesson;
 
-  // Store files reference before transform
-  const videoFile =
-    lessonForm.video_file instanceof File ? lessonForm.video_file : null;
-  const imageFile =
-    lessonForm.image_file instanceof File ? lessonForm.image_file : null;
-  const documentFile =
-    lessonForm.document_file instanceof File ? lessonForm.document_file : null;
+  // Log files for debugging
+  console.log('Show.vue - Submitting lesson with files:', {
+    hasFiles,
+    useFormData,
+    video_file: lessonForm.video_file instanceof File ? `File: ${lessonForm.video_file.name} (${lessonForm.video_file.size} bytes)` : lessonForm.video_file,
+    image_file: lessonForm.image_file instanceof File ? `File: ${lessonForm.image_file.name} (${lessonForm.image_file.size} bytes)` : lessonForm.image_file,
+    document_file: lessonForm.document_file instanceof File ? `File: ${lessonForm.document_file.name} (${lessonForm.document_file.size} bytes)` : lessonForm.document_file,
+    type: lessonForm.type,
+    isFileTypeLesson,
+  });
 
   if (editingLesson.value) {
     // Update existing lesson
+    // CRITICAL: Files are already set on lessonForm (video_file, image_file, document_file)
+    // Inertia will automatically include File objects when forceFormData is true
+    // We use transform to clean up null/undefined file fields but preserve File objects
+    
+    // CRITICAL: For PUT requests with files, we need to ensure files are included
+    // Inertia's transform might not include File objects in the data parameter
+    // So we access them directly from lessonForm
+    // CRITICAL: When using forceFormData, Inertia creates FormData from lessonForm.data()
+    // We MUST set ALL fields individually on lessonForm BEFORE calling .put()
+    // The transform function should use the form's data, but we need to ensure it's all there
+    
+    // Prepare all data to send
+    const formDataToSend = {
+      title: lessonForm.title || '',
+      type: lessonForm.type || '',
+      section_id: lessonForm.section_id !== undefined && lessonForm.section_id !== null 
+        ? String(lessonForm.section_id) 
+        : (isAdmin.value && editingLesson.value 
+          ? String(editingLesson.value.section?.id || editingLesson.value.section_id || '') 
+          : ''),
+      title_ar: lessonForm.title_ar || '',
+      description: lessonForm.description || '',
+      description_ar: lessonForm.description_ar || '',
+      content: lessonForm.content || '',
+      content_ar: lessonForm.content_ar || '',
+      order: lessonForm.order !== null && lessonForm.order !== undefined ? String(lessonForm.order) : '',
+      duration_minutes: lessonForm.duration_minutes !== null && lessonForm.duration_minutes !== undefined ? String(lessonForm.duration_minutes) : '0',
+      is_free: lessonForm.is_free !== undefined ? lessonForm.is_free : false,
+      video_url: lessonForm.video_url || '',
+      live_meeting_date: lessonForm.live_meeting_date || '',
+      live_meeting_link: lessonForm.live_meeting_link || '',
+    };
+    
+    // CRITICAL: Set ALL fields individually on lessonForm - this ensures they're in lessonForm.data()
+    lessonForm.title = formDataToSend.title;
+    lessonForm.type = formDataToSend.type;
+    lessonForm.section_id = formDataToSend.section_id;
+    lessonForm.title_ar = formDataToSend.title_ar;
+    lessonForm.description = formDataToSend.description;
+    lessonForm.description_ar = formDataToSend.description_ar;
+    lessonForm.content = formDataToSend.content;
+    lessonForm.content_ar = formDataToSend.content_ar;
+    lessonForm.order = formDataToSend.order;
+    lessonForm.duration_minutes = formDataToSend.duration_minutes;
+    lessonForm.is_free = formDataToSend.is_free;
+    lessonForm.video_url = formDataToSend.video_url;
+    lessonForm.live_meeting_date = formDataToSend.live_meeting_date;
+    lessonForm.live_meeting_link = formDataToSend.live_meeting_link;
+    
+    // Files are already set on lessonForm (video_file, image_file, document_file)
+    // They will be included automatically when forceFormData is true
+    
+    // Debug: Verify all data is set correctly
+    console.log('Show.vue - After setting form data:', {
+      title: lessonForm.title,
+      type: lessonForm.type,
+      section_id: lessonForm.section_id,
+      hasVideoFile: lessonForm.video_file instanceof File,
+      hasImageFile: lessonForm.image_file instanceof File,
+      hasDocumentFile: lessonForm.document_file instanceof File,
+      formDataKeys: Object.keys(lessonForm.data()),
+      formDataSample: {
+        title: lessonForm.data().title,
+        type: lessonForm.data().type,
+        section_id: lessonForm.data().section_id,
+      },
+      formDataToSend: formDataToSend,
+    });
+    
+    // CRITICAL: Use the same approach as CREATE (POST) - it works correctly
+    // Use { ...data } first, then add files - this is the proven working method
     lessonForm
       .transform((data) => {
-        // Include files in the transform
+        // CRITICAL: Use same approach as POST - start with data spread
+        // This works correctly for both with and without files
         const transformed = { ...data };
+        
+        // CRITICAL: Include files if they're File objects (same as POST)
         // Always include files if they exist (as File objects)
-        if (videoFile) transformed.video_file = videoFile;
-        if (imageFile) transformed.image_file = imageFile;
-        if (documentFile) transformed.document_file = documentFile;
+        // Only include if they're actual File objects - don't include null values
+        if (lessonForm.video_file instanceof File) {
+          transformed.video_file = lessonForm.video_file;
+        } else {
+          // Explicitly delete the field if it's not a File to avoid issues
+          delete transformed.video_file;
+        }
+        if (lessonForm.image_file instanceof File) {
+          transformed.image_file = lessonForm.image_file;
+        } else {
+          delete transformed.image_file;
+        }
+        if (lessonForm.document_file instanceof File) {
+          transformed.document_file = lessonForm.document_file;
+        } else {
+          delete transformed.document_file;
+        }
+        
+        console.log('Show.vue - Transform data for PUT:', {
+          ...transformed,
+          video_file: transformed.video_file instanceof File ? `File: ${transformed.video_file.name} (${transformed.video_file.size} bytes)` : 'not included',
+          image_file: transformed.image_file instanceof File ? `File: ${transformed.image_file.name} (${transformed.image_file.size} bytes)` : 'not included',
+          document_file: transformed.document_file instanceof File ? `File: ${transformed.document_file.name} (${transformed.document_file.size} bytes)` : 'not included',
+        });
+        
         return transformed;
       })
       .put(
@@ -1643,6 +1797,11 @@ const submitLesson = (formData) => {
           },
           onError: (errors) => {
             console.error("Update lesson error:", errors);
+            console.error("Update lesson form data:", {
+              video_file: lessonForm.video_file instanceof File ? `File: ${lessonForm.video_file.name}` : lessonForm.video_file,
+              image_file: lessonForm.image_file instanceof File ? `File: ${lessonForm.image_file.name}` : lessonForm.image_file,
+              document_file: lessonForm.document_file instanceof File ? `File: ${lessonForm.document_file.name}` : lessonForm.document_file,
+            });
             if (errors.message) {
               showError(errors.message, t("common.error") || "Error");
             } else {
@@ -1662,12 +1821,35 @@ const submitLesson = (formData) => {
     // Create new lesson
     lessonForm
       .transform((data) => {
-        // Include files in the transform
+        // CRITICAL: Include files in the transform - they must be File objects
         const transformed = { ...data };
+        
         // Always include files if they exist (as File objects)
-        if (videoFile) transformed.video_file = videoFile;
-        if (imageFile) transformed.image_file = imageFile;
-        if (documentFile) transformed.document_file = documentFile;
+        // Only include if they're actual File objects - don't include null values
+        if (lessonForm.video_file instanceof File) {
+          transformed.video_file = lessonForm.video_file;
+        } else {
+          // Explicitly delete the field if it's not a File to avoid issues
+          delete transformed.video_file;
+        }
+        if (lessonForm.image_file instanceof File) {
+          transformed.image_file = lessonForm.image_file;
+        } else {
+          delete transformed.image_file;
+        }
+        if (lessonForm.document_file instanceof File) {
+          transformed.document_file = lessonForm.document_file;
+        } else {
+          delete transformed.document_file;
+        }
+        
+        console.log('Show.vue - Transform data for POST:', {
+          ...transformed,
+          video_file: transformed.video_file instanceof File ? `File: ${transformed.video_file.name} (${transformed.video_file.size} bytes)` : 'not included',
+          image_file: transformed.image_file instanceof File ? `File: ${transformed.image_file.name} (${transformed.image_file.size} bytes)` : 'not included',
+          document_file: transformed.document_file instanceof File ? `File: ${transformed.document_file.name} (${transformed.document_file.size} bytes)` : 'not included',
+        });
+        
         return transformed;
       })
       .post(

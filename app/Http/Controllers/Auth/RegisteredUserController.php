@@ -36,10 +36,23 @@ class RegisteredUserController extends Controller
         event(new Registered($user));
 
         Auth::login($user);
+        $request->session()->regenerate();
 
-        // Redirect based on user role to their respective dashboard
+        // If user has admin role, always redirect to admin dashboard
+        if ($user->isAdmin()) {
+            return redirect()->route('admin.dashboard');
+        }
+
+        // Get available roles for selection (non-admin roles)
+        $availableRoles = $user->getAvailableRolesForSelection();
+        
+        // If user has multiple non-admin roles, show role selection page
+        if (count($availableRoles) > 1) {
+            return redirect()->route('role-selection');
+        }
+
+        // Single role - redirect to appropriate dashboard
         return match(true) {
-            $user->isAdmin() => redirect()->route('admin.dashboard'),
             $user->isInstructor() => redirect()->route('instructor.dashboard'),
             $user->isStudent() => redirect()->route('student.dashboard'),
             default => redirect()->route('welcome'),

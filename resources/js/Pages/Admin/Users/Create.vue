@@ -134,21 +134,22 @@
                         </div>
                         </div>
 
-                    <!-- Role Selection -->
+                    <!-- Role Selection (Multiple Roles) -->
                         <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">
-                            {{ t('users.fields.role') }} <span class="text-red-500">*</span>
+                            {{ t('users.fields.roles') || 'Roles' }} <span class="text-red-500">*</span>
+                            <span class="text-xs text-gray-500 font-normal ml-2">({{ t('users.select_multiple_roles') || 'You can select multiple roles' }})</span>
                         </label>
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
                             <label
                                 v-for="role in roles"
                                 :key="role.id"
                                 class="relative flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-all"
-                                :class="form.role_id === role.id ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500' : 'border-gray-200 hover:border-gray-300'"
+                                :class="form.role_ids && form.role_ids.includes(role.id) ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-500' : 'border-gray-200 hover:border-gray-300'"
                             >
                                 <input
-                                    v-model="form.role_id"
-                                    type="radio"
+                                    v-model="form.role_ids"
+                                    type="checkbox"
                                     :value="role.id"
                                     class="sr-only"
                                 />
@@ -161,14 +162,19 @@
                                     <p class="font-medium text-gray-900 text-sm">{{ getRoleName(role) }}</p>
                                     <p v-if="role.description || role.description_ar" class="text-xs text-gray-500 mt-0.5 line-clamp-1">{{ getRoleDescription(role) }}</p>
                                 </div>
-                                <div v-if="form.role_id === role.id" class="absolute top-2 left-2">
+                                <div v-if="form.role_ids && form.role_ids.includes(role.id)" class="absolute top-2 left-2">
                                     <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                                     </svg>
                                 </div>
                             </label>
                         </div>
-                        <p v-if="form.errors.role_id || form.errors.role" class="mt-2 text-sm text-red-600">{{ form.errors.role_id || form.errors.role }}</p>
+                        <p v-if="form.errors.role_ids || form.errors.role_id || form.errors.role" class="mt-2 text-sm text-red-600">
+                            {{ form.errors.role_ids || form.errors.role_id || form.errors.role }}
+                        </p>
+                        <p v-if="form.role_ids && form.role_ids.length > 0" class="mt-2 text-sm text-gray-500">
+                            {{ t('users.selected_roles_count') || 'Selected' }}: {{ form.role_ids.length }} {{ form.role_ids.length === 1 ? (t('users.role') || 'role') : (t('users.roles_plural') || 'roles') }}
+                        </p>
                         </div>
 
                     <!-- Admin Checkbox -->
@@ -236,7 +242,8 @@ const form = useForm({
     national_id: '',
     password: '',
     password_confirmation: '',
-    role_id: null,
+    role_id: null, // Keep for backward compatibility
+    role_ids: [], // Multiple roles
     role: '', // Keep for backward compatibility
     is_admin: false,
     is_active: true,
@@ -275,13 +282,20 @@ const getRoleColorClass = (slug) => {
 };
 
 const submit = () => {
-    // Set role name/slug for backward compatibility
-    if (form.role_id) {
-        const selectedRole = roles.value.find(r => r.id === form.role_id);
-        if (selectedRole) {
-            form.role = selectedRole.slug || selectedRole.name;
+    // If role_ids is empty but role_id exists, use role_id for backward compatibility
+    if ((!form.role_ids || form.role_ids.length === 0) && form.role_id) {
+        form.role_ids = [form.role_id];
+    }
+    
+    // Set role name/slug for backward compatibility (use first role)
+    if (form.role_ids && form.role_ids.length > 0) {
+        const firstRole = roles.value.find(r => r.id === form.role_ids[0]);
+        if (firstRole) {
+            form.role = firstRole.slug || firstRole.name;
+            form.role_id = firstRole.id; // For backward compatibility
         }
     }
+    
     form.post(route('admin.users.store'));
 };
 </script>

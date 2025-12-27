@@ -60,16 +60,24 @@
                         <i class="bi bi-person text-secondary"></i>
                         <span>{{ t('profile.my_profile') }}</span>
                     </Link>
-                    
-                    <Link
-                        v-if="showDashboard"
-                        :href="dashboardRoute"
-                        class="d-flex align-items-center gap-3 px-3 py-2 small text-dark text-decoration-none hover-bg-light transition-colors bg-white"
-                        @click="closeDropdown"
+                </div>
+                
+                <!-- Available Roles Section -->
+                <div v-if="availableRoles.length > 0" class="border-top border-gray-200 py-1 bg-white">
+                    <div class="px-3 py-2 small text-muted fw-semibold text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">
+                        {{ t('common.switch_role') || 'Switch Role' }}
+                    </div>
+                    <button
+                        v-for="role in availableRoles"
+                        :key="role.id || role.slug"
+                        type="button"
+                        @click.stop="switchRole(role.slug)"
+                        class="w-100 d-flex align-items-center gap-3 px-3 py-2 small text-decoration-none border-0 transition-all role-switch-btn"
+                        :class="getRoleButtonClass(role.slug)"
                     >
-                        <i class="bi bi-house text-secondary"></i>
-                        <span>{{ t('common.dashboard') }}</span>
-                    </Link>
+                        <i :class="[getRoleIcon(role.slug), getRoleIconClass(role.slug)]"></i>
+                        <span class="fw-medium">{{ getRoleName(role) }}</span>
+                    </button>
                 </div>
                 
                 <div class="border-top border-gray-200 py-1 bg-white">
@@ -128,16 +136,24 @@
                         <i class="bi bi-person text-secondary"></i>
                         <span>{{ t('profile.my_profile') }}</span>
                     </Link>
-                    
-                    <Link
-                        v-if="showDashboard"
-                        :href="dashboardRoute"
-                        class="d-flex align-items-center gap-3 px-3 py-2 small text-dark text-decoration-none hover-bg-light transition-colors bg-white"
-                        @click="closeDropdown"
+                </div>
+                
+                <!-- Available Roles Section -->
+                <div v-if="availableRoles.length > 0" class="border-top border-gray-200 py-1 bg-white">
+                    <div class="px-3 py-2 small text-muted fw-semibold text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">
+                        {{ t('common.switch_role') || 'Switch Role' }}
+                    </div>
+                    <button
+                        v-for="role in availableRoles"
+                        :key="role.id || role.slug"
+                        type="button"
+                        @click.stop="switchRole(role.slug)"
+                        class="w-100 d-flex align-items-center gap-3 px-3 py-2 small text-decoration-none border-0 transition-all role-switch-btn"
+                        :class="getRoleButtonClass(role.slug)"
                     >
-                        <i class="bi bi-house text-secondary"></i>
-                        <span>{{ t('common.dashboard') }}</span>
-                    </Link>
+                        <i :class="[getRoleIcon(role.slug), getRoleIconClass(role.slug)]"></i>
+                        <span class="fw-medium">{{ getRoleName(role) }}</span>
+                    </button>
                 </div>
                 
                 <div class="border-top border-gray-200 py-1 bg-white">
@@ -157,7 +173,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, defineProps, defineExpose, watch, Teleport } from 'vue';
-import { usePage, Link, router } from '@inertiajs/vue3';
+import { usePage, Link, router, useForm } from '@inertiajs/vue3';
 import { useDirection } from '@/composables/useDirection';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
@@ -176,9 +192,26 @@ const page = usePage();
 
 const showDropdown = ref(false);
 const auth = computed(() => page.props.auth?.user);
+const allAvailableRoles = computed(() => page.props.auth?.availableRoles || []);
 const dropdownRef = ref(null);
 const buttonRef = ref(null);
 const expandedButtonRef = ref(null);
+
+// Filter out current role from available roles
+const availableRoles = computed(() => {
+    const selectedRole = page.props.auth?.selectedRole;
+    const userRole = auth.value?.role;
+    const currentRole = selectedRole || userRole;
+    
+    if (!currentRole) return allAvailableRoles.value;
+    
+    // Filter out current role
+    return allAvailableRoles.value.filter(role => {
+        const roleSlug = role.slug || role.name;
+        return roleSlug !== currentRole && 
+               roleSlug?.toLowerCase() !== currentRole?.toLowerCase();
+    });
+});
 
 // Calculate position for expanded dropdown
 const expandedDropdownStyle = computed(() => {
@@ -206,36 +239,11 @@ const expandedDropdownStyle = computed(() => {
     }
 });
 
-const dashboardRoute = computed(() => {
-    const user = auth.value;
-    if (!user) return route('welcome');
-    
-    const role = user.role;
-    const isAdmin = user.is_admin === 1 || user.is_admin === true;
-    
-    // Only admins with is_admin == 1 get dashboard, students and instructors don't have dashboard
-    if ((role === 'super_admin' || role === 'admin') && isAdmin) {
-        return route('admin.dashboard');
-    }
-    return route('welcome');
-});
-
-const showDashboard = computed(() => {
-    const user = auth.value;
-    if (!user) return false;
-    const role = user.role;
-    const isAdmin = user.is_admin === 1 || user.is_admin === true;
-    // Only show dashboard link for admins with is_admin == 1
-    return (role === 'super_admin' || role === 'admin') && isAdmin;
-});
-
 const showProfile = computed(() => {
     const user = auth.value;
     if (!user) return false;
-    const role = user.role;
-    const isAdmin = user.is_admin === 1 || user.is_admin === true;
-    // Hide profile link for admin and super_admin roles
-    return !((role === 'super_admin' || role === 'admin') && isAdmin);
+    // Show profile link for all users
+    return true;
 });
 
 const getInitials = (name) => {
@@ -253,6 +261,132 @@ const closeDropdown = () => {
 
 const logout = () => {
     router.post(route('logout'));
+};
+
+const switchRole = (roleSlug) => {
+    console.log('switchRole called with:', roleSlug);
+    
+    if (!roleSlug) {
+        console.error('No role slug provided');
+        return;
+    }
+    
+    // Close dropdown first
+    closeDropdown();
+    
+    // Build route URL with query parameter
+    // First get the base route URL
+    let routeUrl = route('role-selection.switch');
+    
+    // If route helper returns '#', build URL manually
+    if (!routeUrl || routeUrl === '#') {
+        routeUrl = '/role-selection/switch';
+    }
+    
+    // Add query parameter
+    const url = new URL(routeUrl, window.location.origin);
+    url.searchParams.set('role_slug', roleSlug);
+    const fullUrl = url.pathname + url.search;
+    
+    console.log('Navigating to route:', fullUrl);
+    
+    // Use router.visit with method: 'get' to force GET request
+    router.visit(fullUrl, {
+        method: 'get',
+        preserveScroll: false,
+        preserveState: false,
+        only: [],
+        replace: false, // Don't replace current history entry
+        onBefore: () => {
+            console.log('Before GET request');
+        },
+        onStart: () => {
+            console.log('GET request started');
+        },
+        onSuccess: (page) => {
+            console.log('Role switch success:', page);
+            // Backend will redirect using Inertia::location()
+            // This will force a full page reload with GET request
+            // Inertia::location() automatically handles the redirect
+            // No manual navigation needed - backend handles it
+        },
+        onError: (errors) => {
+            console.error('Role switch error:', errors);
+            
+            // Show error message to user
+            if (errors.role_slug) {
+                const errorMessage = Array.isArray(errors.role_slug) 
+                    ? errors.role_slug[0] 
+                    : errors.role_slug;
+                alert(errorMessage || 'Failed to switch role. Please try again.');
+            } else if (errors.message) {
+                alert(errors.message);
+            } else {
+                alert('Failed to switch role. Please try again.');
+            }
+        },
+        onFinish: () => {
+            console.log('GET request finished');
+        }
+    });
+};
+
+const isCurrentRole = (roleSlug) => {
+    // Get selected role from session, or fallback to user's role
+    const selectedRole = page.props.auth?.selectedRole;
+    const userRole = auth.value?.role;
+    
+    // Compare with both selectedRole and userRole
+    // Also handle cases where slug might match name
+    return selectedRole === roleSlug 
+        || userRole === roleSlug
+        || (selectedRole && selectedRole.toLowerCase() === roleSlug.toLowerCase())
+        || (userRole && userRole.toLowerCase() === roleSlug.toLowerCase());
+};
+
+const getRoleName = (role) => {
+    const locale = page.props.locale || 'ar';
+    if (locale === 'ar' && role.name_ar) {
+        return role.name_ar;
+    }
+    return role.name || role.slug;
+};
+
+const getRoleIcon = (roleSlug) => {
+    const icons = {
+        'super_admin': 'bi bi-shield-check',
+        'admin': 'bi bi-shield',
+        'instructor': 'bi bi-person-badge',
+        'student': 'bi bi-mortarboard',
+    };
+    return icons[roleSlug] || 'bi bi-person';
+};
+
+// Get role button class based on role type
+const getRoleButtonClass = (roleSlug) => {
+    const baseClass = 'bg-white';
+    const hoverClass = 'hover:bg-gray-50';
+    
+    const roleColors = {
+        'super_admin': 'hover:bg-purple-50 hover:text-purple-700',
+        'admin': 'hover:bg-red-50 hover:text-red-700',
+        'instructor': 'hover:bg-blue-50 hover:text-blue-700',
+        'student': 'hover:bg-emerald-50 hover:text-emerald-700',
+    };
+    
+    return `${baseClass} ${roleColors[roleSlug] || hoverClass} text-gray-700`;
+};
+
+// Get role icon color class
+const getRoleIconClass = (roleSlug) => {
+    const roleIconColors = {
+        'super_admin': 'text-purple-600',
+        'admin': 'text-red-600',
+        'instructor': 'text-blue-600',
+        'student': 'text-emerald-600',
+    };
+    
+    return roleIconColors[roleSlug] || 'text-gray-500';
 };
 
 // Calculate position for minimized dropdown
@@ -367,6 +501,20 @@ onUnmounted(() => {
 
 .hover-bg-light:hover {
     background-color: #f8f9fa !important;
+}
+
+.role-switch-btn {
+    cursor: pointer;
+    border-radius: 6px;
+    margin: 2px 4px;
+}
+
+.role-switch-btn:hover {
+    transform: translateX(2px);
+}
+
+.role-switch-btn:active {
+    transform: translateX(0);
 }
 
 @keyframes slideDown {

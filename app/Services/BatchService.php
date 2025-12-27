@@ -46,14 +46,29 @@ class BatchService
 
     /**
      * Get active instructors for batch assignment
+     * Supports users with multiple roles
      */
     public function getActiveInstructors(): Collection
     {
-        return User::where('role', 'instructor')
+        // Check both legacy role field and Spatie roles (supports multiple roles)
+        $instructors = User::where(function($query) {
+                $query->where('role', 'instructor')
+                      ->orWhereHas('roles', function($q) {
+                          $q->where('slug', 'instructor')
+                            ->orWhere('name', 'instructor');
+                      });
+            })
             ->where('is_active', true)
             ->select('id', 'name', 'email')
             ->orderBy('name')
-            ->get();
+            ->get()
+            ->filter(function($user) {
+                // Filter to ensure user has instructor role using isInstructor() method
+                return $user->isInstructor();
+            })
+            ->values();
+        
+        return $instructors;
     }
 
     /**

@@ -187,11 +187,27 @@ class BatchController extends Controller
             'student_ids.*' => 'exists:users,id',
         ]);
 
+        $added = 0;
+        $skipped = 0;
+
         foreach ($validated['student_ids'] as $studentId) {
+            $user = User::find($studentId);
+            
+            // Check if user has student role (supports multiple roles)
+            if (!$user || !$user->isStudent()) {
+                $skipped++;
+                continue;
+            }
+
             Enrollment::firstOrCreate(
                 ['batch_id' => $batch->id, 'student_id' => $studentId],
                 ['enrolled_at' => now(), 'status' => 'enrolled', 'progress' => 0]
             );
+            $added++;
+        }
+
+        if ($skipped > 0) {
+            return redirect()->back()->with('warning', __('Some users were skipped because they do not have student role.'));
         }
 
         return redirect()->back()->with('success', __('Students added successfully.'));
@@ -223,19 +239,48 @@ class BatchController extends Controller
 
     private function getInstructors()
     {
-        return User::where('role', 'instructor')
+        // Check both legacy role field and Spatie roles (supports multiple roles)
+        $instructors = User::where(function($query) {
+                $query->where('role', 'instructor')
+                      ->orWhereHas('roles', function($q) {
+                          $q->where('slug', 'instructor')
+                            ->orWhere('name', 'instructor');
+                      });
+            })
+            ->where('is_active', true)
             ->orderBy('name')
-            ->get(['id', 'name', 'email']);
+            ->get(['id', 'name', 'email'])
+            ->filter(function($user) {
+                // Filter to ensure user has instructor role using isInstructor() method
+                return $user->isInstructor();
+            })
+            ->values();
+        
+        return $instructors;
     }
 
     private function getAvailableStudents(Batch $batch)
     {
         $enrolledIds = $batch->enrollments->pluck('student_id');
         
-        return User::where('role', 'student')
+        // Get all users that have student role (supports multiple roles)
+        // Check both legacy role field and Spatie roles
+        $students = User::where(function($query) {
+                $query->where('role', 'student')
+                      ->orWhereHas('roles', function($q) {
+                          $q->where('slug', 'student')
+                            ->orWhere('name', 'student');
+                      });
+            })
+            ->where('is_active', true)
             ->whereNotIn('id', $enrolledIds)
             ->orderBy('name')
             ->get(['id', 'name', 'email']);
+        
+        // Filter to ensure user has student role using isStudent() method
+        return $students->filter(function($user) {
+            return $user->isStudent();
+        })->values();
     }
 
     private function formatCourse(Course $course): array
