@@ -24,6 +24,7 @@
                     </div>
                 </div>
                 <button
+                    v-if="can('questions.create')"
                     @click="openQuestionModal(null)"
                     class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 font-medium transition-all shadow-lg shadow-blue-500/25"
                 >
@@ -69,6 +70,7 @@
                             <!-- Actions -->
                             <div class="flex items-center gap-2">
                                 <Link
+                                    v-if="can('questions.view')"
                                     :href="route('admin.courses.lessons.questions.show', [course.slug || course.id, lesson.id, question.id])"
                                     class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                     :title="t('common.view')"
@@ -79,6 +81,7 @@
                                     </svg>
                                 </Link>
                                 <button
+                                    v-if="can('questions.edit')"
                                     @click="openQuestionModal(question)"
                                     class="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
                                     :title="t('common.edit')"
@@ -88,6 +91,7 @@
                                     </svg>
                                 </button>
                                 <button
+                                    v-if="can('questions.delete')"
                                     @click="confirmDelete(question)"
                                     class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                     :title="t('common.delete')"
@@ -111,6 +115,7 @@
                     <h3 class="text-lg font-medium text-gray-900 mb-2">{{ t('questions.no_questions') || 'No questions yet' }}</h3>
                     <p class="text-gray-500 mb-6">{{ t('questions.no_questions_hint') || 'Add questions to create a test or quiz' }}</p>
                     <button
+                        v-if="can('questions.create')"
                         @click="openQuestionModal(null)"
                         class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium transition-all"
                     >
@@ -144,6 +149,7 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
 import { useAlert } from '@/composables/useAlert';
+import { usePermissions } from '@/composables/usePermissions';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 import QuestionForm from '@/Pages/Admin/Questions/Form.vue';
 
@@ -157,6 +163,7 @@ const props = defineProps({
 const { t } = useTranslation();
 const { route } = useRoute();
 const { showSuccess, showError } = useAlert();
+const { can } = usePermissions();
 const page = usePage();
 
 // Modal state

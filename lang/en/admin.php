@@ -40,5 +40,15 @@ return [
     'cannot_create_batch_existing_not_ended' => 'Cannot create a new batch. The previous batch (:batch_name) has not ended yet. Please wait until :end_date before creating a new one.',
     'batch_updated_successfully' => 'Batch updated successfully!',
     'batch_created_successfully' => 'Batch created successfully!',
+    
+    // Programs Management
+    'programs_management' => 'Programs Management',
+    'view_programs' => 'View Programs',
+    'create_program' => 'Create Program',
+    
+    // Tracks Management
+    'tracks_management' => 'Tracks Management',
+    'view_tracks' => 'View Tracks',
+    'create_track' => 'Create Track',
 ];
 

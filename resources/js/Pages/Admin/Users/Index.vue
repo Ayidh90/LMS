@@ -156,6 +156,7 @@
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <div class="d-flex align-items-center gap-2">
                                         <Link
+                                            v-if="can('users.edit')"
                                             :href="route('admin.users.edit', user.id)"
                                             class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1"
                                             title="Edit User"
@@ -166,6 +167,7 @@
                                             <span class="d-none d-sm-inline">{{ t('common.edit') }}</span>
                                         </Link>
                                         <button
+                                            v-if="can('users.delete')"
                                             @click="confirmDelete(user)"
                                             class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1"
                                             title="Delete User"
@@ -273,11 +275,14 @@ import { ref } from 'vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
+import { usePermissions } from '@/composables/usePermissions';
 import { Head, Link, router } from '@inertiajs/vue3';
 
 defineProps({
     users: Object,
 });
+
+const { can } = usePermissions();
 
 const { t, locale } = useTranslation();
 const { route } = useRoute();

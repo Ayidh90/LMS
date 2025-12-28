@@ -48,6 +48,67 @@ class HandleInertiaRequests extends Middleware
         
         $user = $request->user();
         
+        // Ensure selected_role is properly set before getting permissions
+        if ($user) {
+            // Refresh to get latest selected_role from database
+            $user->refresh();
+            
+            // Get user roles from model relationship (Spatie roles)
+            $userRoles = $user->roles()->get();
+            $rolesCount = $user->countUserRoles($userRoles);
+            
+            // Get selected_role from user table (database)
+            $selectedRole = $user->selected_role ?? session('selected_role');
+            
+            // If user has only one role, automatically set it as selected_role
+            if ($rolesCount === 1) {
+                $singleRole = $userRoles->first();
+                if ($singleRole) {
+                    $singleRoleSlug = $singleRole->slug ?? $singleRole->name;
+                } else if ($user->role) {
+                    // Fallback to legacy role field
+                    $singleRoleSlug = $user->role;
+                } else {
+                    $singleRoleSlug = null;
+                }
+                
+                // If no selected_role is set, or if it doesn't match the single role, update it
+                if ($singleRoleSlug && (!$selectedRole || $selectedRole !== $singleRoleSlug)) {
+                    $selectedRole = $singleRoleSlug;
+                    // Save to database (user table)
+                    if (!$user->selected_role || $user->selected_role !== $singleRoleSlug) {
+                        $user->update(['selected_role' => $singleRoleSlug]);
+                    }
+                    session(['selected_role' => $singleRoleSlug]);
+                }
+            }
+            
+            // If user has multiple roles, validate selected_role against actual roles
+            if ($rolesCount > 1 && $selectedRole) {
+                // Validate that selected_role exists in user's roles
+                $roleExists = $userRoles->contains(function($role) use ($selectedRole) {
+                    return ($role->slug === $selectedRole || $role->name === $selectedRole);
+                });
+                
+                // Also check legacy role field
+                if (!$roleExists && $user->role === $selectedRole) {
+                    $roleExists = true;
+                }
+                
+                // If selected_role doesn't match any of user's roles, clear it
+                if (!$roleExists) {
+                    $selectedRole = null;
+                    $user->update(['selected_role' => null]);
+                    session()->forget('selected_role');
+                }
+            }
+            
+            // Set selected_role on user model for getPermissionArray() to use
+            if ($selectedRole) {
+                $user->setAttribute('selected_role', $selectedRole);
+            }
+        }
+        
         // Get settings service
         $settingsService = app(SettingsService::class);
         $instructorPermissions = $settingsService->getInstructorPermissions();
@@ -67,11 +128,16 @@ class HandleInertiaRequests extends Middleware
                 : asset('storage/' . $websiteSettings['favicon']);
         }
         
+        // Get selected role (from database or session or default to user's role)
+        $selectedRole = null;
+        if ($user) {
+            $selectedRole = $user->selected_role ?? session('selected_role') ?? $user->role;
+        }
+        
         return [
             ...parent::share($request),
             'direction' => $direction,
             'locale' => $locale,
-            'isLocal' => app()->environment('local'),
             'auth' => [
                 'user' => $user ? [
                     'id' => $user->id,
@@ -81,11 +147,12 @@ class HandleInertiaRequests extends Middleware
                     'role' => $user->role,
                     'is_admin' => $user->is_admin ?? false,
                     'is_active' => $user->is_active ?? true,
+                    'selected_role' => $selectedRole,
                 ] : null,
-                'can' => $user?->getPermissionArray(),
+                'can' => $user ? $user->getPermissionArray() : [],
                 'roles' => $user ? array_values($user->getRoleNames()->toArray()) : [],
                 'availableRoles' => $user ? $user->getAvailableRolesForSelection() : [],
-                'selectedRole' => $user ? ($user->selected_role ?? $user->role) : null,
+                'selectedRole' => $selectedRole,
             ],
             'settings' => [
                 'instructor_permissions' => $instructorPermissions,
@@ -101,4 +168,3 @@ class HandleInertiaRequests extends Middleware
         ];
     }
 }
-

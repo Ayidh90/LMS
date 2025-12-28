@@ -23,7 +23,7 @@
 
             <!-- Form Card -->
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <form @submit.prevent="submit" class="p-6 space-y-6">
+                <form @submit.prevent="submit" class="p-6 space-y-6" autocomplete="off">
                     <!-- Name Field -->
                         <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -98,9 +98,10 @@
                             <input
                                 v-model="form.password"
                                 type="password"
-                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                                    :class="{ 'border-red-500 focus:ring-red-500': form.errors.password }"
-                                    placeholder="••••••••"
+                                autocomplete="new-password"
+                                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                :class="{ 'border-red-500 focus:ring-red-500': form.errors.password }"
+                                placeholder="••••••••"
                             />
                                 <p v-if="form.errors.password" class="mt-2 text-sm text-red-600">{{ form.errors.password }}</p>
                         </div>
@@ -111,8 +112,9 @@
                             <input
                                 v-model="form.password_confirmation"
                                 type="password"
-                                    class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                                    placeholder="••••••••"
+                                autocomplete="new-password"
+                                class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                                placeholder="••••••••"
                             />
                             </div>
                         </div>
@@ -331,6 +333,12 @@ const submit = () => {
             form.role = firstRole.slug || firstRole.name;
             form.role_id = firstRole.id; // For backward compatibility
         }
+    }
+    
+    // Remove password fields if they are empty (don't send empty passwords to backend)
+    if (!form.password || form.password.trim() === '') {
+        form.password = null;
+        form.password_confirmation = null;
     }
     
     form.put(route('admin.users.update', props.user.id));

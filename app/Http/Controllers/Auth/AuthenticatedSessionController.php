@@ -90,22 +90,11 @@ class AuthenticatedSessionController extends Controller
     }
 
     /**
-     * Find user by email or national_id, or create if in development
+     * Find user by email or national_id
      */
     private function findOrCreateUser(LoginRequest $request): ?User
     {
-        $user = $this->findUserByEmailOrNationalId($request->email);
-
-        if ($user) {
-            return $user;
-        }
-
-        // Auto-create user in development environments
-        if ($this->shouldAutoCreateUser($request->email)) {
-            return $this->createStudentUser($request);
-        }
-
-        return null;
+        return $this->findUserByEmailOrNationalId($request->email);
     }
 
     /**
@@ -123,94 +112,24 @@ class AuthenticatedSessionController extends Controller
         return User::where('email', $email)->first();
     }
 
-    /**
-     * Check if user should be auto-created (development only)
-     */
-    private function shouldAutoCreateUser(string $email): bool
-    {
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            return false;
-        }
-
-        // Allow auto-creation in local, testing, or when debug is enabled
-        return app()->environment(['local', 'testing']) 
-            || config('app.debug', false) === true;
-    }
-
-    /**
-     * Create a new student user
-     */
-    private function createStudentUser(LoginRequest $request): ?User
-    {
-        try {
-            $emailParts = explode('@', $request->email);
-            $name = ucfirst(str_replace(['.', '_', '-'], ' ', $emailParts[0]));
-            
-            $user = User::create([
-                'name' => $name,
-                'email' => $request->email,
-                'password' => $request->filled('password')
-                    ? Hash::make($request->password)
-                    : Hash::make('password'),
-                'role' => 'student',
-                'is_admin' => false,
-                'is_active' => true,
-            ]);
-
-            if (method_exists($user, 'assignRole')) {
-                try {
-                    $user->assignRole('student');
-                } catch (\Exception $e) {
-                    // Role assignment failed, but user is created - continue
-                }
-            }
-
-            return $user;
-        } catch (\Exception $e) {
-            // If creation fails (e.g., duplicate), try to find existing user
-            return User::where('email', $request->email)->first();
-        }
-    }
 
     /**
      * Validate user password
      */
     private function validatePassword(LoginRequest $request, User $user): bool
     {
-        // Password is optional - allow login without password
+        // Password is required
         if (!$request->filled('password')) {
-            return true;
+            return false;
         }
 
-        // If user has no password set, accept any password in development
+        // If user has no password set, deny login
         if (!$user->password) {
-            if ($this->isDevelopment()) {
-                // Set password from request in development
-                $user->update(['password' => Hash::make($request->password)]);
-            }
-            return true;
+            return false;
         }
 
         // Verify password matches
-        if (Hash::check($request->password, $user->password)) {
-            return true;
-        }
-
-        // In development, allow 'password' as default and update it
-        if ($this->isDevelopment() && $request->password === 'password') {
-            $user->update(['password' => Hash::make('password')]);
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Check if running in development environment
-     */
-    private function isDevelopment(): bool
-    {
-        return app()->environment(['local', 'testing']) || config('app.debug');
+        return Hash::check($request->password, $user->password);
     }
 
     /**

@@ -20,7 +20,7 @@
                         <h1 class="tracks-title">{{ t('tracks.tracks_management') || 'Tracks' }}</h1>
                         <p class="tracks-subtitle">{{ t('tracks.tracks_description') || 'Manage learning tracks' }}</p>
                     </div>
-                    <Link :href="route('admin.tracks.create')" class="btn btn-primary btn-lg tracks-create-btn">
+                    <Link v-if="can('tracks.create')" :href="route('admin.tracks.create')" class="btn btn-primary btn-lg tracks-create-btn">
                         <i class="bi bi-plus-circle me-2"></i>
                         {{ t('tracks.create') || 'Create Track' }}
                     </Link>
@@ -72,14 +72,14 @@
                                     {{ track.courses?.length || 0 }} {{ t('tracks.courses') || 'Courses' }}
                                 </small>
                                 <div class="btn-group btn-group-sm">
-                                    <Link :href="route('admin.tracks.show', track.slug || track.id)" class="btn btn-outline-primary" :title="t('common.view') || 'View'">
+                                    <Link v-if="can('tracks.view')" :href="route('admin.tracks.show', track.slug || track.id)" class="btn btn-outline-primary" :title="t('common.view') || 'View'">
                                         <i class="bi bi-eye"></i>
                                     </Link>
-                                    <Link :href="route('admin.tracks.edit', track.slug || track.id)" class="btn btn-outline-secondary" :title="t('common.edit') || 'Edit'">
+                                    <Link v-if="can('tracks.edit')" :href="route('admin.tracks.edit', track.slug || track.id)" class="btn btn-outline-secondary" :title="t('common.edit') || 'Edit'">
                                         <i class="bi bi-pencil"></i>
                                     </Link>
                                     <button 
-                                        v-if="(track.courses?.length || 0) === 0"
+                                        v-if="can('tracks.delete') && (track.courses?.length || 0) === 0"
                                         @click="confirmDelete(track)" 
                                         class="btn btn-outline-danger" 
                                         :title="t('common.delete') || 'Delete'"
@@ -99,7 +99,7 @@
                     <i class="bi bi-diagram-2 text-muted" style="font-size: 4rem;"></i>
                     <h5 class="mt-3 mb-2">{{ t('tracks.no_tracks') || 'No tracks found' }}</h5>
                     <p class="text-muted mb-4">{{ t('tracks.no_tracks_description') || 'Get started by creating your first track' }}</p>
-                    <Link :href="route('admin.tracks.create')" class="btn btn-primary">
+                    <Link v-if="can('tracks.create')" :href="route('admin.tracks.create')" class="btn btn-primary">
                         <i class="bi bi-plus-circle me-2"></i>
                         {{ t('tracks.create') || 'Create Track' }}
                     </Link>
@@ -129,6 +129,7 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
 import { useAlert } from '@/composables/useAlert';
+import { usePermissions } from '@/composables/usePermissions';
 import { Head, Link, router } from '@inertiajs/vue3';
 
 const props = defineProps({
@@ -140,6 +141,7 @@ const props = defineProps({
 const { t } = useTranslation();
 const { route } = useRoute();
 const { showConfirm, showSuccess, showError } = useAlert();
+const { can } = usePermissions();
 
 const selectedProgram = ref(props.filters?.program_id || '');
 

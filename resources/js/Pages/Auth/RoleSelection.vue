@@ -46,7 +46,7 @@
                 </div>
             </div>
 
-            <div class="mt-6">
+            <div class="mt-6 space-y-3">
                 <button
                     @click="submit"
                     :disabled="!selectedRole || form.processing"
@@ -60,6 +60,15 @@
                         {{ t('auth.continue') || 'Continue' }}
                     </span>
                 </button>
+                <button
+                    @click="goToLogin"
+                    class="w-full flex justify-center items-center gap-2 py-3 px-4 border border-gray-300 rounded-xl shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    <span>{{ t('common.back') || t('auth.back_to_login') || 'Back to Login' }}</span>
+                </button>
             </div>
         </div>
     </div>
@@ -69,7 +78,7 @@
 import { ref } from 'vue';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
-import { useForm } from '@inertiajs/vue3';
+import { useForm, router } from '@inertiajs/vue3';
 
 const props = defineProps({
     roles: {
@@ -133,6 +142,15 @@ const submit = () => {
         return;
     }
     form.post(route('role-selection.store'));
+};
+
+const goToLogin = () => {
+    // Logout first, then redirect to login
+    router.post(route('logout'), {}, {
+        onFinish: () => {
+            router.visit(route('login'));
+        }
+    });
 };
 </script>
 

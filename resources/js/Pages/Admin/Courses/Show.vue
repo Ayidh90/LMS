@@ -30,7 +30,7 @@
         ></div>
         <div class="relative z-10 order-2 sm:order-1">
           <Link
-            v-if="course && (course.slug || course.id)"
+            v-if="can('courses.edit') && course && (course.slug || course.id)"
             :href="route('admin.courses.edit', course.slug || course.id)"
             class="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-blue-600 font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
           >
@@ -473,7 +473,7 @@
                 </p>
               </div>
               <Link
-                v-if="course && (course.slug || course.id)"
+                v-if="can('sections.view') && course && (course.slug || course.id)"
                 :href="
                   route(
                     'admin.courses.sections.index',
@@ -513,6 +513,7 @@
                           {{ section.translated_title || section.title }}
                         </button>
                         <button
+                          v-if="can('sections.edit')"
                           @click.stop="openSectionModal(section)"
                           class="btn btn-sm btn-outline-warning ms-2"
                           :title="t('common.edit') || 'Edit Section'"
@@ -590,6 +591,7 @@
                               >
                                 <!-- Edit Lesson button hidden -->
                                 <button
+                                  v-if="can('questions.create')"
                                   @click.stop="openQuestionModal(lesson.id)"
                                   class="btn btn-sm lesson-action-btn-add"
                                   :title="
@@ -603,6 +605,7 @@
                                 </button>
                                 <Link
                                   v-if="
+                                    can('questions.view') &&
                                     lesson.id &&
                                     course &&
                                     (course.slug || course.id)
@@ -673,6 +676,7 @@
                                   question.question
                                 }}</small>
                                 <button
+                                  v-if="can('questions.edit')"
                                   @click.stop="
                                     openQuestionModal(lesson.id, question)
                                   "
@@ -695,6 +699,7 @@
                           }}
                           <div class="mt-3">
                             <button
+                              v-if="can('lessons.create')"
                               @click.stop="openLessonModal(section.id)"
                               class="btn btn-sm btn-primary"
                             >
@@ -713,7 +718,7 @@
                 <p class="text-muted mb-3">
                   {{ t("admin.no_sections") || "No sections added yet" }}
                 </p>
-                <button @click="openSectionModal()" class="btn btn-primary">
+                <button v-if="can('sections.create')" @click="openSectionModal()" class="btn btn-primary">
                   <i class="bi bi-plus-circle me-2"></i>
                   {{ t("admin.add_section") || "Add Section" }}
                 </button>
@@ -741,7 +746,7 @@
             <div class="card-body">
               <div class="d-grid gap-2">
                 <Link
-                  v-if="course && (course.slug || course.id)"
+                  v-if="can('batches.view') && course && (course.slug || course.id)"
                   :href="
                     route(
                       'admin.courses.batches.index',
@@ -754,6 +759,7 @@
                   {{ t("admin.manage_batches") || "Manage Batches" }}
                 </Link>
                 <button
+                  v-if="can('batches.create')"
                   @click="openBatchModal()"
                   class="btn btn-outline-success"
                 >
@@ -761,6 +767,7 @@
                   {{ t("admin.create_batch") || "Create Batch" }}
                 </button>
                 <button
+                  v-if="can('sections.create')"
                   @click="openSectionModal()"
                   class="btn btn-outline-info"
                 >
@@ -768,7 +775,7 @@
                   {{ t("admin.add_section") || "Add Section" }}
                 </button>
                 <Link
-                  v-if="course && (course.slug || course.id)"
+                  v-if="can('sections.view') && course && (course.slug || course.id)"
                   :href="
                     route(
                       'admin.courses.sections.index',
@@ -781,6 +788,7 @@
                   {{ t("admin.manage_sections") || "Manage Chapters" }}
                 </Link>
                 <button
+                  v-if="can('lessons.create')"
                   @click="openLessonModal()"
                   class="btn btn-outline-secondary"
                 >
@@ -789,6 +797,7 @@
                 </button>
                 <Link
                   v-if="
+                    can('lessons.view') &&
                     course &&
                     (course.slug || course.id) &&
                     course?.sections &&
@@ -831,7 +840,7 @@
               </div>
               <div class="d-flex gap-2">
                 <Link
-                  v-if="course && (course.slug || course.id)"
+                  v-if="can('batches.view') && course && (course.slug || course.id)"
                   :href="
                     route(
                       'admin.courses.batches.index',
@@ -847,6 +856,7 @@
                   }}</span>
                 </Link>
                 <button
+                  v-if="can('batches.create')"
                   @click="openBatchModal()"
                   class="btn btn-sm btn-primary"
                   :title="t('admin.create_batch') || 'Create Batch'"
@@ -861,6 +871,7 @@
             <div class="card-body">
               <div
                 v-if="
+                  can('batches.view') &&
                   course &&
                   (course.slug || course.id) &&
                   course?.batches &&
@@ -945,7 +956,7 @@
                 <p class="text-muted mb-4">
                   {{ t("admin.no_batches") || "No batches yet" }}
                 </p>
-                <button @click="openBatchModal()" class="btn btn-primary">
+                <button v-if="can('batches.create')" @click="openBatchModal()" class="btn btn-primary">
                   <i class="bi bi-plus-circle me-2"></i>
                   {{ t("admin.create_batch") || "Create Batch" }}
                 </button>
@@ -1034,7 +1045,7 @@ const props = defineProps({
 const { t } = useTranslation();
 const { route } = useRoute();
 const { showSuccess, showError } = useAlert();
-const { isAdmin } = usePermissions();
+const { isAdmin, can } = usePermissions();
 const page = usePage();
 
 const direction = computed(() => page.props.direction || "ltr");

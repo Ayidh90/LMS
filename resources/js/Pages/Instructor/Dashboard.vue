@@ -17,16 +17,7 @@
                                 <p class="text-white text-opacity-90 text-sm">{{ t('instructor.welcome_message') || 'Welcome back! Manage your courses and students.' }}</p>
                             </div>
                             <div class="welcome-actions">
-                        <Link
-                            v-if="can('courses.create')"
-                            :href="route('courses.create')"
-                                    class="welcome-button"
-                        >
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                                    </svg>
-                            {{ t('admin.create_course') || 'Create Course' }}
-                        </Link>
+                    
                             </div>
                         </div>
                     </div>
@@ -173,16 +164,7 @@
                                                         </div>
                                                     </div>
                                                     <div class="course-action-enhanced">
-                                                        <Link
-                                                            v-if="can('courses.edit')"
-                                                            :href="route('courses.edit', course.id)"
-                                                            class="course-button-enhanced course-button-secondary-enhanced"
-                                                        >
-                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                            </svg>
-                                                            {{ t('common.edit') || 'Edit' }}
-                                                        </Link>
+                                                     
                                                         <Link
                                                             v-if="can('courses.view')"
                                                             :href="route('courses.show', course.slug || course.id)"
@@ -239,16 +221,7 @@
                                             </div>
                                         </div>
                                         <div class="course-action">
-                                        <Link
-                                            v-if="can('courses.edit')"
-                                            :href="route('courses.edit', course.id)"
-                                                class="course-button course-button-secondary"
-                                        >
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                </svg>
-                                            {{ t('common.edit') || 'Edit' }}
-                                        </Link>
+                                    
                                             <Link
                                                 v-if="can('courses.view')"
                                                 :href="route('courses.show', course.slug || course.id)"

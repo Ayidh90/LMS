@@ -3,9 +3,11 @@
 namespace Modules\Roles\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Modules\Roles\Models\Role;
 use Modules\Roles\Services\RoleService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class RoleController extends Controller
@@ -20,7 +22,7 @@ class RoleController extends Controller
     public function index()
     {
         $roles = $this->roleService->getAllRoles();
-        $permissions = $this->roleService->getAllPermissions();
+        $permissions = $this->roleService->getAllPermissions(Auth::user());
 
         return Inertia::render('Admin/Roles/Index', [
             'roles' => $roles ? $roles->toArray() : [],
@@ -33,7 +35,7 @@ class RoleController extends Controller
      */
     public function create()
     {
-        $permissions = $this->roleService->getAllPermissions();
+        $permissions = $this->roleService->getAllPermissions(Auth::user());
 
         return Inertia::render('Admin/Roles/Create', [
             'permissions' => $permissions ? $permissions->toArray() : [],
@@ -56,6 +58,20 @@ class RoleController extends Controller
             'permissions.*' => ['exists:permissions,id'],
         ]);
 
+        // Validate that user can only assign permissions they have access to
+        /** @var User|null $user */
+        $user = Auth::user();
+        if ($user && isset($validated['permissions']) && !empty($validated['permissions'])) {
+            $allowedPermissions = $this->roleService->getAllPermissions($user)->pluck('id')->toArray();
+            $requestedPermissions = $validated['permissions'];
+            
+            // Check if user has permissions.manage - if yes, they can assign any permission
+            if (!$user->hasPermission('permissions.manage')) {
+                // Filter out permissions the user doesn't have access to
+                $validated['permissions'] = array_intersect($requestedPermissions, $allowedPermissions);
+            }
+        }
+
         $role = $this->roleService->createRole(
             $validated,
             $validated['permissions'] ?? []
@@ -72,7 +88,7 @@ class RoleController extends Controller
     {
         $role = $this->roleService->getRoleById($role->id);
         $users = $this->roleService->getUsersWithRole($role);
-        $permissions = $this->roleService->getAllPermissions();
+        $permissions = $this->roleService->getAllPermissions(Auth::user());
 
         return Inertia::render('Admin/Roles/Show', [
             'role' => $role ? $role->toArray() : null,
@@ -87,7 +103,7 @@ class RoleController extends Controller
     public function edit(Role $role)
     {
         $role = $this->roleService->getRoleById($role->id);
-        $permissions = $this->roleService->getAllPermissions();
+        $permissions = $this->roleService->getAllPermissions(Auth::user());
 
         return Inertia::render('Admin/Roles/Edit', [
             'role' => $role ? $role->toArray() : null,
@@ -111,10 +127,24 @@ class RoleController extends Controller
             'permissions.*' => ['exists:permissions,id'],
         ]);
 
+        // Validate that user can only assign permissions they have access to
+        /** @var User|null $user */
+        $user = Auth::user();
+        if ($user && isset($validated['permissions']) && $validated['permissions'] !== null) {
+            $allowedPermissions = $this->roleService->getAllPermissions($user)->pluck('id')->toArray();
+            $requestedPermissions = $validated['permissions'];
+            
+            // Check if user has permissions.manage - if yes, they can assign any permission
+            if (!$user->hasPermission('permissions.manage')) {
+                // Filter out permissions the user doesn't have access to
+                $validated['permissions'] = array_intersect($requestedPermissions, $allowedPermissions);
+            }
+        }
+
         $role = $this->roleService->updateRole(
             $role,
             $validated,
-            $validated['permissions'] ?? []
+            $validated['permissions'] ?? null
         );
 
         return redirect()->route('admin.roles.index')

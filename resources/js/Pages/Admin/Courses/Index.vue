@@ -20,7 +20,7 @@
                         <h1 class="page-title mb-0">{{ t('courses.title') || 'Courses' }}</h1>
                         </div>
                     <div>
-                        <Link :href="route('admin.courses.create')" class="btn btn-create">
+                        <Link v-if="can('courses.create')" :href="route('admin.courses.create')" class="btn btn-create">
                             <i class="bi bi-plus-circle"></i>
                             <span>{{ t('courses.create') || 'Create Course' }}</span>
                             </Link>
@@ -143,6 +143,7 @@
                                 <td>
                                     <div class="actions-cell">
                                         <Link 
+                                            v-if="can('courses.view-all')"
                                             :href="getCourseShowUrl(course)" 
                                             class="btn-action btn-action-view"
                                             :title="t('common.view') || 'View'"
@@ -150,6 +151,7 @@
                                             <i class="bi bi-eye"></i>
                                         </Link>
                                         <Link 
+                                            v-if="can('courses.edit')"
                                             :href="getCourseEditUrl(course)" 
                                             class="btn-action btn-action-edit"
                                             :title="t('common.edit') || 'Edit'"
@@ -157,7 +159,7 @@
                                             <i class="bi bi-pencil"></i>
                                         </Link>
                                         <button 
-                                            v-if="!course.is_published"
+                                            v-if="can('courses.delete') && !course.is_published"
                                             class="btn-action btn-action-delete"
                                             :title="t('common.delete') || 'Delete'"
                                             @click="confirmDelete(course)"
@@ -222,6 +224,7 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
 import { useAlert } from '@/composables/useAlert';
+import { usePermissions } from '@/composables/usePermissions';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 
 const props = defineProps({
@@ -235,6 +238,7 @@ const props = defineProps({
 const { t, locale } = useTranslation();
 const { route } = useRoute();
 const { showConfirm, showSuccess, showError } = useAlert();
+const { can } = usePermissions();
 const page = usePage();
 
 const direction = computed(() => page.props.direction || 'ltr');

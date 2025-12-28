@@ -33,10 +33,10 @@
       </div>
 
       <!-- Statistics Grid - Modern Compact Style -->
-      <div v-if="can('dashboard-view')" class="mb-4">
+      <div v-if="can('dashboard.admin')" class="mb-4">
         <div class="statistics-grid">
           <!-- Programs -->
-          <Link :href="safeRoute('admin.programs.index')" class="stat-item stat-item-indigo text-decoration-none">
+          <Link v-if="can('programs.view')" :href="safeRoute('admin.programs.index')" class="stat-item stat-item-indigo text-decoration-none">
             <div class="stat-icon">
               <i class="bi bi-diagram-3"></i>
             </div>
@@ -55,7 +55,7 @@
           </Link>
 
           <!-- Tracks -->
-          <Link :href="safeRoute('admin.tracks.index')" class="stat-item stat-item-emerald text-decoration-none">
+          <Link v-if="can('tracks.view')" :href="safeRoute('admin.tracks.index')" class="stat-item stat-item-emerald text-decoration-none">
             <div class="stat-icon">
               <i class="bi bi-diagram-2"></i>
             </div>
@@ -74,7 +74,7 @@
           </Link>
 
           <!-- Courses -->
-          <Link :href="safeRoute('admin.courses.index')" class="stat-item stat-item-primary text-decoration-none">
+          <Link v-if="can('courses.view-all')" :href="safeRoute('admin.courses.index')" class="stat-item stat-item-primary text-decoration-none">
             <div class="stat-icon">
               <i class="bi bi-book"></i>
             </div>
@@ -112,7 +112,7 @@
           </div>
 
           <!-- Users -->
-          <Link :href="safeRoute('admin.users.index')" class="stat-item stat-item-success text-decoration-none">
+          <Link v-if="can('users.view')" :href="safeRoute('admin.users.index')" class="stat-item stat-item-success text-decoration-none">
             <div class="stat-icon">
               <i class="bi bi-people"></i>
             </div>
@@ -131,7 +131,7 @@
           </Link>
 
           <!-- Roles -->
-          <Link :href="safeRoute('admin.roles.index')" class="stat-item stat-item-danger text-decoration-none">
+          <Link v-if="can('roles.view')" :href="safeRoute('admin.roles.index')" class="stat-item stat-item-danger text-decoration-none">
             <div class="stat-icon">
               <i class="bi bi-shield-check"></i>
             </div>
@@ -235,7 +235,7 @@
       </div>
 
       <!-- Charts Section -->
-      <div v-if="can('dashboard-view')" class="row g-4 mb-4">
+      <div v-if="can('dashboard.admin')" class="row g-4 mb-4">
         <!-- Enrollments Chart -->
         <div v-if="hasChartData(props.enrollments_chart_data?.series)" class="col-12 col-lg-6">
           <div class="card shadow-sm border-0">
@@ -364,7 +364,7 @@
             <i class="bi bi-book text-primary"></i>
             {{ t('admin.recent_courses') || 'Recent Courses' }}
           </h4>
-          <Link :href="safeRoute('admin.courses.index')" class="btn btn-sm btn-outline-primary">
+          <Link v-if="can('courses.view-all')" :href="safeRoute('admin.courses.index')" class="btn btn-sm btn-outline-primary">
             {{ t('common.view_all') || 'View All' }}
             <i class="bi bi-arrow-right ms-1"></i>
           </Link>
@@ -410,10 +410,39 @@ import { Head, usePage, Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { useRoute } from '@/composables/useRoute';
 import { useTranslation } from '@/composables/useTranslation';
-import { usePermissions } from '@/composables/usePermissions';
 
 const { t } = useTranslation();
-const { can } = usePermissions();
+const page = usePage();
+
+// Check permission using page.props.auth.can (from HandleInertiaRequests)
+const can = (permissionOrPermissions) => {
+  // Safety check: ensure auth and can exist
+  if (!page.props?.auth?.can) {
+    return false;
+  }
+  try {
+    // Safety check: ensure permissionOrPermissions is valid
+    if (permissionOrPermissions === null || permissionOrPermissions === undefined) {
+      return false;
+    }
+    let permissions = [].concat(permissionOrPermissions);
+    let allPermissions = page.props.auth.can;
+    // Safety check: ensure allPermissions is an object
+    if (!allPermissions || typeof allPermissions !== 'object') {
+      return false;
+    }
+    let hasPermission = false;
+    permissions.forEach((item) => {
+      if (item && allPermissions[item]) {
+        hasPermission = true;
+      }
+    });
+    return hasPermission;
+  } catch (error) {
+    console.error('Error in can method:', error);
+    return false;
+  }
+};
 
 const props = defineProps({
   statistics: {
@@ -462,7 +491,6 @@ const props = defineProps({
   },
 });
 
-const page = usePage();
 const { route } = useRoute();
 
 const userName = computed(() => {
@@ -720,8 +748,6 @@ const batchesChartSeries = computed(() => [{
   name: t('admin.batches_count') || 'Batches',
   data: props.batches_chart_data?.series || [],
 }]);
-
-// Using can from usePermissions composable
 
 // Safe translation helper with fallback
 const safeTranslate = (key, fallback = '') => {

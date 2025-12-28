@@ -41,6 +41,8 @@ class PermissionSeeder extends Seeder
             ['name' => 'create batches', 'name_ar' => 'إنشاء الدفعات', 'slug' => 'batches.create', 'description' => 'Can create batches', 'description_ar' => 'يمكن إنشاء الدفعات'],
             ['name' => 'edit batches', 'name_ar' => 'تعديل الدفعات', 'slug' => 'batches.edit', 'description' => 'Can edit batches', 'description_ar' => 'يمكن تعديل الدفعات'],
             ['name' => 'delete batches', 'name_ar' => 'حذف الدفعات', 'slug' => 'batches.delete', 'description' => 'Can delete batches', 'description_ar' => 'يمكن حذف الدفعات'],
+            ['name' => 'add students to batches', 'name_ar' => 'إضافة طلاب للدفعات', 'slug' => 'batches.add-students', 'description' => 'Can add students to batches', 'description_ar' => 'يمكن إضافة طلاب للدفعات'],
+            ['name' => 'remove students from batches', 'name_ar' => 'إزالة طلاب من الدفعات', 'slug' => 'batches.remove-students', 'description' => 'Can remove students from batches', 'description_ar' => 'يمكن إزالة طلاب من الدفعات'],
             ['name' => 'manage batches', 'name_ar' => 'إدارة الدفعات', 'slug' => 'batches.manage', 'description' => 'Can manage batches', 'description_ar' => 'يمكن إدارة الدفعات'],
             
             // Enrollment Permissions
@@ -65,12 +67,6 @@ class PermissionSeeder extends Seeder
             ['name' => 'view permissions', 'name_ar' => 'عرض الصلاحيات', 'slug' => 'permissions.view', 'description' => 'Can view permissions', 'description_ar' => 'يمكن عرض الصلاحيات'],
             ['name' => 'manage permissions', 'name_ar' => 'إدارة الصلاحيات', 'slug' => 'permissions.manage', 'description' => 'Can manage permissions', 'description_ar' => 'يمكن إدارة الصلاحيات'],
             
-            // Category Permissions
-            ['name' => 'view categories', 'name_ar' => 'عرض الفئات', 'slug' => 'categories.view', 'description' => 'Can view categories', 'description_ar' => 'يمكن عرض الفئات'],
-            ['name' => 'create categories', 'name_ar' => 'إنشاء الفئات', 'slug' => 'categories.create', 'description' => 'Can create categories', 'description_ar' => 'يمكن إنشاء الفئات'],
-            ['name' => 'edit categories', 'name_ar' => 'تعديل الفئات', 'slug' => 'categories.edit', 'description' => 'Can edit categories', 'description_ar' => 'يمكن تعديل الفئات'],
-            ['name' => 'delete categories', 'name_ar' => 'حذف الفئات', 'slug' => 'categories.delete', 'description' => 'Can delete categories', 'description_ar' => 'يمكن حذف الفئات'],
-            
             // Settings Permissions
             ['name' => 'view settings', 'name_ar' => 'عرض الإعدادات', 'slug' => 'settings.view', 'description' => 'Can view settings', 'description_ar' => 'يمكن عرض الإعدادات'],
             ['name' => 'edit settings', 'name_ar' => 'تعديل الإعدادات', 'slug' => 'settings.edit', 'description' => 'Can edit settings', 'description_ar' => 'يمكن تعديل الإعدادات'],
@@ -86,11 +82,19 @@ class PermissionSeeder extends Seeder
             ['name' => 'mark attendance', 'name_ar' => 'تسجيل الحضور', 'slug' => 'attendance.mark', 'description' => 'Can mark attendance', 'description_ar' => 'يمكن تسجيل الحضور'],
             ['name' => 'manage attendance', 'name_ar' => 'إدارة الحضور', 'slug' => 'attendance.manage', 'description' => 'Can manage attendance', 'description_ar' => 'يمكن إدارة الحضور'],
             
-            // FAQ Permissions
-            ['name' => 'view faqs', 'name_ar' => 'عرض الأسئلة الشائعة', 'slug' => 'faqs.view', 'description' => 'Can view FAQs', 'description_ar' => 'يمكن عرض الأسئلة الشائعة'],
-            ['name' => 'create faqs', 'name_ar' => 'إنشاء الأسئلة الشائعة', 'slug' => 'faqs.create', 'description' => 'Can create FAQs', 'description_ar' => 'يمكن إنشاء الأسئلة الشائعة'],
-            ['name' => 'edit faqs', 'name_ar' => 'تعديل الأسئلة الشائعة', 'slug' => 'faqs.edit', 'description' => 'Can edit FAQs', 'description_ar' => 'يمكن تعديل الأسئلة الشائعة'],
-            ['name' => 'delete faqs', 'name_ar' => 'حذف الأسئلة الشائعة', 'slug' => 'faqs.delete', 'description' => 'Can delete FAQs', 'description_ar' => 'يمكن حذف الأسئلة الشائعة'],
+            // Program Permissions
+            ['name' => 'view programs', 'name_ar' => 'عرض البرامج', 'slug' => 'programs.view', 'description' => 'Can view programs', 'description_ar' => 'يمكن عرض البرامج'],
+            ['name' => 'create programs', 'name_ar' => 'إنشاء البرامج', 'slug' => 'programs.create', 'description' => 'Can create programs', 'description_ar' => 'يمكن إنشاء البرامج'],
+            ['name' => 'edit programs', 'name_ar' => 'تعديل البرامج', 'slug' => 'programs.edit', 'description' => 'Can edit programs', 'description_ar' => 'يمكن تعديل البرامج'],
+            ['name' => 'delete programs', 'name_ar' => 'حذف البرامج', 'slug' => 'programs.delete', 'description' => 'Can delete programs', 'description_ar' => 'يمكن حذف البرامج'],
+            ['name' => 'manage programs', 'name_ar' => 'إدارة البرامج', 'slug' => 'programs.manage', 'description' => 'Can manage programs', 'description_ar' => 'يمكن إدارة البرامج'],
+            
+            // Track Permissions
+            ['name' => 'view tracks', 'name_ar' => 'عرض المسارات', 'slug' => 'tracks.view', 'description' => 'Can view tracks', 'description_ar' => 'يمكن عرض المسارات'],
+            ['name' => 'create tracks', 'name_ar' => 'إنشاء المسارات', 'slug' => 'tracks.create', 'description' => 'Can create tracks', 'description_ar' => 'يمكن إنشاء المسارات'],
+            ['name' => 'edit tracks', 'name_ar' => 'تعديل المسارات', 'slug' => 'tracks.edit', 'description' => 'Can edit tracks', 'description_ar' => 'يمكن تعديل المسارات'],
+            ['name' => 'delete tracks', 'name_ar' => 'حذف المسارات', 'slug' => 'tracks.delete', 'description' => 'Can delete tracks', 'description_ar' => 'يمكن حذف المسارات'],
+            ['name' => 'manage tracks', 'name_ar' => 'إدارة المسارات', 'slug' => 'tracks.manage', 'description' => 'Can manage tracks', 'description_ar' => 'يمكن إدارة المسارات'],
         ];
 
         foreach ($permissions as $permission) {

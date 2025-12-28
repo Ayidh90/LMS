@@ -21,13 +21,14 @@
                         <p class="track-description">{{ track?.translated_description || track?.description }}</p>
                         <small class="track-program-link">
                             {{ t('tracks.program') || 'Program' }}: 
-                            <Link :href="route('admin.programs.show', track?.program?.slug || track?.program?.id)" class="program-link">
+                            <Link v-if="can('programs.view')" :href="route('admin.programs.show', track?.program?.slug || track?.program?.id)" class="program-link">
                                 {{ track?.program?.translated_name || track?.program?.name }}
                             </Link>
+                            <span v-else class="program-link">{{ track?.program?.translated_name || track?.program?.name }}</span>
                         </small>
                     </div>
                     <div class="btn-group">
-                        <Link :href="route('admin.tracks.edit', track?.slug || track?.id)" class="btn btn-primary btn-lg">
+                        <Link v-if="can('tracks.edit')" :href="route('admin.tracks.edit', track?.slug || track?.id)" class="btn btn-primary btn-lg">
                             <i class="bi bi-pencil me-2"></i>
                             {{ t('common.edit') || 'Edit' }}
                         </Link>
@@ -164,7 +165,7 @@
                     <div class="card shadow-sm border-0">
                         <div class="card-header bg-light d-flex justify-content-between align-items-center">
                             <h5 class="mb-0">{{ t('tracks.courses') || 'Courses' }}</h5>
-                            <button @click="showAddCourseModal = true" class="btn btn-sm btn-primary">
+                            <button v-if="can('tracks.edit')" @click="showAddCourseModal = true" class="btn btn-sm btn-primary">
                                 <i class="bi bi-plus-circle me-1"></i>
                                 {{ t('tracks.add_course') || 'Add Course' }}
                             </button>
@@ -203,10 +204,10 @@
                                                 </div>
                                             </div>
                                             <div class="d-flex gap-2">
-                                                <Link :href="route('admin.courses.show', course.slug || course.id)" class="btn btn-sm btn-outline-primary flex-grow-1">
+                                                <Link v-if="can('courses.view-all')" :href="route('admin.courses.show', course.slug || course.id)" class="btn btn-sm btn-outline-primary flex-grow-1">
                                                     {{ t('common.view') || 'View Course' }}
                                                 </Link>
-                                                <button @click="confirmRemoveCourse(course)" class="btn btn-sm btn-outline-danger" :title="t('tracks.remove_from_track') || 'Remove from Track'">
+                                                <button v-if="can('tracks.edit')" @click="confirmRemoveCourse(course)" class="btn btn-sm btn-outline-danger" :title="t('tracks.remove_from_track') || 'Remove from Track'">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </div>
@@ -217,7 +218,7 @@
                             <div v-else class="text-center py-4">
                                 <i class="bi bi-book text-muted" style="font-size: 3rem;"></i>
                                 <p class="text-muted mt-3">{{ t('tracks.no_courses_in_track') || 'No courses in this track' }}</p>
-                                <button @click="showAddCourseModal = true" class="btn btn-primary mt-3">
+                                <button v-if="can('tracks.edit')" @click="showAddCourseModal = true" class="btn btn-primary mt-3">
                                     <i class="bi bi-plus-circle me-2"></i>
                                     {{ t('tracks.add_course') || 'Add Course' }}
                                 </button>
@@ -295,6 +296,7 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
 import { useAlert } from '@/composables/useAlert';
+import { usePermissions } from '@/composables/usePermissions';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 
 const props = defineProps({
@@ -312,6 +314,7 @@ const props = defineProps({
 const { t } = useTranslation();
 const { route } = useRoute();
 const { showConfirm, showSuccess, showError } = useAlert();
+const { can } = usePermissions();
 
 const showAddCourseModal = ref(false);
 const selectedCourseIds = ref([]);

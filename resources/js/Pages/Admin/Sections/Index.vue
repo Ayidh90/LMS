@@ -16,6 +16,7 @@
                     </div>
                 </div>
                 <button
+                    v-if="can('sections.create')"
                     @click="showCreateModal = true"
                     class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 font-medium transition-all shadow-lg shadow-blue-500/25"
                 >
@@ -61,6 +62,7 @@
                             <!-- Actions -->
                             <div class="flex items-center gap-2">
                                 <button
+                                    v-if="can('sections.edit')"
                                     @click="editSection(section)"
                                     class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                     :title="t('common.edit')"
@@ -70,6 +72,7 @@
                                     </svg>
                                 </button>
                                 <button
+                                    v-if="can('sections.delete')"
                                     @click="confirmDelete(section)"
                                     class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                     :title="t('common.delete')"
@@ -229,6 +232,7 @@ import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
 import { useAlert } from '@/composables/useAlert';
+import { usePermissions } from '@/composables/usePermissions';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 
 const props = defineProps({
@@ -239,6 +243,7 @@ const props = defineProps({
 const { t } = useTranslation();
 const { route } = useRoute();
 const { showSuccess, showError, showConfirm } = useAlert();
+const { can } = usePermissions();
 const page = usePage();
 
 const showCreateModal = ref(false);

@@ -372,7 +372,7 @@
                     <div class="lg:col-span-1">
                         <div class="bg-white rounded-xl shadow-sm p-6 sticky top-4">
                             <!-- Admin Edit Buttons -->
-                            <div v-if="showEditButtons" class="space-y-3 mb-6">
+                            <!-- <div v-if="showEditButtons" class="space-y-3 mb-6">
                                 <Link
                                     v-if="can('courses.edit')"
                                     :href="route('courses.edit', { course: course.slug || course.id })"
@@ -387,7 +387,7 @@
                                 >
                                     {{ t('lessons.actions.add_first') }}
                                 </Link>
-                            </div>
+                            </div> -->
                             
                             <!-- Instructor: Show course content access -->
                             <div v-if="isInstructor && course.lessons?.length > 0 && can('lessons.view')" class="space-y-3">
@@ -486,31 +486,7 @@
                                     </div>
                                 </div>
 
-            <!-- Newsletter Section -->
-            <div class="bg-slate-800 py-8 mt-12">
-                <div class="max-w-7xl mx-auto px-4">
-                    <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-                        <div class="flex items-center gap-3">
-                            <span class="text-2xl">📬</span>
-                            <div>
-                                <h3 class="text-white font-semibold">{{ t('newsletter.title') }}</h3>
-                                <p class="text-gray-400 text-sm">{{ t('newsletter.subtitle') }}</p>
-                            </div>
-                        </div>
-                        <div class="flex gap-2 w-full md:w-auto">
-                            <div class="relative flex-1 md:w-80">
-                                <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                </svg>
-                                <input type="email" :placeholder="t('newsletter.placeholder')" class="w-full pr-10 pl-4 py-3 rounded-lg border-0 focus:ring-2 focus:ring-blue-500" />
-                            </div>
-                            <button class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors">
-                                {{ t('newsletter.join') }}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+
 
             <!-- Instructor Dashboard Section -->
             <div v-if="isInstructor && instructorData" class="max-w-7xl mx-auto py-8 px-4">

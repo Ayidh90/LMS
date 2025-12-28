@@ -113,17 +113,10 @@
                                                 </p>
                                             </div>
                                         </div>
-                                        <div class="track-progress-overview">
-                                            <div class="track-progress-percentage-large">{{ track.progress || 0 }}%</div>
-                                            <div class="track-progress-label-small">{{ t('student.progress') || 'Complete' }}</div>
-                                        </div>
+                                    
                                     </div>
                                     
-                                    <div class="track-progress-bar-container">
-                                        <div class="track-progress-bar-udemy">
-                                            <div class="track-progress-fill-udemy" :style="`width: ${track.progress || 0}%`"></div>
-                                        </div>
-                                    </div>
+                               
 
                                     <div v-if="track.courses && track.courses.length > 0" class="track-courses-container">
                                         <div class="track-courses-header-udemy">

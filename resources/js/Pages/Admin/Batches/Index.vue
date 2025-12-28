@@ -31,6 +31,7 @@
                         </div>
                         <div class="col-12 col-md-4 text-md-end">
                             <button 
+                                v-if="can('batches.create')"
                                 type="button"
                                 @click="openBatchModal(null)"
                                 class="btn btn-light btn-lg shadow-sm fw-semibold create-batch-btn"
@@ -115,6 +116,7 @@
                             <!-- Actions -->
                             <div class="border-top pt-3" @click.stop>
                                 <Link 
+                                    v-if="can('batches.view')"
                                     :href="route('admin.courses.batches.show', [course.slug || course.id, batch.id])"
                                     class="btn btn-outline-primary w-100 fw-semibold"
                                 >
@@ -136,6 +138,7 @@
                     <h3 class="h5 fw-semibold mb-2">{{ t('admin.no_batches') || 'No batches yet' }}</h3>
                     <p class="text-muted mb-4">{{ t('admin.no_batches_description') || 'Create your first batch to start enrolling students' }}</p>
                     <button 
+                        v-if="can('batches.create')"
                         type="button"
                         @click="openBatchModal(null)"
                         class="btn btn-primary"
@@ -168,6 +171,7 @@ import { Head, Link, usePage, useForm } from '@inertiajs/vue3';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
 import { useAlert } from '@/composables/useAlert';
+import { usePermissions } from '@/composables/usePermissions';
 import { router } from '@inertiajs/vue3';
 import BatchForm from '@/Pages/Admin/Batches/Form.vue';
 
@@ -181,6 +185,7 @@ const props = defineProps({
 const { t } = useTranslation();
 const { route } = useRoute();
 const { showSuccess, showError } = useAlert();
+const { can } = usePermissions();
 const page = usePage();
 
 // Modal state

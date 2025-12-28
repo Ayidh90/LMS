@@ -339,13 +339,11 @@ import { computed, ref, inject, watch, onMounted, onUnmounted } from "vue";
 import { Link, usePage, router } from "@inertiajs/vue3";
 import axios from "axios";
 import { useTranslation } from "@/composables/useTranslation";
-import { usePermissions } from "@/composables/usePermissions";
 import { useRoute } from "@/composables/useRoute";
 import UserDropdown from "./UserDropdown.vue";
 
 const { t } = useTranslation();
 const page = usePage();
-const { can: canPermission } = usePermissions();
 const { route: routeHelper } = useRoute();
 
 // Get current locale and direction
@@ -631,39 +629,39 @@ const menuItems = computed(() => {
         icon: "separator",
       },
       {
-        title: t("admin.programs_management") || "Programs Management",
-        permission: "programs.manage",
+        title: t("admin.programs_management"),
+        permission: "programs.view",
       },
       {
-        title: t("admin.view_programs") || "View Programs",
+        title: t("admin.view_programs"),
         icon: "diagram-3",
         route: "admin.programs.index",
-        permission: "programs.manage",
+        permission: "programs.view",
       },
       {
-        title: t("admin.create_program") || "Create Program",
+        title: t("admin.create_program"),
         icon: "plus-circle",
         route: "admin.programs.create",
-        permission: "programs.manage",
+        permission: "programs.create",
       },
       {
         icon: "separator",
       },
       {
-        title: t("admin.tracks_management") || "Tracks Management",
-        permission: "tracks.manage",
+        title: t("admin.tracks_management"),
+        permission: "tracks.view",
       },
       {
-        title: t("admin.view_tracks") || "View Tracks",
+        title: t("admin.view_tracks"),
         icon: "diagram-2",
         route: "admin.tracks.index",
-        permission: "tracks.manage",
+        permission: "tracks.view",
       },
       {
-        title: t("admin.create_track") || "Create Track",
+        title: t("admin.create_track"),
         icon: "plus-circle",
         route: "admin.tracks.create",
-        permission: "tracks.manage",
+        permission: "tracks.create",
       },
       {
         icon: "separator",
@@ -685,26 +683,25 @@ const menuItems = computed(() => {
                   title: t("admin.view_batches") || "View Batches",
                   route: "admin.courses.batches.index",
                   routeParams: { course: courseIdentifier.value },
-                  permission: "batches.view-all",
+                  permission: "batches.view",
                 },
                 {
                   title: t("admin.view_sections") || "View Sections",
                   route: "admin.courses.sections.index",
                   routeParams: { course: courseIdentifier.value },
-                  permission: "sections.view-all",
+                  permission: "sections.view",
                 },
                 {
                   title: t("admin.view_lessons") || "View Lessons",
                   route: "admin.courses.lessons.index",
                   routeParams: { course: courseIdentifier.value },
-                  permission: "lessons.view-all",
+                  permission: "lessons.view",
                 },
-
                 {
                   title: t("admin.view_questions") || "View Questions",
                   route: "admin.courses.lessons.index",
                   routeParams: { course: courseIdentifier.value },
-                  permission: "questions.view-all",
+                  permission: "questions.view",
                 },
               ]
             : [],
@@ -729,26 +726,26 @@ const menuItems = computed(() => {
       },
       {
         title: t("admin.users_management"),
-        permission: "users.manage",
+        permission: "users.view",
       },
       {
         title: t("admin.users"),
         icon: "people",
         route: "admin.users.index",
-        permission: "users.manage",
+        permission: "users.view",
       },
       {
         icon: "separator",
       },
       {
         title: t("admin.system_settings"),
-        permission: "role-list",
+        permission: "roles.view",
       },
       {
         title: t("admin.roles_permissions"),
         icon: "key-square",
         route: "admin.roles.index",
-        permission: "role-list",
+        permission: "roles.view",
       },
       {
         title: t("admin.settings") || "Settings",
@@ -773,8 +770,35 @@ const menuItems = computed(() => {
   }
 });
 
-// Use the composable's can function
-const can = canPermission;
+// Check permission using page.props.auth.can (from HandleInertiaRequests)
+const can = (permissionOrPermissions) => {
+  // Safety check: ensure auth and can exist
+  if (!page.props?.auth?.can) {
+    return false;
+  }
+  try {
+    // Safety check: ensure permissionOrPermissions is valid
+    if (permissionOrPermissions === null || permissionOrPermissions === undefined) {
+      return false;
+    }
+    let permissions = [].concat(permissionOrPermissions);
+    let allPermissions = page.props.auth.can;
+    // Safety check: ensure allPermissions is an object
+    if (!allPermissions || typeof allPermissions !== 'object') {
+      return false;
+    }
+    let hasPermission = false;
+    permissions.forEach((item) => {
+      if (item && allPermissions[item]) {
+        hasPermission = true;
+      }
+    });
+    return hasPermission;
+  } catch (error) {
+    console.error('Error in can method:', error);
+    return false;
+  }
+};
 
 const hasChildren = (item) => {
   if (!item || typeof item !== "object") {
@@ -1023,63 +1047,34 @@ const safeRouteCurrent = (routeName, routeParams = {}) => {
   }
 };
 
+/**
+ * Check if menu item should be displayed based on user permissions
+ * Uses can() function which checks page.props.auth.can from HandleInertiaRequests
+ */
 const hasPermission = (item) => {
-  if (!item || typeof item !== "object") return false;
-
-  const user = page.props?.auth?.user;
-
-  // Super admin always sees all items
-  if (user?.role === "super_admin") {
-    // For separators and labels, still check if they should be shown
-    if (
-      item.icon === "separator" ||
-      (item.title && !item.icon && !item.route)
-    ) {
-      // Let the normal logic handle separators and labels
-    } else {
-      return true;
-    }
-  }
-
-  // Admin with is_admin flag also sees all items
-  if (
-    user?.is_admin &&
-    (user?.role === "admin" || user?.role === "super_admin")
-  ) {
-    if (
-      item.icon === "separator" ||
-      (item.title && !item.icon && !item.route)
-    ) {
-      // Let the normal logic handle separators and labels
-    } else {
-      return true;
-    }
-  }
-
-  // If item has allowAdmin flag and user is admin, allow access (check this before permission check)
-  if (
-    item.allowAdmin &&
-    user &&
-    (user.role === "admin" || user.role === "super_admin" || user.is_admin)
-  ) {
-    return true;
-  }
-
+  // Safety check: ensure item exists
+  if (!item || typeof item !== 'object') return false;
+  
   // If item has no permission requirement, show it
   if (!item.permission) {
     // For label items (title only), check if any items below have permissions
     if (item.title && !item.icon && !item.route) {
       return hasAnyChildPermission(item);
     }
+    // For separators, check if any items after have permissions
+    if (item.icon === "separator") {
+      return shouldShowSeparator(menuItems.value.findIndex(i => i === item));
+    }
     return true;
   }
-
+  
+  // Check permission using can() function
   try {
-    // Check if user has the required permission
     const hasItemPermission = can(item.permission);
-
+    
     // If item has children, also check if any child is accessible
     if (hasChildren(item)) {
+      // Safety check: ensure children exists and is an array
       if (!item.children || !Array.isArray(item.children)) {
         return hasItemPermission;
       }
@@ -1090,8 +1085,9 @@ const hasPermission = (item) => {
       });
       return hasItemPermission || hasChildPermission;
     }
-
+    
     // If user is admin and doesn't have permission but item has allowAdmin, allow it
+    const user = page.props?.auth?.user;
     if (
       !hasItemPermission &&
       item.allowAdmin &&
@@ -1100,10 +1096,10 @@ const hasPermission = (item) => {
     ) {
       return true;
     }
-
+    
     return hasItemPermission;
   } catch (error) {
-    console.error("Error checking permission:", error);
+    console.error('Error checking permission:', error);
     return false;
   }
 };
@@ -1127,16 +1123,8 @@ const hasAnyChildPermission = (labelItem) => {
       break;
     }
 
-    // Check if this item has permission
-    if (item.permission) {
-      if (can(item.permission)) {
-        return true;
-      }
-    } else if (item.title && !item.icon && !item.route) {
-      // Another label - stop here
-      break;
-    } else if (!item.permission) {
-      // Item without permission requirement - show it
+    // Check if this item should be shown based on permissions
+    if (hasPermission(item)) {
       return true;
     }
   }

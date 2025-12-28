@@ -22,6 +22,7 @@
                 </div>
                 <div class="relative z-10 flex items-center gap-3">
                     <button 
+                        v-if="can('batches.edit')"
                         type="button"
                         @click="openBatchModal"
                         class="btn btn-light btn-lg shadow-lg"
@@ -186,6 +187,7 @@
                                 <p class="text-muted small mb-0">{{ t('admin.manage_students_description') || 'View and manage enrolled students' }}</p>
                                 </div>
                             <button 
+                                v-if="can('batches.add-students')"
                                 type="button"
                                     @click="showAddStudentsModal = true"
                                 class="btn btn-primary btn-sm"
@@ -215,6 +217,7 @@
                                         </div>
                                     </div>
                                     <button 
+                                        v-if="can('batches.remove-students')"
                                         type="button"
                                         @click="removeStudent(student)"
                                         :title="t('admin.remove_student') || 'Remove Student'"
@@ -248,6 +251,7 @@
                         <div class="card-body">
                             <div class="d-grid gap-2">
                                 <button 
+                                    v-if="can('batches.edit')"
                                     type="button"
                                     @click="openBatchModal"
                                     class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-start"
@@ -256,6 +260,7 @@
                                     {{ t('common.edit') || 'Edit Batch' }}
                                 </button>
                         <button
+                            v-if="can('batches.add-students')"
                             type="button"
                                     @click="showAddStudentsModal = true"
                                     class="btn btn-outline-success w-100 d-flex align-items-center justify-content-start"
@@ -264,6 +269,7 @@
                                     {{ t('admin.add_students') || 'Add Students' }}
                         </button>
                                 <Link 
+                                    v-if="can('courses.view-all')"
                                     :href="route('admin.courses.show', course.slug || course.id)" 
                                     class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-start"
                                 >
@@ -307,6 +313,7 @@ import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
 import { useModal } from '@/composables/useModal';
 import { useAlert } from '@/composables/useAlert';
+import { usePermissions } from '@/composables/usePermissions';
 import { ref, watch } from 'vue';
 import BatchForm from '@/Pages/Admin/Batches/Form.vue';
 import AddStudentsModal from '@/Pages/Admin/Batches/AddStudentsModal.vue';
@@ -322,6 +329,7 @@ const { t } = useTranslation();
 const { route } = useRoute();
 const { setModalOpen } = useModal();
 const { showSuccess, showError, showConfirm } = useAlert();
+const { can } = usePermissions();
 const page = usePage();
 
 const showAddStudentsModal = ref(false);

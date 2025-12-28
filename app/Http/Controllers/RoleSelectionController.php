@@ -56,54 +56,52 @@ class RoleSelectionController extends Controller
 
         $roleSlug = $request->input('role_slug') ?? $request->query('role_slug');
         
-        // Verify user has this role
-        if (!$user->hasRoleBySlug($roleSlug) && $user->role !== $roleSlug) {
+        // Verify user has this role and get the role model
+        $selectedRole = $user->roles()->where(function($query) use ($roleSlug) {
+            $query->where('slug', $roleSlug)
+                  ->orWhere('name', $roleSlug);
+        })->first();
+        
+        // Also check legacy role field
+        if (!$selectedRole && $user->role === $roleSlug) {
+            $selectedRole = \Modules\Roles\Models\Role::where('slug', $roleSlug)
+                ->orWhere('name', $roleSlug)
+                ->first();
+        }
+        
+        if (!$selectedRole) {
             return back()->withErrors([
                 'role_slug' => __('Invalid role selected.'),
             ]);
         }
 
-        // If user is trying to select admin role
-        if ($roleSlug === 'super_admin') {
-            // Super admin can always access (no checks needed)
-            if (!$user->hasRoleBySlug('super_admin') && $user->role !== 'super_admin') {
-                return back()->withErrors([
-                    'role_slug' => __('Invalid role selected.'),
-                ]);
-            }
-        } elseif ($roleSlug === 'admin') {
-            // Regular admin needs both user->is_admin == 1 and role->is_admin == 1
+        // Check if role requires admin access (is_admin == 1)
+        if ($selectedRole->is_admin == 1) {
+            // User must have is_admin == 1 to access admin roles
             if ($user->is_admin != 1) {
                 return back()->withErrors([
                     'role_slug' => __('You do not have permission to access admin dashboard.'),
                 ]);
             }
-            
-            $selectedRole = $user->roles()->where(function($query) {
-                $query->where('slug', 'admin')
-                      ->orWhere('name', 'admin');
-            })->first();
-            
-            if (!$selectedRole && $user->role === 'admin') {
-                $selectedRole = \Modules\Roles\Models\Role::where('slug', 'admin')
-                    ->orWhere('name', 'admin')
-                    ->first();
-            }
-            
-            if (!$selectedRole || $selectedRole->is_admin != 1) {
-                return back()->withErrors([
-                    'role_slug' => __('This role does not have admin access.'),
-                ]);
-            }
         }
 
-        // Update selected_role in database (set to null first, then set new role)
-        $user->update(['selected_role' => null]);
-        $user->refresh();
+        // Update selected_role in database and session
         $user->update(['selected_role' => $roleSlug]);
-        
-        // Store selected role in session
         session(['selected_role' => $roleSlug]);
+        
+        // Refresh user to ensure latest data is loaded
+        $user->refresh();
+        
+        // Verify selected_role is set correctly and user has this role
+        if ($user->selected_role !== $roleSlug) {
+            return back()->withErrors([
+                'role_slug' => __('Failed to update selected role.'),
+            ]);
+        }
+        
+        // Ensure permissions are filtered based on selected_role
+        // This is handled by HandleInertiaRequests middleware which calls getPermissionArray()
+        // which checks selected_role and returns only that role's permissions
         
         // Redirect directly to appropriate dashboard based on selected role
         return $this->redirectToRoleDashboard($user, $roleSlug);
@@ -127,58 +125,52 @@ class RoleSelectionController extends Controller
 
         $roleSlug = $request->role_slug;
         
-        // Verify user has this role
-        if (!$user->hasRoleBySlug($roleSlug) && $user->role !== $roleSlug) {
+        // Verify user has this role and get the role model
+        $selectedRole = $user->roles()->where(function($query) use ($roleSlug) {
+            $query->where('slug', $roleSlug)
+                  ->orWhere('name', $roleSlug);
+        })->first();
+        
+        // Also check legacy role field
+        if (!$selectedRole && $user->role === $roleSlug) {
+            $selectedRole = \Modules\Roles\Models\Role::where('slug', $roleSlug)
+                ->orWhere('name', $roleSlug)
+                ->first();
+        }
+        
+        if (!$selectedRole) {
             return back()->withErrors([
                 'role_slug' => __('Invalid role selected.'),
             ]);
         }
 
-        // If user is trying to select admin role
-        if ($roleSlug === 'super_admin') {
-            // Super admin can always access (no checks needed)
-            // Just verify user has this role
-            if (!$user->hasRoleBySlug('super_admin') && $user->role !== 'super_admin') {
-                return back()->withErrors([
-                    'role_slug' => __('Invalid role selected.'),
-                ]);
-            }
-        } elseif ($roleSlug === 'admin') {
-            // Regular admin needs both user->is_admin == 1 and role->is_admin == 1
-            // Check user->is_admin
+        // Check if role requires admin access (is_admin == 1)
+        if ($selectedRole->is_admin == 1) {
+            // User must have is_admin == 1 to access admin roles
             if ($user->is_admin != 1) {
                 return back()->withErrors([
                     'role_slug' => __('You do not have permission to access admin dashboard.'),
                 ]);
             }
-            
-            // Check role->is_admin
-            $selectedRole = $user->roles()->where(function($query) {
-                $query->where('slug', 'admin')
-                      ->orWhere('name', 'admin');
-            })->first();
-            
-            // Also check legacy role field
-            if (!$selectedRole && $user->role === 'admin') {
-                $selectedRole = \Modules\Roles\Models\Role::where('slug', 'admin')
-                    ->orWhere('name', 'admin')
-                    ->first();
-            }
-            
-            if (!$selectedRole || $selectedRole->is_admin != 1) {
-                return back()->withErrors([
-                    'role_slug' => __('This role does not have admin access.'),
-                ]);
-            }
         }
 
-        // Update selected_role in database (set to null first, then set new role)
-        $user->update(['selected_role' => null]);
-        $user->refresh();
+        // Update selected_role in database and session
         $user->update(['selected_role' => $roleSlug]);
-        
-        // Store selected role in session
         session(['selected_role' => $roleSlug]);
+        
+        // Refresh user to ensure latest data is loaded
+        $user->refresh();
+        
+        // Verify selected_role is set correctly and user has this role
+        if ($user->selected_role !== $roleSlug) {
+            return back()->withErrors([
+                'role_slug' => __('Failed to update selected role.'),
+            ]);
+        }
+        
+        // Ensure permissions are filtered based on selected_role
+        // This is handled by HandleInertiaRequests middleware which calls getPermissionArray()
+        // which checks selected_role and returns only that role's permissions
 
         return $this->redirectToRoleDashboard($user, $roleSlug);
     }
@@ -190,12 +182,31 @@ class RoleSelectionController extends Controller
     {
         $roleSlug = $roleSlug ?? session('selected_role') ?? $user->role;
 
-        $route = match ($roleSlug) {
-            'admin', 'super_admin' => 'admin.dashboard',
-            'instructor' => 'instructor.dashboard',
-            'student' => 'student.dashboard',
-            default => 'profile.show',
-        };
+        // Get the role model to check is_admin
+        $role = $user->roles()->where(function($query) use ($roleSlug) {
+            $query->where('slug', $roleSlug)
+                  ->orWhere('name', $roleSlug);
+        })->first();
+        
+        // Also check legacy role field
+        if (!$role && $user->role === $roleSlug) {
+            $role = \Modules\Roles\Models\Role::where('slug', $roleSlug)
+                ->orWhere('name', $roleSlug)
+                ->first();
+        }
+
+        // Determine route based on role type
+        if ($role && $role->is_admin == 1) {
+            // Any role with is_admin == 1 goes to admin dashboard
+            $route = 'admin.dashboard';
+        } else {
+            // Check by slug for non-admin roles
+            $route = match ($roleSlug) {
+                'instructor' => 'instructor.dashboard',
+                'student' => 'student.dashboard',
+                default => 'profile.show',
+            };
+        }
 
         // Use Inertia::location() with full absolute URL to force GET request
         // This prevents Inertia from trying to resend POST request

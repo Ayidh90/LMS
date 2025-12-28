@@ -17,6 +17,7 @@
                             </div>
                         </div>
                         <button
+                            v-if="can('lessons.create')"
                             @click="openLessonModal()"
                             class="btn btn-primary add-lesson-btn d-flex align-items-center gap-2"
                         >
@@ -97,17 +98,19 @@
                                     </td>
                                     <td class="text-center questions-cell">
                                         <Link
-                                            v-if="lesson.questions_count > 0"
+                                            v-if="can('questions.view') && lesson.questions_count > 0"
                                             :href="route('admin.courses.lessons.questions.index', [course.slug || course.id, lesson.id])"
                                             class="text-decoration-none questions-link"
                                             :title="t('lessons.questions') || 'Questions'"
                                         >
                                             <span class="badge bg-info text-white questions-badge">{{ lesson.questions_count }}</span>
                                         </Link>
+                                        <span v-else-if="!can('questions.view') && lesson.questions_count > 0" class="badge bg-info text-white questions-badge">{{ lesson.questions_count }}</span>
                                         <span v-else class="text-muted questions-empty">{{ t('common.no') || '0' }}</span>
                                     </td>
                                     <td class="text-center attendance-cell">
                                         <Link
+                                            v-if="can('attendance.view')"
                                             :href="route('admin.courses.lessons.show', [course.slug || course.id, lesson.id])"
                                             class="btn btn-sm btn-outline-success attendance-btn"
                                             :title="t('lessons.attendance') || t('attendance.title') || 'Attendance'"
@@ -120,6 +123,7 @@
                                         <div class="action-buttons-wrapper">
                                             <div class="d-flex flex-column flex-md-row justify-content-center gap-2 action-buttons">
                                                 <Link
+                                                    v-if="can('lessons.view')"
                                                     :href="route('admin.courses.lessons.show', [course.slug || course.id, lesson.id])"
                                                     class="btn btn-sm btn-outline-primary action-btn action-btn-view"
                                                     :title="t('common.view') || t('lessons.actions.view') || 'View'"
@@ -129,6 +133,7 @@
                                                 </Link>
                                                 <!-- Edit Lesson button hidden -->
                                                 <Link
+                                                    v-if="can('questions.view')"
                                                     :href="route('admin.courses.lessons.questions.index', [course.slug || course.id, lesson.id])"
                                                     class="btn btn-sm btn-outline-info action-btn action-btn-questions"
                                                     :title="t('admin.manage_questions') || t('lessons.actions.add_question') || 'Manage Questions'"
@@ -137,6 +142,7 @@
                                                     <span class="action-btn-text">{{ t('lessons.questions') || 'Questions' }}</span>
                                                 </Link>
                                                 <button
+                                                    v-if="can('lessons.delete')"
                                                     @click="confirmDelete(lesson)"
                                                     type="button"
                                                     class="btn btn-sm btn-outline-danger action-btn action-btn-delete"
@@ -199,7 +205,7 @@ const props = defineProps({
 const { t } = useTranslation();
 const { route } = useRoute();
 const { showSuccess, showError } = useAlert();
-const { isAdmin } = usePermissions();
+const { isAdmin, can } = usePermissions();
 
 const selectedSection = ref('');
 

@@ -13,27 +13,11 @@
 
                     <!-- Form Content -->
                     <div class="px-8 py-6">
-                        <!-- Quick Register Buttons (Local Only) -->
                         <!-- Info: All registrations automatically get student role -->
                         <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                             <p class="text-xs font-semibold text-blue-800 mb-1">
                                 {{ t('auth.registration_note') || 'Note: All new registrations will automatically receive student role. Admin can change your role later if needed.' }}
                             </p>
-                        </div>
-                        
-                        <!-- Quick Register Buttons (Local Only) - Only for testing -->
-                        <div v-if="isLocal" class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                            <p class="text-xs font-semibold text-yellow-800 mb-2">{{ t('auth.quick_register') }}</p>
-                            <p class="text-xs text-yellow-700 mb-3">{{ t('auth.quick_register_hint') }}</p>
-                            <div class="grid grid-cols-1 gap-2">
-                                <button
-                                    @click="fillForm('student@lms.com')"
-                                    type="button"
-                                    class="px-3 py-2 text-xs font-medium text-yellow-800 bg-yellow-100 hover:bg-yellow-200 rounded-lg transition-colors border border-yellow-300"
-                                >
-                                    {{ t('auth.register_as_student') }}
-                                </button>
-                            </div>
                         </div>
 
                         <form class="space-y-5" @submit.prevent="submit">
@@ -162,16 +146,17 @@
                                 </button>
                             </div>
 
-                            <!-- Login Link -->
-                            <div class="text-center">
-                                <p class="text-sm text-gray-600">
-                                    {{ t('auth.already_have_account') }}
-                                    <Link :href="route('login')" class="font-medium text-purple-600 hover:text-purple-500 transition-colors">
-                                        {{ t('auth.sign_in_link') }}
-                                    </Link>
-                                </p>
-                            </div>
                         </form>
+
+                        <!-- Login Link -->
+                        <div class="text-center mt-5">
+                            <p class="text-sm text-gray-600">
+                                {{ t('auth.already_have_account') }}
+                                <Link :href="route('login')" class="font-medium text-purple-600 hover:text-purple-500 transition-colors">
+                                    {{ t('auth.sign_in_link') }}
+                                </Link>
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -185,7 +170,6 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { useDirection } from '@/composables/useDirection';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
-import { usePage } from '@inertiajs/vue3';
 import { useForm, Link } from '@inertiajs/vue3';
 
 defineProps({
@@ -195,28 +179,17 @@ defineProps({
 const { direction } = useDirection();
 const { t } = useTranslation();
 const { route } = useRoute();
-const page = usePage();
-
-const isLocal = computed(() => page.props.isLocal || false);
 
 const form = useForm({
     name: '',
     email: '',
     national_id: '',
-    password: 'password123',
-    password_confirmation: 'password123',
+    password: '',
+    password_confirmation: '',
     // Note: role is NOT included - backend always sets it to 'student'
 });
 
 const processing = computed(() => form.processing);
-
-const fillForm = (email) => {
-    form.name = 'Student User';
-    form.email = email;
-    form.national_id = '';
-    form.password = 'password123';
-    form.password_confirmation = 'password123';
-};
 
 const submit = () => {
     // Remove role if somehow it exists - backend will ignore it anyway

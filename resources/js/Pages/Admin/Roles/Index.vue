@@ -9,6 +9,7 @@
                     <p class="mt-1 text-sm text-gray-500">{{ t('roles.description') || 'Manage system roles and their permissions' }}</p>
                 </div>
                     <Link
+                        v-if="can('roles.create')"
                         :href="route('admin.roles.create')"
                     class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 font-medium transition-all duration-200 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40"
                     >
@@ -61,6 +62,7 @@
                             </div>
                             <div class="flex items-center gap-1">
                                         <Link
+                                            v-if="can('roles.view')"
                                             :href="route('admin.roles.show', role.id)"
                                     class="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                     :title="t('common.view')"
@@ -71,6 +73,7 @@
                                     </svg>
                                         </Link>
                                         <Link
+                                            v-if="can('roles.edit')"
                                             :href="route('admin.roles.edit', role.id)"
                                     class="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
                                     :title="t('common.edit')"
@@ -80,6 +83,7 @@
                                     </svg>
                                         </Link>
                                         <button
+                                    v-if="can('roles.delete')"
                                     @click="confirmDelete(role)"
                                     class="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                     :title="t('common.delete')"
@@ -104,6 +108,7 @@
                         <h3 class="text-lg font-medium text-gray-900 mb-2">{{ t('roles.no_roles') }}</h3>
                         <p class="text-gray-500 mb-6">{{ t('roles.no_roles_description') || 'Get started by creating your first role' }}</p>
                         <Link
+                            v-if="can('roles.create')"
                             :href="route('admin.roles.create')"
                             class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-medium transition-colors"
                         >
@@ -163,6 +168,7 @@ import { ref, computed } from 'vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
+import { usePermissions } from '@/composables/usePermissions';
 import { Head, Link, router } from '@inertiajs/vue3';
 
 const props = defineProps({
@@ -178,6 +184,7 @@ const props = defineProps({
 
 const { t, locale } = useTranslation();
 const { route } = useRoute();
+const { can } = usePermissions();
 
 const showDeleteModal = ref(false);
 const roleToDelete = ref(null);

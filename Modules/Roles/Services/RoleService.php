@@ -111,11 +111,51 @@ class RoleService
     }
 
     /**
-     * Get all permissions
+     * Get all permissions (filtered by user's access)
+     * If user has permissions.manage, return all permissions
+     * Otherwise, return only permissions the user has
+     * Excludes categories and faqs permissions
      */
-    public function getAllPermissions()
+    public function getAllPermissions(?User $user = null)
     {
-        return Permission::orderBy('name')->get();
+        // If no user provided, get current authenticated user
+        if (!$user) {
+            $user = auth()->user();
+        }
+
+        // Base query - exclude categories and faqs
+        $query = Permission::where(function ($q) {
+            $q->where('slug', 'not like', 'categories.%')
+              ->where('slug', 'not like', 'faqs.%');
+        });
+
+        // If user has permissions.manage, they can see all permissions
+        if ($user && $user->hasPermission('permissions.manage')) {
+            return $query->orderBy('name')->get();
+        }
+
+        // Otherwise, only return permissions the user actually has
+        if ($user) {
+            $userPermissionIds = collect();
+            
+            // Get permissions from all user roles
+            $roles = $user->roles()->with('permissions')->get();
+            foreach ($roles as $role) {
+                $userPermissionIds = $userPermissionIds->merge($role->permissions->pluck('id'));
+            }
+            
+            // Also get direct permissions assigned to user
+            $directPermissions = $user->permissions()->pluck('id');
+            $userPermissionIds = $userPermissionIds->merge($directPermissions);
+            
+            // Return unique permissions (excluding categories and faqs)
+            return $query->whereIn('id', $userPermissionIds->unique())
+                ->orderBy('name')
+                ->get();
+        }
+
+        // If no user, return empty collection
+        return collect();
     }
 
     /**

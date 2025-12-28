@@ -22,6 +22,7 @@ export function usePermissions() {
     
     /**
      * Check if user has a specific permission or permissions
+     * Uses page.props.auth.can from HandleInertiaRequests
      * 
      * @param {string|string[]} permissionOrPermissions - Single permission string or array of permissions
      * @returns {boolean} True if user has at least one of the required permissions
@@ -31,45 +32,28 @@ export function usePermissions() {
      * can(['courses.create', 'courses.edit'])
      */
     const can = (permissionOrPermissions) => {
-        // Super admin always has all permissions
-        if (user.value?.role === 'super_admin') {
-            return true;
-        }
-        
-        // Admin with is_admin flag also has all permissions
-        if (user.value?.is_admin && (user.value?.role === 'admin' || user.value?.role === 'super_admin')) {
-            return true;
-        }
-        
-        const authCan = permissions.value;
-        
-        if (!authCan || typeof authCan !== 'object') {
+        // Safety check: ensure auth and can exist
+        if (!page.props?.auth?.can) {
             return false;
         }
-        
-        // Check if user has the wildcard permission (super admin)
-        if (authCan['*'] === true) {
-            return true;
-        }
-        
         try {
-            if (permissionOrPermissions === null || permissionOrPermissions === undefined || permissionOrPermissions === '') {
+            // Safety check: ensure permissionOrPermissions is valid
+            if (permissionOrPermissions === null || permissionOrPermissions === undefined) {
                 return false;
             }
-            
-            // Handle array of permissions or single permission
-            const perms = Array.isArray(permissionOrPermissions) 
-                ? permissionOrPermissions 
-                : [permissionOrPermissions];
-            
-            // Check if user has at least one of the required permissions
-            return perms.some((permission) => {
-                if (!permission || typeof permission !== 'string') {
-                    return false;
+            let perms = [].concat(permissionOrPermissions);
+            let allPermissions = page.props.auth.can;
+            // Safety check: ensure allPermissions is an object
+            if (!allPermissions || typeof allPermissions !== 'object') {
+                return false;
+            }
+            let hasPermission = false;
+            perms.forEach((item) => {
+                if (item && allPermissions[item]) {
+                    hasPermission = true;
                 }
-                // Check if permission exists in auth.can and is truthy
-                return authCan[permission] === true;
             });
+            return hasPermission;
         } catch (error) {
             console.error('Error in can method:', error);
             return false;

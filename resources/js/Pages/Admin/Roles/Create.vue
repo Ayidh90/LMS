@@ -139,9 +139,9 @@
                                     :class="form.permissions.includes(permission.id) ? 'border-blue-500 bg-blue-50/50 ring-1 ring-blue-500' : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'"
                                 >
                                     <input
-                                        v-model="form.permissions"
                                         type="checkbox"
-                                        :value="permission.id"
+                                        :checked="form.permissions.includes(permission.id)"
+                                        @change="togglePermission(permission.id)"
                                         class="mt-0.5 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                                     />
                                     <div class="flex-1 min-w-0">
@@ -226,7 +226,8 @@ const getPermissionName = (permission) => {
 const groupedPermissions = computed(() => {
     const groups = {};
     const groupOrder = [
-        'categories',
+        'programs',
+        'tracks',
         'courses',
         'sections',
         'lessons',
@@ -239,13 +240,17 @@ const groupedPermissions = computed(() => {
         'settings',
         'dashboard',
         'attendance',
-        'faqs',
     ];
 
-    // Group permissions
+    // Group permissions (exclude categories and faqs)
     props.permissions?.forEach(permission => {
         const slug = permission.slug || '';
         const groupName = slug.split('.')[0] || 'other';
+        
+        // Skip categories and faqs permissions
+        if (groupName === 'categories' || groupName === 'faqs') {
+            return;
+        }
         
         if (!groups[groupName]) {
             groups[groupName] = [];
@@ -274,7 +279,8 @@ const groupedPermissions = computed(() => {
 // Get group display name
 const getGroupName = (groupName) => {
     const groupNames = {
-        categories: locale.value === 'ar' ? 'الفئات' : 'Categories',
+        programs: locale.value === 'ar' ? 'البرامج' : 'Programs',
+        tracks: locale.value === 'ar' ? 'المسارات' : 'Tracks',
         courses: locale.value === 'ar' ? 'الدورات' : 'Courses',
         sections: locale.value === 'ar' ? 'الأقسام' : 'Sections',
         lessons: locale.value === 'ar' ? 'الدروس' : 'Lessons',
@@ -287,7 +293,6 @@ const getGroupName = (groupName) => {
         settings: locale.value === 'ar' ? 'الإعدادات' : 'Settings',
         dashboard: locale.value === 'ar' ? 'لوحات التحكم' : 'Dashboards',
         attendance: locale.value === 'ar' ? 'الحضور' : 'Attendance',
-        faqs: locale.value === 'ar' ? 'الأسئلة الشائعة' : 'FAQs',
         other: locale.value === 'ar' ? 'أخرى' : 'Other',
     };
     return groupNames[groupName] || groupName;
@@ -301,10 +306,18 @@ const generateSlug = () => {
         .replace(/-+/g, '-');
 };
 
+const togglePermission = (permissionId) => {
+    const index = form.permissions.indexOf(permissionId);
+    if (index > -1) {
+        form.permissions.splice(index, 1);
+    } else {
+        form.permissions.push(permissionId);
+    }
+};
+
 const selectAll = () => {
     // Select all permissions from all groups
-    const allIds = props.permissions?.map(p => p.id) || [];
-    form.permissions = allIds;
+    form.permissions = [...(props.permissions?.map(p => p.id) || [])];
 };
 
 const deselectAll = () => {

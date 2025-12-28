@@ -40,5 +40,15 @@ return [
     'cannot_create_batch_existing_not_ended' => 'لا يمكن إنشاء دفعة جديدة. الدفعة السابقة (:batch_name) لم تنته بعد. يرجى الانتظار حتى :end_date قبل إنشاء دفعة جديدة.',
     'batch_updated_successfully' => 'تم تحديث الدفعة بنجاح!',
     'batch_created_successfully' => 'تم إنشاء الدفعة بنجاح!',
+    
+    // Programs Management
+    'programs_management' => 'إدارة البرامج',
+    'view_programs' => 'عرض البرامج',
+    'create_program' => 'إنشاء برنامج',
+    
+    // Tracks Management
+    'tracks_management' => 'إدارة المسارات',
+    'view_tracks' => 'عرض المسارات',
+    'create_track' => 'إنشاء مسار',
 ];
 
