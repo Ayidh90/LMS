@@ -114,19 +114,9 @@ class HandleInertiaRequests extends Middleware
         $instructorPermissions = $settingsService->getInstructorPermissions();
         $websiteSettings = $settingsService->getWebsiteSettings();
         
-        // Get logo and favicon URLs
-        $logoUrl = null;
-        $faviconUrl = null;
-        if ($websiteSettings['logo']) {
-            $logoUrl = filter_var($websiteSettings['logo'], FILTER_VALIDATE_URL) 
-                ? $websiteSettings['logo'] 
-                : asset('storage/' . $websiteSettings['logo']);
-        }
-        if ($websiteSettings['favicon']) {
-            $faviconUrl = filter_var($websiteSettings['favicon'], FILTER_VALIDATE_URL) 
-                ? $websiteSettings['favicon'] 
-                : asset('storage/' . $websiteSettings['favicon']);
-        }
+        // Get logo and favicon URLs using Settings model methods
+        $logoUrl = $websiteSettings['logo_url'] ?? null;
+        $faviconUrl = $websiteSettings['favicon_url'] ?? null;
         
         // Get selected role (from database or session or default to user's role)
         $selectedRole = null;

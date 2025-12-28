@@ -12,12 +12,20 @@ class SettingsService
     public function getAll(): array
     {
         return Settings::all()->mapWithKeys(function ($setting) {
-            return [$setting->key => [
-                'value' => Settings::get($setting->key),
+            $value = Settings::get($setting->key);
+            $result = [
+                'value' => $value,
                 'type' => $setting->type,
                 'description' => $setting->description,
                 'description_ar' => $setting->description_ar,
-            ]];
+            ];
+            
+            // For file settings (logo and favicon), include the full URL
+            if (in_array($setting->key, ['website_logo', 'website_favicon']) && $value) {
+                $result['url'] = Settings::getFileUrl($value);
+            }
+            
+            return [$setting->key => $result];
         })->toArray();
     }
 
@@ -41,7 +49,9 @@ class SettingsService
         return [
             'name' => Settings::websiteName(),
             'logo' => Settings::websiteLogo(),
+            'logo_url' => Settings::websiteLogoUrl(),
             'favicon' => Settings::websiteFavicon(),
+            'favicon_url' => Settings::websiteFaviconUrl(),
             'info' => Settings::websiteInfo(),
             'email' => Settings::websiteEmail(),
             'mobile' => Settings::websiteMobile(),

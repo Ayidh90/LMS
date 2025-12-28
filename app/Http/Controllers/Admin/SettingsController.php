@@ -151,13 +151,30 @@ class SettingsController extends Controller
         try {
             $oldLogo = Settings::websiteLogo();
             $extension = $file->getClientOriginalExtension();
+            $filename = 'logo.' . $extension;
             
-            return $this->imageService->upload(
+            // Upload to storage (for backup/management)
+            $storagePath = $this->imageService->upload(
                 $file,
                 'settings',
                 $oldLogo,
-                'logo.' . $extension
+                $filename
             );
+            
+            // Also copy to public/images/settings/ for direct access (like default-course.avif)
+            $publicImagesDir = public_path('images/settings');
+            if (!is_dir($publicImagesDir)) {
+                mkdir($publicImagesDir, 0755, true);
+            }
+            // Copy from storage to public/images
+            $storageFile = storage_path('app/public/' . $storagePath);
+            $publicFile = $publicImagesDir . '/' . $filename;
+            if (file_exists($storageFile)) {
+                copy($storageFile, $publicFile);
+            }
+            
+            // Return storage path (database stores relative path)
+            return $storagePath;
         } catch (\Exception $e) {
             Log::error('Logo upload failed: ' . $e->getMessage());
             throw new \RuntimeException(__('Failed to upload logo. Please try again.'), 0, $e);
@@ -172,13 +189,30 @@ class SettingsController extends Controller
         try {
             $oldFavicon = Settings::websiteFavicon();
             $extension = $file->getClientOriginalExtension();
+            $filename = 'favicon.' . $extension;
             
-            return $this->imageService->upload(
+            // Upload to storage (for backup/management)
+            $storagePath = $this->imageService->upload(
                 $file,
                 'settings',
                 $oldFavicon,
-                'favicon.' . $extension
+                $filename
             );
+            
+            // Also copy to public/images/settings/ for direct access (like default-course.avif)
+            $publicImagesDir = public_path('images/settings');
+            if (!is_dir($publicImagesDir)) {
+                mkdir($publicImagesDir, 0755, true);
+            }
+            // Copy from storage to public/images
+            $storageFile = storage_path('app/public/' . $storagePath);
+            $publicFile = $publicImagesDir . '/' . $filename;
+            if (file_exists($storageFile)) {
+                copy($storageFile, $publicFile);
+            }
+            
+            // Return storage path (database stores relative path)
+            return $storagePath;
         } catch (\Exception $e) {
             Log::error('Favicon upload failed: ' . $e->getMessage());
             throw new \RuntimeException(__('Failed to upload favicon. Please try again.'), 0, $e);

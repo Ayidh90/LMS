@@ -152,6 +152,9 @@
                                                             {{ course.is_published ? t('courses.status.published') : t('courses.status.draft') }}
                                                         </span>
                                                     </div>
+                                                    <div v-if="course.course_type" class="course-type-enhanced">
+                                                        <span class="course-type-badge-enhanced">{{ t(`courses.types.${course.course_type}`) || course.course_type }}</span>
+                                                    </div>
                                                     <p v-if="course.translated_description || course.description" class="course-description-enhanced">
                                                         {{ course.translated_description || course.description }}
                                                     </p>
@@ -208,6 +211,9 @@
                                                 :class="course.is_published ? 'status-published' : 'status-draft'">
                                                     {{ course.is_published ? t('courses.status.published') : t('courses.status.draft') }}
                                                 </span>
+                                        </div>
+                                        <div v-if="course.course_type" class="course-type">
+                                            <span class="course-type-badge">{{ t(`courses.types.${course.course_type}`) || course.course_type }}</span>
                                         </div>
                                         <p v-if="course.translated_description || course.description" class="course-description">
                                             {{ course.translated_description || course.description || t('instructor.no_description') || 'No description' }}
@@ -954,6 +960,38 @@ onMounted(() => {
 .status-draft-enhanced {
     background: #f1f5f9;
     color: #475569;
+}
+
+.course-type-enhanced {
+    margin-bottom: 0.75rem;
+}
+
+.course-type-badge-enhanced {
+    display: inline-block;
+    padding: 0.25rem 0.625rem;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.course-type {
+    margin-bottom: 0.75rem;
+}
+
+.course-type-badge {
+    display: inline-block;
+    padding: 0.25rem 0.625rem;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .empty-state-small-enhanced {

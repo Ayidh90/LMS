@@ -1180,7 +1180,7 @@ const translations = {
             types: {
                 live_class: 'بث مباشر',
                 course: 'دورة',
-                recurring: 'مكرر',
+                recurring: 'مقرر',
                 text_lesson: 'درس نصي',
             },
             sort: {

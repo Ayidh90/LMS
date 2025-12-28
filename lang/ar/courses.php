@@ -27,7 +27,7 @@ return [
     
     'types' => [
         'course' => 'دورة',
-        'recurring' => 'مكرر',
+        'recurring' => 'مقرر',
     ],
     
     'placeholders' => [

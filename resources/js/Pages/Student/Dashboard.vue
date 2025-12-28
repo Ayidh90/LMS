@@ -134,6 +134,9 @@
                                                         <h5 class="course-item-title">{{ course.translated_title || course.title }}</h5>
                                                         <span class="course-item-progress-badge">{{ course.progress || 0 }}%</span>
                                                     </div>
+                                                    <div v-if="course.course_type" class="course-item-type">
+                                                        <span class="course-type-badge">{{ t(`courses.types.${course.course_type}`) || course.course_type }}</span>
+                                                    </div>
                                                     <div class="course-item-progress-bar-wrapper">
                                                         <div class="course-item-progress-bar">
                                                             <div class="course-item-progress-fill" :style="`width: ${course.progress || 0}%`"></div>
@@ -165,6 +168,9 @@
                                         </div>
                                         <div class="course-card-info-udemy">
                                             <h4 class="course-card-title-udemy">{{ enrollment.batch?.course?.translated_title || enrollment.batch?.course?.title || enrollment.course?.translated_title || enrollment.course?.title }}</h4>
+                                            <div v-if="enrollment.batch?.course?.course_type || enrollment.course?.course_type" class="course-card-type-udemy">
+                                                <span class="course-type-badge">{{ t(`courses.types.${enrollment.batch?.course?.course_type || enrollment.course?.course_type}`) || (enrollment.batch?.course?.course_type || enrollment.course?.course_type) }}</span>
+                                            </div>
                                             <div class="course-card-meta">
                                                 <div class="course-card-instructor-udemy">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -814,6 +820,26 @@ onMounted(() => {
     background: linear-gradient(90deg, #10b981 0%, #059669 100%);
     border-radius: 9999px;
     transition: width 0.5s ease;
+}
+
+.course-item-type {
+    margin-top: 0.5rem;
+}
+
+.course-type-badge {
+    display: inline-block;
+    padding: 0.25rem 0.625rem;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.course-card-type-udemy {
+    margin-bottom: 0.5rem;
 }
 
 /* Standalone Courses - Udemy Style */

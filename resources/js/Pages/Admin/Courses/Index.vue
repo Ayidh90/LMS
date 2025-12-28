@@ -85,6 +85,7 @@
                             <tr>
                                 <th class="text-center" style="width: 50px;">#</th>
                                 <th>{{ t('courses.fields.title') || 'Title' }}</th>
+                                <th class="text-center">{{ t('courses.fields.course_type') || 'Course Type' }}</th>
                                 <th class="text-center">{{ t('courses.fields.level') || 'Level' }}</th>
                                 <th class="text-center">{{ t('courses.status.title') || t('common.status') || 'Status' }}</th>
                                 <th class="text-center">{{ t('courses.students') || 'Students' }}</th>
@@ -124,6 +125,12 @@
                                             </div>
                                             </div>
                                     </td>
+                                <td class="text-center">
+                                    <span v-if="course.course_type" class="badge-course-type">
+                                        {{ t(`courses.types.${course.course_type}`) || course.course_type }}
+                                    </span>
+                                    <span v-else class="text-muted">-</span>
+                                </td>
                                 <td class="text-center">
                                     <span class="badge-level" :class="`badge-level-${course.level}`">
                                             {{ course.level ? (t(`courses.levels.${course.level}`) || course.level) : '-' }}
@@ -170,7 +177,7 @@
                                 </td>
                                 </tr>
                                 <tr v-if="courses.data.length === 0">
-                                <td colspan="6" class="text-center py-5">
+                                <td colspan="7" class="text-center py-5">
                                     <div class="empty-state">
                                         <i class="bi bi-book"></i>
                                         <h5>{{ t('courses.no_courses') || 'No courses found' }}</h5>
@@ -750,6 +757,18 @@ const confirmDelete = async (course) => {
 .badge-level-advanced {
     background: #f8d7da;
     color: #842029;
+}
+
+.badge-course-type {
+    display: inline-block;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border-radius: 0.375rem;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .badge-status {

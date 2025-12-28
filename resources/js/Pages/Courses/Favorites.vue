@@ -61,6 +61,11 @@
                             <h3 class="font-bold text-gray-900 mb-2 line-clamp-2 min-h-[3rem] group-hover:text-blue-600 transition-colors">
                                 {{ course.translated_title || course.title }}
                             </h3>
+                            <div v-if="course.course_type" class="mb-2">
+                                <span class="inline-block px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold uppercase">
+                                    {{ t(`courses.types.${course.course_type}`) || course.course_type }}
+                                </span>
+                            </div>
                             <div class="flex items-center gap-2 mb-3">
                                 <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
                                     {{ getInitials(course.instructor?.name) }}

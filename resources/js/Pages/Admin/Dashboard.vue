@@ -382,7 +382,12 @@
               </div>
               <div class="flex-grow-1 min-w-0">
                 <h5 class="fw-semibold mb-1 text-truncate">{{ course.translated_title || course.title }}</h5>
-                <small class="text-muted">{{ course.level ? t(`courses.levels.${course.level}`) : '' }}</small>
+                <div class="d-flex gap-2 flex-wrap">
+                  <small class="text-muted">{{ course.level ? t(`courses.levels.${course.level}`) : '' }}</small>
+                  <small v-if="course.course_type" class="text-info fw-semibold">
+                    {{ t(`courses.types.${course.course_type}`) || course.course_type }}
+                  </small>
+                </div>
               </div>
               <div>
                 <span 

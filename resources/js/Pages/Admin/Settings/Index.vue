@@ -84,15 +84,22 @@
                             {{ t('admin.website_logo') || 'Website Logo' }}
                         </label>
                         <div class="flex items-start gap-4">
-                            <div v-if="websiteForm.website_logo_preview || currentLogo" class="flex-shrink-0">
+                            <div v-if="websiteForm.website_logo_preview || currentLogoUrl" class="flex-shrink-0">
                                 <img
+                                    :key="`logo-${websiteForm.website_logo_preview || currentLogoUrl}`"
                                     :src="websiteForm.website_logo_preview || currentLogoUrl"
                                     alt="Logo"
                                     class="w-24 h-24 object-contain border border-gray-200 rounded-lg p-2 bg-gray-50"
+                                    @error="handleImageError"
+                                    @load="handleImageLoad"
                                 />
+                            </div>
+                            <div v-else class="flex-shrink-0 w-24 h-24 border border-gray-200 rounded-lg p-2 bg-gray-50 flex items-center justify-center">
+                                <span class="text-xs text-gray-400">{{ t('admin.no_image') || 'No image' }}</span>
                             </div>
                             <div class="flex-1">
                                 <input
+                                    ref="logoInput"
                                     type="file"
                                     @change="handleLogoChange"
                                     accept="image/*"
@@ -115,15 +122,22 @@
                             {{ t('admin.website_favicon') || 'Website Favicon' }}
                         </label>
                         <div class="flex items-start gap-4">
-                            <div v-if="websiteForm.website_favicon_preview || currentFavicon" class="flex-shrink-0">
+                            <div v-if="websiteForm.website_favicon_preview || currentFaviconUrl" class="flex-shrink-0">
                                 <img
+                                    :key="`favicon-${websiteForm.website_favicon_preview || currentFaviconUrl}`"
                                     :src="websiteForm.website_favicon_preview || currentFaviconUrl"
                                     alt="Favicon"
                                     class="w-16 h-16 object-contain border border-gray-200 rounded-lg p-2 bg-gray-50"
+                                    @error="handleImageError"
+                                    @load="handleImageLoad"
                                 />
+                            </div>
+                            <div v-else class="flex-shrink-0 w-16 h-16 border border-gray-200 rounded-lg p-2 bg-gray-50 flex items-center justify-center">
+                                <span class="text-xs text-gray-400">{{ t('admin.no_image') || 'No image' }}</span>
                             </div>
                             <div class="flex-1">
                                 <input
+                                    ref="faviconInput"
                                     type="file"
                                     @change="handleFaviconChange"
                                     accept="image/*"
@@ -318,11 +332,14 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
 import { useForm, usePage, Head } from '@inertiajs/vue3';
+
+const logoInput = ref(null);
+const faviconInput = ref(null);
 
 const props = defineProps({
     settings: Object,
@@ -349,19 +366,65 @@ const websiteForm = useForm({
     website_favicon_preview: null,
 });
 
-const currentLogo = computed(() => props.settings?.website_logo?.value);
-const currentFavicon = computed(() => props.settings?.website_favicon?.value);
-
+// Get logo and favicon URLs from shared settings (which have full URLs) or build from props
 const currentLogoUrl = computed(() => {
-    if (!currentLogo.value) return null;
-    if (currentLogo.value.startsWith('http')) return currentLogo.value;
-    return `/storage/${currentLogo.value}`;
+    // First try shared settings (has full URL from middleware)
+    const sharedLogo = page.props.settings?.website?.logo || page.props.settings?.website?.logo_url;
+    if (sharedLogo && sharedLogo !== '' && sharedLogo !== null) {
+        return sharedLogo;
+    }
+    // Second try: URL from props (now included in getAll() response)
+    const logoUrl = props.settings?.website_logo?.url;
+    if (logoUrl && logoUrl !== '' && logoUrl !== null) {
+        return logoUrl;
+    }
+    // Fallback: build URL from storage path
+    const logo = props.settings?.website_logo?.value;
+    if (!logo || logo === '' || logo === null || logo === undefined) {
+        return null;
+    }
+    // If it's already a full URL, return it
+    if (typeof logo === 'string' && (logo.startsWith('http://') || logo.startsWith('https://'))) {
+        return logo;
+    }
+    // Build storage URL
+    let cleanPath = logo.startsWith('/') ? logo.substring(1) : logo;
+    cleanPath = cleanPath.replace(/^storage\//, '');
+    return `/storage/${cleanPath}`;
 });
 
 const currentFaviconUrl = computed(() => {
-    if (!currentFavicon.value) return null;
-    if (currentFavicon.value.startsWith('http')) return currentFavicon.value;
-    return `/storage/${currentFavicon.value}`;
+    // First try shared settings (has full URL from middleware)
+    const sharedFavicon = page.props.settings?.website?.favicon || page.props.settings?.website?.favicon_url;
+    if (sharedFavicon && sharedFavicon !== '' && sharedFavicon !== null) {
+        return sharedFavicon;
+    }
+    // Second try: URL from props (now included in getAll() response)
+    const faviconUrl = props.settings?.website_favicon?.url;
+    if (faviconUrl && faviconUrl !== '' && faviconUrl !== null) {
+        return faviconUrl;
+    }
+    // Fallback: build URL from storage path
+    const favicon = props.settings?.website_favicon?.value;
+    if (!favicon || favicon === '' || favicon === null || favicon === undefined) {
+        return null;
+    }
+    // If it's already a full URL, return it
+    if (typeof favicon === 'string' && (favicon.startsWith('http://') || favicon.startsWith('https://'))) {
+        return favicon;
+    }
+    // Build storage URL
+    let cleanPath = favicon.startsWith('/') ? favicon.substring(1) : favicon;
+    cleanPath = cleanPath.replace(/^storage\//, '');
+    return `/storage/${cleanPath}`;
+});
+
+const currentLogo = computed(() => {
+    return page.props.settings?.website?.logo || props.settings?.website_logo?.value;
+});
+
+const currentFavicon = computed(() => {
+    return page.props.settings?.website?.favicon || props.settings?.website_favicon?.value;
 });
 
 const handleLogoChange = (event) => {
@@ -388,26 +451,72 @@ const handleFaviconChange = (event) => {
     }
 };
 
+const handleImageError = (event) => {
+    console.error('Image failed to load from storage:', event.target.src);
+    // Hide the broken image instead of showing placeholder
+    event.target.style.display = 'none';
+    // Show error message in console for debugging
+    console.error('Failed to load image. Check if file exists at:', event.target.src);
+    event.target.onerror = null; // Prevent infinite loop
+};
+
+const handleImageLoad = (event) => {
+    // Image loaded successfully
+    console.log('Image loaded successfully:', event.target.src);
+};
+
+// Debug: Log image URLs on mount and watch for changes
+onMounted(() => {
+    console.log('=== Settings Page Debug ===');
+    console.log('Shared settings (website):', page.props.settings?.website);
+    console.log('Props settings:', props.settings);
+    console.log('Current logo URL:', currentLogoUrl.value);
+    console.log('Current favicon URL:', currentFaviconUrl.value);
+    console.log('Logo from props:', props.settings?.website_logo?.value);
+    console.log('Favicon from props:', props.settings?.website_favicon?.value);
+    console.log('==========================');
+});
+
 const submitForm = () => {
     form.put(route('admin.settings.update'), {
         preserveScroll: true,
+        onSuccess: () => {
+            // Form will reload automatically
+        },
     });
 };
 
 const submitWebsiteSettings = () => {
+    console.log('Submitting website settings...');
+    console.log('Form data:', {
+        website_name: websiteForm.website_name,
+        has_logo: !!websiteForm.website_logo,
+        has_favicon: !!websiteForm.website_favicon,
+    });
+    
     websiteForm.transform((data) => {
-        const formData = { ...data };
-        if (websiteForm.website_logo) {
-            formData.website_logo = websiteForm.website_logo;
-        }
-        if (websiteForm.website_favicon) {
-            formData.website_favicon = websiteForm.website_favicon;
-        }
+        // Exclude preview fields from submission
+        const { website_logo_preview, website_favicon_preview, ...formData } = data;
         return formData;
     }).post(route('admin.settings.update'), {
-        preserveScroll: true,
+        preserveScroll: false, // Don't preserve scroll to ensure page reloads
         forceFormData: true,
         _method: 'put',
+        onSuccess: (page) => {
+            console.log('Settings saved successfully!');
+            console.log('Updated settings:', page.props.settings);
+            // Clear previews and file inputs after successful save
+            websiteForm.website_logo_preview = null;
+            websiteForm.website_favicon_preview = null;
+            websiteForm.website_logo = null;
+            websiteForm.website_favicon = null;
+            // Reset file input elements
+            if (logoInput.value) logoInput.value.value = '';
+            if (faviconInput.value) faviconInput.value.value = '';
+        },
+        onError: (errors) => {
+            console.error('Settings save failed:', errors);
+        },
     });
 };
 </script>
