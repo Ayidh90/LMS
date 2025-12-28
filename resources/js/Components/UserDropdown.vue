@@ -50,6 +50,24 @@
                     <p class="text-muted small mb-0" style="font-size: 0.75rem">{{ auth?.email }}</p>
                 </div>
                 
+                <!-- Impersonation Banner -->
+                <div v-if="isImpersonating" class="px-3 py-2 bg-warning bg-opacity-10 border-bottom border-warning border-opacity-25">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                        <span class="small fw-semibold text-warning">{{ t('users.impersonating') || 'Impersonating' }}</span>
+                    </div>
+                    <p class="small text-muted mb-2" style="font-size: 0.7rem;">
+                        {{ t('users.impersonating_as') || 'You are viewing as' }}: <strong>{{ auth?.name }}</strong>
+                    </p>
+                    <button
+                        @click="stopImpersonating"
+                        class="w-100 btn btn-sm btn-warning text-white d-flex align-items-center justify-content-center gap-2"
+                    >
+                        <i class="bi bi-x-circle"></i>
+                        <span>{{ t('users.stop_impersonating') || 'Stop Impersonating' }}</span>
+                    </button>
+                </div>
+
                 <div class="py-1 bg-white">
                     <Link
                         v-if="showProfile"
@@ -126,6 +144,24 @@
                     <p class="text-muted small mb-0" style="font-size: 0.75rem">{{ auth?.email }}</p>
                 </div>
                 
+                <!-- Impersonation Banner -->
+                <div v-if="isImpersonating" class="px-3 py-2 bg-warning bg-opacity-10 border-bottom border-warning border-opacity-25">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                        <span class="small fw-semibold text-warning">{{ t('users.impersonating') || 'Impersonating' }}</span>
+                    </div>
+                    <p class="small text-muted mb-2" style="font-size: 0.7rem;">
+                        {{ t('users.impersonating_as') || 'You are viewing as' }}: <strong>{{ auth?.name }}</strong>
+                    </p>
+                    <button
+                        @click="stopImpersonating"
+                        class="w-100 btn btn-sm btn-warning text-white d-flex align-items-center justify-content-center gap-2"
+                    >
+                        <i class="bi bi-x-circle"></i>
+                        <span>{{ t('users.stop_impersonating') || 'Stop Impersonating' }}</span>
+                    </button>
+                </div>
+
                 <div class="py-1 bg-white">
                     <Link
                         v-if="showProfile"
@@ -193,6 +229,8 @@ const page = usePage();
 const showDropdown = ref(false);
 const auth = computed(() => page.props.auth?.user);
 const allAvailableRoles = computed(() => page.props.auth?.availableRoles || []);
+const isImpersonating = computed(() => page.props.auth?.impersonating || false);
+const originalUser = computed(() => page.props.auth?.originalUser || null);
 const dropdownRef = ref(null);
 const buttonRef = ref(null);
 const expandedButtonRef = ref(null);
@@ -261,6 +299,53 @@ const closeDropdown = () => {
 
 const logout = () => {
     router.post(route('logout'));
+};
+
+const stopImpersonating = () => {
+    closeDropdown();
+    
+    // Build route URL
+    let routeUrl;
+    try {
+        routeUrl = route('admin.users.stop-impersonating');
+        // Check if route helper returned a valid URL
+        if (!routeUrl || routeUrl === '#' || routeUrl === '') {
+            throw new Error('Route helper returned invalid URL');
+        }
+    } catch (error) {
+        console.warn('Route helper failed, building URL manually:', error);
+        // Fallback: build URL manually
+        routeUrl = '/admin/users/stop-impersonating';
+    }
+
+    // Ensure URL starts with /
+    if (!routeUrl.startsWith('/')) {
+        routeUrl = `/${routeUrl}`;
+    }
+
+    // Use form submission to ensure full page reload and proper redirect
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = routeUrl;
+    form.style.display = 'none';
+    
+    // Add CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    if (!csrfToken) {
+        console.error('CSRF token not found');
+        alert('CSRF token not found. Please refresh the page.');
+        return;
+    }
+
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = '_token';
+    csrfInput.value = csrfToken;
+    form.appendChild(csrfInput);
+    
+    // Add to body, submit
+    document.body.appendChild(form);
+    form.submit();
 };
 
 const switchRole = (roleSlug) => {

@@ -74,6 +74,11 @@ Route::middleware('auth')->group(function () {
 |--------------------------------------------------------------------------
 */
 
+// Stop impersonating - must be outside role:admin middleware to allow access when impersonating
+Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
+    Route::post('/users/stop-impersonating', [AdminUserController::class, 'stopImpersonating'])->name('users.stop-impersonating');
+});
+
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     // Dashboard
     Route::middleware('permission:dashboard.admin')
@@ -83,6 +88,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Users Management
     Route::middleware('permission:users.manage')->group(function () {
         Route::resource('users', AdminUserController::class);
+        Route::post('/users/{user}/impersonate', [AdminUserController::class, 'impersonate'])->name('users.impersonate');
         Route::get('/activity-logs', [AdminActivityLogController::class, 'index'])->name('activity-logs.index');
     });
     

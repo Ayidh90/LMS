@@ -64,6 +64,23 @@ return [
         'not_found' => 'Permission not found',
     ],
 
+    // Users
+    'users' => [
+        'created_successfully' => 'User created successfully',
+        'updated_successfully' => 'User updated successfully',
+        'deleted_successfully' => 'User deleted successfully',
+        'impersonate' => 'Impersonate',
+        'impersonating' => 'Impersonating',
+        'impersonating_as' => 'You are viewing as',
+        'stop_impersonating' => 'Stop Impersonating',
+        'impersonation_started' => 'You are now impersonating :name',
+        'impersonation_stopped' => 'You have stopped impersonating.',
+        'no_impersonation_session' => 'No active impersonation session found.',
+        'original_user_not_found' => 'Original user not found.',
+        'cannot_impersonate_yourself' => 'You cannot impersonate yourself.',
+        'no_permission_to_impersonate' => 'You do not have permission to impersonate users.',
+    ],
+
     // General
     'success' => 'Operation completed successfully',
     'error' => 'An error occurred',

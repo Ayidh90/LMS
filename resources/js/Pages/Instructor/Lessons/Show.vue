@@ -93,8 +93,147 @@
                     </div>
                 </div>
 
-                <!-- Content Section -->
-                <div v-if="lesson.content" class="bg-white rounded-xl shadow-sm p-8 mb-6">
+                <!-- Video Section (for video_file, youtube_video, google_drive_video, embed_frame) -->
+                <div v-if="lesson.video_url && (lesson.type === 'video_file' || lesson.type === 'youtube_video' || lesson.type === 'google_drive_video' || lesson.type === 'embed_frame' || lesson.type === 'video')" class="bg-white rounded-xl shadow-sm p-8 mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                        <span class="w-1 h-6 bg-blue-600 rounded-full"></span>
+                        {{ t('lessons.fields.video') || 'Video' }}
+                    </h2>
+                    
+                    <!-- Uploaded Video File -->
+                    <div v-if="lesson.type === 'video_file' && lesson.video_url" class="mb-4">
+                        <video
+                            :id="`video-player-${lesson.id}`"
+                            :src="lesson.video_url"
+                            controls
+                            class="w-full rounded-lg shadow-lg"
+                            style="max-height: 600px;"
+                        >
+                            {{ t('lessons.video_not_supported') || 'Your browser does not support the video tag.' }}
+                        </video>
+                        <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+                            <p class="text-sm font-semibold text-gray-700 mb-2">{{ t('lessons.fields.video_url') || 'Video URL' }}:</p>
+                            <a :href="lesson.video_url" target="_blank" class="text-sm text-blue-600 hover:underline break-all">
+                                {{ lesson.video_url }}
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- YouTube Video -->
+                    <div v-else-if="lesson.type === 'youtube_video' && lesson.video_url" class="mb-4">
+                        <div class="aspect-video rounded-lg overflow-hidden shadow-lg">
+                            <iframe
+                                :src="getYouTubeEmbedUrl(lesson.video_url)"
+                                frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen
+                                class="w-full h-full"
+                            ></iframe>
+                        </div>
+                        <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+                            <p class="text-sm font-semibold text-gray-700 mb-2">{{ t('lessons.fields.video_url') || 'Video URL' }}:</p>
+                            <a :href="lesson.video_url" target="_blank" class="text-sm text-blue-600 hover:underline break-all">
+                                {{ lesson.video_url }}
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Google Drive Video -->
+                    <div v-else-if="lesson.type === 'google_drive_video' && lesson.video_url" class="mb-4">
+                        <div class="aspect-video rounded-lg overflow-hidden shadow-lg bg-gray-100 flex items-center justify-center">
+                            <a :href="lesson.video_url" target="_blank" class="text-center p-8">
+                                <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M7.71 2.5L2.07 6.72c-.58.46-.58 1.38 0 1.84l5.64 4.22c.58.46 1.38.46 1.96 0l5.64-4.22c.58-.46.58-1.38 0-1.84L9.67 2.5c-.58-.46-1.38-.46-1.96 0z"/>
+                                </svg>
+                                <p class="text-lg font-semibold text-gray-700">{{ t('lessons.types.google_drive_video') || 'Google Drive Video' }}</p>
+                                <p class="text-sm text-gray-500 mt-2">{{ t('lessons.click_to_open') || 'Click to open video' }}</p>
+                            </a>
+                        </div>
+                        <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+                            <p class="text-sm font-semibold text-gray-700 mb-2">{{ t('lessons.fields.video_url') || 'Video URL' }}:</p>
+                            <a :href="lesson.video_url" target="_blank" class="text-sm text-blue-600 hover:underline break-all">
+                                {{ lesson.video_url }}
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Embed Frame -->
+                    <div v-else-if="lesson.type === 'embed_frame' && lesson.video_url" class="mb-4">
+                        <div class="aspect-video rounded-lg overflow-hidden shadow-lg">
+                            <iframe
+                                :src="lesson.video_url"
+                                frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen
+                                class="w-full h-full"
+                            ></iframe>
+                        </div>
+                        <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+                            <p class="text-sm font-semibold text-gray-700 mb-2">{{ t('lessons.fields.video_url') || 'Video URL' }}:</p>
+                            <a :href="lesson.video_url" target="_blank" class="text-sm text-blue-600 hover:underline break-all">
+                                {{ lesson.video_url }}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Image Section -->
+                <div v-if="lesson.type === 'image' && lesson.video_url" class="bg-white rounded-xl shadow-sm p-8 mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                        <span class="w-1 h-6 bg-blue-600 rounded-full"></span>
+                        {{ t('lessons.fields.image') || 'Image' }}
+                    </h2>
+                    <div class="mb-4">
+                        <img
+                            :src="lesson.video_url"
+                            :alt="lesson.title"
+                            class="w-full rounded-lg shadow-lg"
+                            style="max-height: 800px; object-fit: contain;"
+                        />
+                        <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+                            <p class="text-sm font-semibold text-gray-700 mb-2">{{ t('lessons.fields.image_url') || 'Image URL' }}:</p>
+                            <a :href="lesson.video_url" target="_blank" class="text-sm text-blue-600 hover:underline break-all">
+                                {{ lesson.video_url }}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Document Section -->
+                <div v-if="lesson.type === 'document_file' && lesson.video_url" class="bg-white rounded-xl shadow-sm p-8 mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                        <span class="w-1 h-6 bg-blue-600 rounded-full"></span>
+                        {{ t('lessons.fields.document') || 'Document' }}
+                    </h2>
+                    <div class="mb-4">
+                        <div class="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center bg-gray-50">
+                            <svg class="w-20 h-20 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                            <p class="text-lg font-semibold text-gray-700 mb-2">{{ t('lessons.document_file') || 'Document File' }}</p>
+                            <a
+                                :href="lesson.video_url"
+                                target="_blank"
+                                class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold transition-all shadow-lg hover:shadow-xl"
+                            >
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                {{ t('lessons.download_document') || 'Download Document' }}
+                                <i class="bi bi-box-arrow-up-right ms-2"></i>
+                            </a>
+                        </div>
+                        <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+                            <p class="text-sm font-semibold text-gray-700 mb-2">{{ t('lessons.fields.document_url') || 'Document URL' }}:</p>
+                            <a :href="lesson.video_url" target="_blank" class="text-sm text-blue-600 hover:underline break-all">
+                                {{ lesson.video_url }}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content Section (for text type or any lesson with content) -->
+                <div v-if="lesson.content && (lesson.type === 'text' || !lesson.video_url)" class="bg-white rounded-xl shadow-sm p-8 mb-6">
                     <h2 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
                         <span class="w-1 h-6 bg-blue-600 rounded-full"></span>
                         {{ t('lessons.fields.content') }}
@@ -589,6 +728,36 @@ onMounted(() => {
 const formatContent = (content) => {
     if (!content) return '';
     return content.replace(/\n/g, '<br>');
+};
+
+// Convert YouTube URL to embed format
+const getYouTubeEmbedUrl = (url) => {
+    if (!url) return '';
+    
+    // If already an embed URL, return as is
+    if (url.includes('youtube.com/embed/') || url.includes('youtu.be/')) {
+        // Extract video ID from embed URL
+        const embedMatch = url.match(/embed\/([a-zA-Z0-9_-]+)/);
+        if (embedMatch) {
+            return `https://www.youtube.com/embed/${embedMatch[1]}`;
+        }
+    }
+    
+    // Extract video ID from various YouTube URL formats
+    const patterns = [
+        /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]+)/,
+        /youtube\.com\/.*[?&]v=([a-zA-Z0-9_-]+)/,
+    ];
+    
+    for (const pattern of patterns) {
+        const match = url.match(pattern);
+        if (match && match[1]) {
+            return `https://www.youtube.com/embed/${match[1]}`;
+        }
+    }
+    
+    // If no match, return original URL (might be a different video platform)
+    return url;
 };
 
 const formatDate = (date) => {

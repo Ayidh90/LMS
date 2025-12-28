@@ -31,9 +31,13 @@ class RoleSelectionController extends Controller
             return $this->redirectToRoleDashboard($user);
         }
 
+        // Check if impersonating
+        $impersonating = session()->has('impersonate_original_user_id');
+
         // If user has multiple roles (including admin), show role selection page
         return Inertia::render('Auth/RoleSelection', [
             'roles' => $availableRoles,
+            'impersonating' => $impersonating,
         ]);
     }
 

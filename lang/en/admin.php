@@ -50,5 +50,10 @@ return [
     'tracks_management' => 'Tracks Management',
     'view_tracks' => 'View Tracks',
     'create_track' => 'Create Track',
+    
+    // Users Management
+    'users' => 'Users',
+    'users_description' => 'Manage system users and their roles',
+    'users_management' => 'Users Management',
 ];
 

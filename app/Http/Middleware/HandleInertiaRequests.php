@@ -134,6 +134,11 @@ class HandleInertiaRequests extends Middleware
             $selectedRole = $user->selected_role ?? session('selected_role') ?? $user->role;
         }
         
+        // Check if currently impersonating
+        $isImpersonating = session()->has('impersonate_original_user_id');
+        $originalUserId = session('impersonate_original_user_id');
+        $originalUser = $isImpersonating && $originalUserId ? \App\Models\User::find($originalUserId) : null;
+
         return [
             ...parent::share($request),
             'direction' => $direction,
@@ -153,6 +158,12 @@ class HandleInertiaRequests extends Middleware
                 'roles' => $user ? array_values($user->getRoleNames()->toArray()) : [],
                 'availableRoles' => $user ? $user->getAvailableRolesForSelection() : [],
                 'selectedRole' => $selectedRole,
+                'impersonating' => $isImpersonating,
+                'originalUser' => $originalUser ? [
+                    'id' => $originalUser->id,
+                    'name' => $originalUser->name,
+                    'email' => $originalUser->email,
+                ] : null,
             ],
             'settings' => [
                 'instructor_permissions' => $instructorPermissions,

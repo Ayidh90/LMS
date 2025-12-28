@@ -41,10 +41,13 @@
                             class="w-full sm:w-auto px-4 py-3 pr-10 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 focus:bg-white min-w-[180px] appearance-none cursor-pointer transition-all"
                         >
                             <option value="">{{ t('users.all_roles') || 'All Roles' }}</option>
-                            <option value="student">{{ t('users.roles.student') }}</option>
-                            <option value="instructor">{{ t('users.roles.instructor') }}</option>
-                            <option value="admin">{{ t('users.roles.admin') }}</option>
-                            <option value="super_admin">{{ t('users.roles.super_admin') }}</option>
+                            <option
+                                v-for="role in roles"
+                                :key="role.id"
+                                :value="role.slug || role.name"
+                            >
+                                {{ getRoleDisplayName(role) }}
+                            </option>
                         </select>
                         <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -60,16 +63,43 @@
                         <thead class="table-light">
                             <tr>
                                 <th scope="col" class="text-right text-uppercase fw-bold text-muted small border-bottom-2">
-                                    {{ t('users.fields.name') }}
+                                    <button
+                                        @click="sortBy('name')"
+                                        class="flex items-center gap-2 text-muted hover:text-gray-900 transition-colors bg-transparent border-0 p-0 cursor-pointer"
+                                        :class="{ 'text-gray-900 font-bold': currentSort === 'name' }"
+                                    >
+                                        {{ t('users.fields.name') }}
+                                        <span v-if="currentSort === 'name'" class="text-xs">
+                                            {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                                        </span>
+                                    </button>
                                 </th>
                                 <th scope="col" class="text-right text-uppercase fw-bold text-muted small border-bottom-2">
-                                    {{ t('users.fields.email') }}
+                                    <button
+                                        @click="sortBy('email')"
+                                        class="flex items-center gap-2 text-muted hover:text-gray-900 transition-colors bg-transparent border-0 p-0 cursor-pointer"
+                                        :class="{ 'text-gray-900 font-bold': currentSort === 'email' }"
+                                    >
+                                        {{ t('users.fields.email') }}
+                                        <span v-if="currentSort === 'email'" class="text-xs">
+                                            {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                                        </span>
+                                    </button>
                                 </th>
                                 <th scope="col" class="text-right text-uppercase fw-bold text-muted small border-bottom-2">
                                     {{ t('users.fields.roles') || t('users.fields.role') }}
                                 </th>
                                 <th scope="col" class="text-right text-uppercase fw-bold text-muted small border-bottom-2">
-                                    {{ t('users.fields.status') }}
+                                    <button
+                                        @click="sortBy('is_active')"
+                                        class="flex items-center gap-2 text-muted hover:text-gray-900 transition-colors bg-transparent border-0 p-0 cursor-pointer"
+                                        :class="{ 'text-gray-900 font-bold': currentSort === 'is_active' }"
+                                    >
+                                        {{ t('users.fields.status') }}
+                                        <span v-if="currentSort === 'is_active'" class="text-xs">
+                                            {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                                        </span>
+                                    </button>
                                 </th>
                                 <th scope="col" class="text-right text-uppercase fw-bold text-muted small border-bottom-2">
                                     {{ t('common.actions') }}
@@ -123,25 +153,41 @@
                                 </td>
                                 <td class="px-4 py-3">
                                     <div class="flex flex-wrap gap-2">
-                                        <!-- Display all user roles -->
-                                        <span
-                                            v-for="role in getUserRoles(user)"
-                                            :key="role.id || role.slug || role"
-                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg shadow-sm border transition-all hover:scale-105"
-                                            :class="getRoleBadgeClass(role.slug || role)"
-                                        >
-                                            <span class="w-2 h-2 rounded-full" :class="getRoleDotClass(role.slug || role)"></span>
-                                            {{ getRoleDisplayName(role) }}
-                                        </span>
-                                        <!-- Fallback to legacy role if no roles found -->
-                                        <span
-                                            v-if="!user.roles || user.roles.length === 0"
-                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg shadow-sm border transition-all hover:scale-105"
-                                            :class="getRoleBadgeClass(user.role)"
-                                        >
-                                            <span class="w-2 h-2 rounded-full" :class="getRoleDotClass(user.role)"></span>
-                                            {{ t('users.roles.' + user.role) || user.role }}
-                                        </span>
+                                        <!-- Display user roles - show first role, or all if only one -->
+                                        <template v-if="getUserRoles(user).length > 1">
+                                            <!-- Multiple roles - show first with clickable indicator -->
+                                            <span
+                                                @click="showRolesModal(user)"
+                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg shadow-sm border transition-all hover:scale-105 cursor-pointer"
+                                                :class="getRoleBadgeClass(getUserRoles(user)[0].slug || getUserRoles(user)[0].name)"
+                                                :title="t('users.view_all_roles') || 'Click to view all roles'"
+                                            >
+                                                <span class="w-2 h-2 rounded-full" :class="getRoleDotClass(getUserRoles(user)[0].slug || getUserRoles(user)[0].name)"></span>
+                                                {{ getRoleDisplayName(getUserRoles(user)[0]) }}
+                                                <span class="ml-1 text-xs font-bold">+{{ getUserRoles(user).length - 1 }}</span>
+                                            </span>
+                                        </template>
+                                        <template v-else>
+                                            <!-- Single role or no roles -->
+                                            <span
+                                                v-for="role in getUserRoles(user)"
+                                                :key="role.id || role.slug || role"
+                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg shadow-sm border transition-all hover:scale-105"
+                                                :class="getRoleBadgeClass(role.slug || role)"
+                                            >
+                                                <span class="w-2 h-2 rounded-full" :class="getRoleDotClass(role.slug || role)"></span>
+                                                {{ getRoleDisplayName(role) }}
+                                            </span>
+                                            <!-- Fallback to legacy role if no roles found -->
+                                            <span
+                                                v-if="!user.roles || user.roles.length === 0"
+                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg shadow-sm border transition-all hover:scale-105"
+                                                :class="getRoleBadgeClass(user.role)"
+                                            >
+                                                <span class="w-2 h-2 rounded-full" :class="getRoleDotClass(user.role)"></span>
+                                                {{ t('users.roles.' + user.role) || user.role }}
+                                            </span>
+                                        </template>
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
@@ -155,6 +201,17 @@
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <div class="d-flex align-items-center gap-2">
+                                        <button
+                                            v-if="can('users.manage')"
+                                            @click="impersonateUser(user)"
+                                            class="btn btn-sm btn-outline-info d-inline-flex align-items-center gap-1"
+                                            title="Impersonate User"
+                                        >
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                            </svg>
+                                            <span class="d-none d-sm-inline">{{ t('users.impersonate') || 'Impersonate' }}</span>
+                                        </button>
                                         <Link
                                             v-if="can('users.edit')"
                                             :href="route('admin.users.edit', user.id)"
@@ -267,30 +324,111 @@
                 </div>
             </div>
         </Teleport>
+
+        <!-- User Roles Modal -->
+        <Teleport to="body">
+            <div v-if="showRolesModalVisible" class="fixed inset-0 z-50 overflow-y-auto">
+                <div class="flex items-center justify-center min-h-screen px-4">
+                    <div class="fixed inset-0 bg-black/50 transition-opacity" @click="showRolesModalVisible = false"></div>
+                    <div class="relative bg-white rounded-2xl shadow-xl max-w-md w-full p-6 z-10">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-900">{{ t('users.user_roles') || 'User Roles' }}</h3>
+                                    <p class="text-sm text-gray-500">{{ selectedUserForRoles?.name }}</p>
+                                </div>
+                            </div>
+                            <button
+                                @click="showRolesModalVisible = false"
+                                class="text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="space-y-2 mb-6">
+                            <div
+                                v-for="role in getUserRoles(selectedUserForRoles)"
+                                :key="role.id || role.slug || role"
+                                class="flex items-center gap-3 p-3 rounded-lg border"
+                                :class="getRoleBadgeClass(role.slug || role.name || role)"
+                            >
+                                <span class="w-3 h-3 rounded-full" :class="getRoleDotClass(role.slug || role.name || role)"></span>
+                                <div class="flex-1">
+                                    <div class="font-semibold text-sm">{{ getRoleDisplayName(role) }}</div>
+                                    <div v-if="role.description || role.description_ar" class="text-xs text-gray-500 mt-1">
+                                        {{ locale === 'ar' && role.description_ar ? role.description_ar : (role.description || '') }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div
+                                v-if="!selectedUserForRoles?.roles || selectedUserForRoles.roles.length === 0"
+                                class="flex items-center gap-3 p-3 rounded-lg border"
+                                :class="getRoleBadgeClass(selectedUserForRoles?.role)"
+                            >
+                                <span class="w-3 h-3 rounded-full" :class="getRoleDotClass(selectedUserForRoles?.role)"></span>
+                                <div class="flex-1">
+                                    <div class="font-semibold text-sm">{{ t('users.roles.' + selectedUserForRoles?.role) || selectedUserForRoles?.role }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex justify-end">
+                            <button
+                                @click="showRolesModalVisible = false"
+                                class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                            >
+                                {{ t('common.close') || 'Close' }}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </Teleport>
     </AdminLayout>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import AdminLayout from '@/Layouts/AdminLayout.vue';
 import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
 import { usePermissions } from '@/composables/usePermissions';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/vue3';
 
-defineProps({
+const props = defineProps({
     users: Object,
+    roles: {
+        type: Array,
+        default: () => [],
+    },
 });
 
 const { can } = usePermissions();
 
 const { t, locale } = useTranslation();
 const { route } = useRoute();
+const page = usePage();
 
-const search = ref('');
-const roleFilter = ref('');
+// Initialize from URL query parameters
+const getQueryParam = (key, defaultValue = '') => {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(key) || defaultValue;
+};
+
+const search = ref(getQueryParam('search', ''));
+const roleFilter = ref(getQueryParam('role', ''));
+const currentSort = ref(getQueryParam('sort_by', 'created_at'));
+const sortOrder = ref(getQueryParam('sort_order', 'desc'));
 const showDeleteModal = ref(false);
 const userToDelete = ref(null);
+const showRolesModalVisible = ref(false);
+const selectedUserForRoles = ref(null);
 
 let searchTimeout = null;
 
@@ -305,11 +443,25 @@ const applyFilters = () => {
     const params = {};
     if (search.value) params.search = search.value;
     if (roleFilter.value) params.role = roleFilter.value;
+    if (currentSort.value) params.sort_by = currentSort.value;
+    if (sortOrder.value) params.sort_order = sortOrder.value;
     
     router.get(route('admin.users.index'), params, {
         preserveState: true,
         preserveScroll: true,
     });
+};
+
+const sortBy = (column) => {
+    if (currentSort.value === column) {
+        // Toggle sort order
+        sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+    } else {
+        // New column, default to ascending
+        currentSort.value = column;
+        sortOrder.value = 'asc';
+    }
+    applyFilters();
 };
 
 const getInitials = (name) => {
@@ -397,6 +549,65 @@ const deleteUser = () => {
             },
         });
     }
+};
+
+const showRolesModal = (user) => {
+    selectedUserForRoles.value = user;
+    showRolesModalVisible.value = true;
+};
+
+const impersonateUser = (user) => {
+    if (!user || !user.id) {
+        console.error('Invalid user data for impersonation');
+        alert('Invalid user data');
+        return;
+    }
+
+    // Build route URL - use route helper first, fallback to manual construction
+    let routeUrl;
+    try {
+        routeUrl = route('admin.users.impersonate', user.id);
+        // Check if route helper returned a valid URL
+        if (!routeUrl || routeUrl === '#' || routeUrl === '') {
+            throw new Error('Route helper returned invalid URL');
+        }
+    } catch (error) {
+        console.warn('Route helper failed, building URL manually:', error);
+        // Fallback: build URL manually based on route pattern
+        routeUrl = `/admin/users/${user.id}/impersonate`;
+    }
+
+    // Ensure URL starts with /
+    if (!routeUrl.startsWith('/')) {
+        routeUrl = `/${routeUrl}`;
+    }
+
+    console.log('Impersonating user:', user.id, 'Route URL:', routeUrl);
+
+    // Use form submission to ensure full page reload and proper redirect
+    // This is more reliable than Inertia router for redirects
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = routeUrl;
+    form.style.display = 'none';
+    
+    // Add CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    if (!csrfToken) {
+        console.error('CSRF token not found');
+        alert('CSRF token not found. Please refresh the page.');
+        return;
+    }
+
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = '_token';
+    csrfInput.value = csrfToken;
+    form.appendChild(csrfInput);
+    
+    // Add to body, submit, then remove
+    document.body.appendChild(form);
+    form.submit();
 };
 </script>
 
@@ -493,6 +704,18 @@ const deleteUser = () => {
 .btn-outline-danger:hover {
     background-color: #dc3545;
     border-color: #dc3545;
+    color: #fff;
+}
+
+.btn-outline-info {
+    border: 1px solid #0dcaf0;
+    color: #0dcaf0;
+    background-color: transparent;
+}
+
+.btn-outline-info:hover {
+    background-color: #0dcaf0;
+    border-color: #0dcaf0;
     color: #fff;
 }
 

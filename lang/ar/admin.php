@@ -50,5 +50,10 @@ return [
     'tracks_management' => 'إدارة المسارات',
     'view_tracks' => 'عرض المسارات',
     'create_track' => 'إنشاء مسار',
+    
+    // Users Management
+    'users' => 'المستخدمين',
+    'users_description' => 'إدارة مستخدمي النظام وأدوارهم',
+    'users_management' => 'إدارة المستخدمين',
 ];
 

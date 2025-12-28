@@ -64,6 +64,23 @@ return [
         'not_found' => 'الصلاحية غير موجودة',
     ],
 
+    // Users
+    'users' => [
+        'created_successfully' => 'تم إنشاء المستخدم بنجاح',
+        'updated_successfully' => 'تم تحديث المستخدم بنجاح',
+        'deleted_successfully' => 'تم حذف المستخدم بنجاح',
+        'impersonate' => 'الدخول كـ',
+        'impersonating' => 'جاري الدخول كـ',
+        'impersonating_as' => 'أنت تشاهد كـ',
+        'stop_impersonating' => 'إنهاء الدخول',
+        'impersonation_started' => 'أنت الآن تدخل كـ :name',
+        'impersonation_stopped' => 'تم إنهاء الدخول.',
+        'no_impersonation_session' => 'لم يتم العثور على جلسة دخول نشطة.',
+        'original_user_not_found' => 'المستخدم الأصلي غير موجود.',
+        'cannot_impersonate_yourself' => 'لا يمكنك الدخول كحسابك الخاص.',
+        'no_permission_to_impersonate' => 'ليس لديك صلاحية للدخول كـ مستخدمين آخرين.',
+    ],
+
     // General
     'success' => 'تمت العملية بنجاح',
     'error' => 'حدث خطأ',
