@@ -753,7 +753,6 @@ const menuItems = computed(() => {
         route: "admin.settings.index",
         permission: "settings.view",
         // Allow admins to access settings even without explicit permission
-        allowAdmin: true,
       },
       {
         title: t("admin.activity_logs"),

@@ -3,6 +3,7 @@
 namespace Modules\Courses\Controllers\Instructor;
 
 use App\Http\Controllers\Controller;
+use App\Traits\HasEffectiveRole;
 use Modules\Courses\Requests\StoreLessonRequest;
 use Modules\Courses\Requests\UpdateLessonRequest;
 use Modules\Courses\Services\LessonService;
@@ -22,6 +23,8 @@ use Inertia\Inertia;
 
 class LessonController extends Controller
 {
+    use HasEffectiveRole;
+    
     public function __construct(
         private LessonService $lessonService,
         private LessonAttendanceService $attendanceService,
@@ -30,6 +33,7 @@ class LessonController extends Controller
 
     public function index(Course $course)
     {
+        $this->ensureEffectiveRole('instructor');
         Gate::authorize('viewLessons', $course);
 
         return redirect()->route('instructor.sections.index', $course);
@@ -37,6 +41,7 @@ class LessonController extends Controller
 
     public function create(Course $course)
     {
+        $this->ensureEffectiveRole('instructor');
         Gate::authorize('createLesson', $course);
 
         return Inertia::render('Instructor/Lessons/Create', [
@@ -47,6 +52,7 @@ class LessonController extends Controller
 
     public function store(StoreLessonRequest $request, Course $course)
     {
+        $this->ensureEffectiveRole('instructor');
         Gate::authorize('createLesson', $course);
 
         $data = $request->validated();
@@ -102,6 +108,7 @@ class LessonController extends Controller
 
     public function show(Course $course, Lesson $lesson)
     {
+        $this->ensureEffectiveRole('instructor');
         Gate::authorize('viewLessons', $course);
 
         $lesson->load(['questions.answers', 'section']);
@@ -127,6 +134,7 @@ class LessonController extends Controller
 
     public function edit(Course $course, Lesson $lesson)
     {
+        $this->ensureEffectiveRole('instructor');
         Gate::authorize('updateLesson', $course);
 
         return Inertia::render('Instructor/Lessons/Edit', [
@@ -138,6 +146,7 @@ class LessonController extends Controller
 
     public function update(UpdateLessonRequest $request, Course $course, Lesson $lesson)
     {
+        $this->ensureEffectiveRole('instructor');
         Gate::authorize('updateLesson', $course);
 
         $data = $request->validated();
@@ -198,6 +207,7 @@ class LessonController extends Controller
 
     public function destroy(Course $course, Lesson $lesson)
     {
+        $this->ensureEffectiveRole('instructor');
         Gate::authorize('deleteLesson', $course);
 
         $this->lessonService->delete($lesson);
@@ -208,6 +218,7 @@ class LessonController extends Controller
 
     public function markAttendance(Request $request, Course $course, Lesson $lesson)
     {
+        $this->ensureEffectiveRole('instructor');
         Gate::authorize('markAttendance', $course);
 
         $validated = $request->validate([

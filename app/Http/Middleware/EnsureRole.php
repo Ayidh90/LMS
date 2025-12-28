@@ -80,6 +80,21 @@ class EnsureRole
             abort(403, __('messages.unauthorized'));
         }
 
+        // For instructor and student routes, also check selected_role
+        // This ensures users with multiple roles can only access routes for their selected role
+        if (in_array('instructor', $roles) || in_array('student', $roles)) {
+            $user->refresh(); // Get latest selected_role from database
+            $selectedRole = $user->selected_role ?? $user->role;
+            
+            // If user has multiple roles, they must have the correct selected_role
+            $availableRoles = $user->getAvailableRolesForSelection();
+            if (count($availableRoles) > 1) {
+                if (!in_array($selectedRole, $roles)) {
+                    abort(403, __('You must switch to the correct role to access this page.'));
+                }
+            }
+        }
+
         return $next($request);
     }
 }

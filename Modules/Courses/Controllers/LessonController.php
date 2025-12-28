@@ -3,7 +3,9 @@
 namespace Modules\Courses\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Traits\HasEffectiveRole;
 use App\Models\Batch;
+use App\Models\User;
 use App\Models\UserQuestionAnswer;
 use Modules\Courses\Models\Course;
 use Modules\Courses\Models\Lesson;
@@ -16,6 +18,8 @@ use Inertia\Inertia;
 
 class LessonController extends Controller
 {
+    use HasEffectiveRole;
+    
     public function __construct(
         private LessonService $lessonService
     ) {}
@@ -25,6 +29,7 @@ class LessonController extends Controller
         $this->authorize('view', $course);
         
         $lessons = $course->lessons()->orderBy('order')->get();
+        /** @var User|null $user */
         $user = Auth::user();
         // Only admins can edit lessons - instructors cannot
         $canEdit = $user && $user->isAdmin();
@@ -39,7 +44,9 @@ class LessonController extends Controller
     public function create(Course $course)
     {
         // Only admins can create lessons
-        if (!Auth::user()->isAdmin()) {
+        /** @var User $user */
+        $user = Auth::user();
+        if (!$user || !$user->isAdmin()) {
             abort(403, __('messages.forbidden'));
         }
 
@@ -51,7 +58,9 @@ class LessonController extends Controller
     public function store(StoreLessonRequest $request, Course $course)
     {
         // Only admins can create lessons
-        if (!Auth::user()->isAdmin()) {
+        /** @var User $user */
+        $user = Auth::user();
+        if (!$user || !$user->isAdmin()) {
             abort(403, __('messages.forbidden'));
         }
 
@@ -77,19 +86,30 @@ class LessonController extends Controller
     {
         $this->authorize('view', $course);
         
+        /** @var User|null $user */
         $user = Auth::user();
         
-        // If user is an instructor teaching this course, redirect to instructor lesson page
-        if ($user && $user->isInstructor()) {
-            $hasAccess = Batch::where('course_id', $course->id)
-                ->where('instructor_id', $user->id)
-                ->exists();
+        if ($user) {
+            $effectiveRole = $this->getEffectiveRole();
             
-            if ($hasAccess) {
-                return redirect()->route('instructor.lessons.show', [
-                    $course->slug ?? $course->id,
-                    $lesson->id
-                ]);
+            // If user's effective role is instructor, redirect to instructor page
+            if ($effectiveRole === 'instructor' && $user->isInstructor()) {
+                $hasAccess = Batch::where('course_id', $course->id)
+                    ->where('instructor_id', $user->id)
+                    ->exists();
+                
+                if ($hasAccess) {
+                    return redirect()->route('instructor.lessons.show', [
+                        $course->slug ?? $course->id,
+                        $lesson->id
+                    ]);
+                }
+            }
+            
+            // Ensure effective role is student for student lesson access
+            $availableRoles = $user->getAvailableRolesForSelection();
+            if (count($availableRoles) > 1 && $effectiveRole !== 'student') {
+                abort(403, __('You must switch to student role to access this page.'));
             }
         }
         
@@ -143,7 +163,9 @@ class LessonController extends Controller
     public function edit(Course $course, Lesson $lesson)
     {
         // Only admins can edit lessons
-        if (!Auth::user()->isAdmin()) {
+        /** @var User $user */
+        $user = Auth::user();
+        if (!$user || !$user->isAdmin()) {
             abort(403, __('messages.forbidden'));
         }
 
@@ -156,7 +178,9 @@ class LessonController extends Controller
     public function update(UpdateLessonRequest $request, Course $course, Lesson $lesson)
     {
         // Only admins can update lessons
-        if (!Auth::user()->isAdmin()) {
+        /** @var User $user */
+        $user = Auth::user();
+        if (!$user || !$user->isAdmin()) {
             abort(403, __('messages.forbidden'));
         }
 
@@ -181,7 +205,9 @@ class LessonController extends Controller
     public function destroy(Course $course, Lesson $lesson)
     {
         // Only admins can delete lessons
-        if (!Auth::user()->isAdmin()) {
+        /** @var User $user */
+        $user = Auth::user();
+        if (!$user || !$user->isAdmin()) {
             abort(403, __('messages.forbidden'));
         }
 

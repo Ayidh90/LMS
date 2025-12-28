@@ -129,6 +129,31 @@ class User extends Authenticatable
             || ($this->roles()->count() === 1 && $this->role && $this->role !== $this->roles()->first()?->slug);
     }
 
+    /**
+     * Get the effective role for the user
+     * - If user has one role: returns user->role
+     * - If user has multiple roles: returns user->selected_role
+     * 
+     * @return string|null
+     */
+    public function getEffectiveRole(): ?string
+    {
+        $availableRoles = $this->getAvailableRolesForSelection();
+        
+        // If user has only one role, use that role
+        if (count($availableRoles) === 1) {
+            return $this->role ?? $availableRoles[0]['slug'] ?? null;
+        }
+        
+        // If user has multiple roles, use selected_role
+        if (count($availableRoles) > 1) {
+            return $this->selected_role ?? $this->role;
+        }
+        
+        // Fallback to user->role
+        return $this->role;
+    }
+
     // Permission Methods
     public function hasPermission(string $permissionSlug): bool
     {

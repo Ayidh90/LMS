@@ -19,7 +19,7 @@
                                 <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ lesson.title }}</h1>
                                 <p v-if="lesson.description" class="text-gray-600">{{ lesson.description }}</p>
                             </div>
-                            <div v-if="canCreateQuestions" class="ml-4 flex gap-2">
+                            <div v-if="canCreateQuestions && can('questions.create')" class="ml-4 flex gap-2">
                                 <Link
                                     :href="route('instructor.lessons.questions.create', [course.slug || course.id, lesson.id])"
                                     class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors flex items-center gap-2"
@@ -468,6 +468,7 @@
                             </div>
                             <div class="flex justify-end">
                                 <button
+                                    v-if="can('attendance.mark')"
                                     type="submit"
                                     :disabled="isSubmittingAttendance"
                                     class="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg hover:shadow-xl"
@@ -535,8 +536,8 @@ const { direction } = useDirection();
 const { t } = useTranslation();
 const { route } = useRoute();
 const { showSuccess, showError, showConfirm } = useAlert();
-const { can } = usePermissions();
 const page = usePage();
+const { can } = usePermissions();
 
 const canCreateQuestions = computed(() => {
     return page.props.settings?.instructor_permissions?.can_create_questions ?? true;

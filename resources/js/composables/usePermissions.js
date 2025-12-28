@@ -123,6 +123,38 @@ export function usePermissions() {
         return hasRole('student');
     });
     
+    /**
+     * Get the effective role for the user
+     * - If user has one role: returns user->role
+     * - If user has multiple roles: returns user->selected_role
+     * 
+     * @returns {string|null}
+     */
+    const getEffectiveRole = computed(() => {
+        if (!user.value) {
+            return null;
+        }
+        
+        const availableRoles = page.props?.auth?.availableRoles || [];
+        
+        // If user has only one role, use that role
+        if (availableRoles.length === 1) {
+            return user.value.role || availableRoles[0]?.slug || null;
+        }
+        
+        // If user has multiple roles, use selected_role (check both camelCase and snake_case)
+        if (availableRoles.length > 1) {
+            return page.props?.auth?.selected_role || 
+                   page.props?.auth?.selectedRole || 
+                   user.value.selected_role ||
+                   user.value.role || 
+                   null;
+        }
+        
+        // Fallback to user->role
+        return user.value.role || null;
+    });
+    
     return {
         can,
         canAll,
@@ -130,6 +162,7 @@ export function usePermissions() {
         isAdmin,
         isInstructor,
         isStudent,
+        getEffectiveRole,
         user,
         permissions,
     };

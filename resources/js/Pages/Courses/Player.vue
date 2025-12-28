@@ -1009,27 +1009,14 @@ const { direction } = useDirection();
 const { t } = useTranslation();
 const { route } = useRoute();
 const { showSuccess, showError } = useAlert();
-const { can } = usePermissions();
+const { can, getEffectiveRole } = usePermissions();
 const page = usePage();
 
 const auth = computed(() => page.props.auth?.user);
 const layout = computed(() => auth.value ? AuthenticatedLayout : AppLayout);
 
-// Get effective role (selectedRole if multiple roles, otherwise default role)
-const effectiveRole = computed(() => {
-    if (!auth.value) return null;
-    
-    const availableRoles = page.props.auth?.availableRoles || [];
-    const selectedRole = page.props.auth?.selectedRole;
-    
-    // If user has multiple roles, use selectedRole
-    if (availableRoles.length > 1) {
-        return selectedRole || auth.value.role;
-    }
-    
-    // If user has single role, use that role
-    return auth.value.role;
-});
+// Use getEffectiveRole from usePermissions composable
+const effectiveRole = getEffectiveRole;
 
 const isStudent = computed(() => {
     if (!auth.value) return false;
@@ -1910,7 +1897,9 @@ watch(() => props.lesson?.id, (newLessonId, oldLessonId) => {
     
     // Initialize video tracking for new lesson (if student and has uploaded video)
     const newLesson = props.lesson;
-    if (newLesson && isStudent.value) {
+    
+    // Check if user is student based on effective role
+    if (newLesson && isStudent.value && effectiveRole.value === 'student') {
         const hasVideo = !!newLesson.video_url;
         const isUploaded = newLesson.type === 'video_file';
         
@@ -1930,14 +1919,13 @@ watch(() => props.lesson?.id, (newLessonId, oldLessonId) => {
         
         // Reload student progress and attendance when lesson changes (for students)
         // Small delay to ensure server has processed attendance and updated progress
-        if (oldLessonId) {
-            setTimeout(() => {
-                router.reload({ 
-                    only: ['studentProgress', 'studentAttendance', 'lessons', 'sections'],
-                    preserveScroll: true 
-                });
-            }, 300);
-        }
+        // This ensures progress is updated when clicking on lessons
+        setTimeout(() => {
+            router.reload({ 
+                only: ['studentProgress', 'studentAttendance', 'lessons', 'sections', 'lesson'],
+                preserveScroll: true 
+            });
+        }, 500);
     }
 }, { immediate: false });
 

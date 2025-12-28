@@ -25,8 +25,9 @@ class LessonAttendanceService
      */
     public function autoMarkAttendance(User $student, Course $course, Lesson $lesson): void
     {
-        // Check if user has student role (supports multiple roles)
-        if (!$student->isStudent()) {
+        // Check if user's effective role is student (supports multiple roles)
+        $effectiveRole = $student->getEffectiveRole();
+        if (!$student->isStudent() || $effectiveRole !== 'student') {
             return;
         }
 
@@ -75,8 +76,9 @@ class LessonAttendanceService
      */
     public function markAttendanceForLiveLesson(User $student, Course $course, Lesson $lesson): void
     {
-        // Check if user has student role (supports multiple roles)
-        if (!$student->isStudent() || $lesson->type !== 'live') {
+        // Check if user's effective role is student (supports multiple roles)
+        $effectiveRole = $student->getEffectiveRole();
+        if (!$student->isStudent() || $effectiveRole !== 'student' || $lesson->type !== 'live') {
             return;
         }
 
@@ -110,8 +112,9 @@ class LessonAttendanceService
      */
     public function markAttendanceAfterVideoWatch(User $student, Course $course, Lesson $lesson, float $watchPercentage): void
     {
-        // Check if user has student role (supports multiple roles)
-        if (!$student->isStudent() || $watchPercentage < 80) {
+        // Check if user's effective role is student (supports multiple roles)
+        $effectiveRole = $student->getEffectiveRole();
+        if (!$student->isStudent() || $effectiveRole !== 'student' || $watchPercentage < 80) {
             return;
         }
 
@@ -141,8 +144,9 @@ class LessonAttendanceService
      */
     public function markAttendanceAfterQuestions(User $student, Course $course, Lesson $lesson): void
     {
-        // Check if user has student role (supports multiple roles)
-        if (!$student->isStudent()) {
+        // Check if user's effective role is student (supports multiple roles)
+        $effectiveRole = $student->getEffectiveRole();
+        if (!$student->isStudent() || $effectiveRole !== 'student') {
             return;
         }
 

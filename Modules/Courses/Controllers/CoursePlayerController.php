@@ -3,6 +3,7 @@
 namespace Modules\Courses\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Traits\HasEffectiveRole;
 use Modules\Courses\Models\Course;
 use Modules\Courses\Models\Lesson;
 use Modules\Courses\Services\CourseService;
@@ -20,6 +21,8 @@ use Inertia\Inertia;
 
 class CoursePlayerController extends Controller
 {
+    use HasEffectiveRole;
+    
     public function __construct(
         private CourseService $courseService,
         private FavoriteService $favoriteService,
@@ -29,7 +32,35 @@ class CoursePlayerController extends Controller
 
     public function show(Course $course, ?Lesson $lesson = null)
     {
+        /** @var User|null $user */
         $user = Auth::user();
+        
+        if ($user) {
+            // Refresh user to get latest selected_role from database
+            $user->refresh();
+            $effectiveRole = $user->getEffectiveRole();
+            
+            // If user's effective role is instructor, redirect to instructor page
+            if ($effectiveRole === 'instructor' && $user->isInstructor()) {
+                $hasAccess = Batch::where('course_id', $course->id)
+                    ->where('instructor_id', $user->id)
+                    ->exists();
+                
+                if ($hasAccess && $lesson) {
+                    return redirect()->route('instructor.lessons.show', [
+                        $course->slug ?? $course->id,
+                        $lesson->id
+                    ]);
+                }
+            }
+            
+            // Ensure effective role is student for student lesson access
+            $availableRoles = $user->getAvailableRolesForSelection();
+            if (count($availableRoles) > 1 && $effectiveRole !== 'student' && !$user->isAdmin()) {
+                abort(403, __('You must switch to student role to access this page.'));
+            }
+        }
+        
         $this->validateAccess($user, $course);
 
         $courseData = $this->courseService->getCourseById($course->id);
@@ -42,7 +73,11 @@ class CoursePlayerController extends Controller
         $currentLesson = $this->getCurrentLesson($lesson, $lessons);
 
         // Get effective role for user (selected_role if multiple roles, otherwise default role)
-        $effectiveRole = $this->getEffectiveRole($user);
+        // Refresh user to ensure we have the latest selected_role
+        if ($user) {
+            $user->refresh();
+        }
+        $effectiveRole = $user ? $user->getEffectiveRole() : null;
         
         // Auto-mark attendance for students when they open the lesson
         $studentAttendance = null;
@@ -64,8 +99,11 @@ class CoursePlayerController extends Controller
             
             // Auto-mark attendance for students when they open a specific lesson
             if ($currentLesson) {
-                // Mark attendance first
+                // Mark attendance first (this will also mark lesson as completed if applicable)
                 $this->attendanceService->autoMarkAttendance($user, $course, $currentLesson);
+                
+                // Refresh progress after auto-marking attendance
+                $studentProgress = $this->attendanceService->getStudentCourseProgress($user, $course, $enrollment->batch_id);
                 
                 // Get student's attendance for current lesson
                 $studentAttendance = $this->attendanceService->getStudentLessonAttendance($user, $currentLesson, $enrollment->batch_id);
@@ -100,10 +138,17 @@ class CoursePlayerController extends Controller
         /** @var User|null $student */
         $student = Auth::user();
         
+        if (!$student instanceof User) {
+            abort(403, __('You must be logged in to mark lessons as completed.'));
+        }
+        
+        // Refresh user to get latest selected_role from database
+        $student->refresh();
+        
         // Get effective role for user (selected_role if multiple roles, otherwise default role)
-        $effectiveRole = $this->getEffectiveRole($student);
+        $effectiveRole = $student->getEffectiveRole();
 
-        if (!$student instanceof User || $effectiveRole !== 'student' || !$student->isStudent()) {
+        if ($effectiveRole !== 'student' || !$student->isStudent()) {
             abort(403, __('Only students can mark lessons as completed.'));
         }
 
@@ -149,7 +194,7 @@ class CoursePlayerController extends Controller
         if (!$user) return;
 
         // Get effective role for user (selected_role if multiple roles, otherwise default role)
-        $effectiveRole = $this->getEffectiveRole($user);
+        $effectiveRole = $user->getEffectiveRole();
 
         if ($user->isAdmin()) return;
 
@@ -171,26 +216,6 @@ class CoursePlayerController extends Controller
         exit;
     }
     
-    /**
-     * Get effective role for user (selected_role if multiple roles, otherwise default role)
-     */
-    private function getEffectiveRole(?User $user): ?string
-    {
-        if (!$user) {
-            return null;
-        }
-        
-        // Get available roles
-        $availableRoles = $user->getAvailableRolesForSelection();
-        
-        // If user has multiple roles, use selected_role
-        if (count($availableRoles) > 1) {
-            return $user->selected_role ?? $user->role;
-        }
-        
-        // If user has single role, use that role
-        return $user->role;
-    }
 
     private function getCurrentLesson(?Lesson $lesson, $lessons): ?Lesson
     {
@@ -223,7 +248,7 @@ class CoursePlayerController extends Controller
         $data = ['isInstructor' => false, 'batches' => collect(), 'students' => collect(), 'attendances' => collect()];
 
         // Get effective role for user (selected_role if multiple roles, otherwise default role)
-        $effectiveRole = $this->getEffectiveRole($user);
+        $effectiveRole = $user->getEffectiveRole();
         
         if (!$user || $effectiveRole !== 'instructor' || !$user->isInstructor()) return $data;
 
@@ -321,7 +346,7 @@ class CoursePlayerController extends Controller
     private function formatLessonsList($lessons, ?User $user, Course $course): array
     {
         $enrollment = null;
-        $effectiveRole = $this->getEffectiveRole($user);
+        $effectiveRole = $user->getEffectiveRole();
         if ($user && $effectiveRole === 'student' && $user->isStudent()) {
             $enrollment = Enrollment::where('student_id', $user->id)
                 ->whereHas('batch', fn($q) => $q->where('course_id', $course->id))
@@ -350,7 +375,7 @@ class CoursePlayerController extends Controller
     private function formatSectionsList($sections, ?User $user, Course $course): array
     {
         $enrollment = null;
-        $effectiveRole = $this->getEffectiveRole($user);
+        $effectiveRole = $user->getEffectiveRole();
         if ($user && $effectiveRole === 'student' && $user->isStudent()) {
             $enrollment = Enrollment::where('student_id', $user->id)
                 ->whereHas('batch', fn($q) => $q->where('course_id', $course->id))
