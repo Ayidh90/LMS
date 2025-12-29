@@ -108,53 +108,118 @@
                                         <p class="text-lg font-semibold text-gray-900">
                                             {{ formatDateTime(lesson.live_meeting_date) }}
                                         </p>
+                                        <!-- Countdown Timer (Compact YouTube Style) -->
+                                        <div v-if="timeUntilMeeting && timeUntilMeeting.total > 0" class="mt-3">
+                                            <div class="inline-flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 rounded-xl shadow-lg border border-red-400">
+                                                <div class="flex-shrink-0">
+                                                    <div class="w-10 h-10 bg-white bg-opacity-25 rounded-full flex items-center justify-center">
+                                                        <i class="bi bi-clock-history text-white text-lg animate-pulse"></i>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-center gap-1.5" dir="ltr">
+                                                    <template v-if="timeUntilMeeting && timeUntilMeeting.days > 0">
+                                                        <span class="px-2.5 py-1.5 bg-white bg-opacity-25 rounded-lg min-w-[50px] text-center">
+                                                            <span class="text-2xl font-bold text-white tabular-nums block leading-tight">{{ String(timeUntilMeeting.days).padStart(2, '0') }}</span>
+                                                            <span class="text-[10px] text-white text-opacity-90 font-medium">d</span>
+                                                        </span>
+                                                        <span class="text-white text-opacity-70 text-xl font-bold">:</span>
+                                                    </template>
+                                                    <template v-if="timeUntilMeeting && (timeUntilMeeting.hours > 0 || timeUntilMeeting.days > 0)">
+                                                        <span class="px-2.5 py-1.5 bg-white bg-opacity-25 rounded-lg min-w-[50px] text-center">
+                                                            <span class="text-2xl font-bold text-white tabular-nums block leading-tight">{{ String(timeUntilMeeting.hours).padStart(2, '0') }}</span>
+                                                            <span class="text-[10px] text-white text-opacity-90 font-medium">h</span>
+                                                        </span>
+                                                        <span class="text-white text-opacity-70 text-xl font-bold">:</span>
+                                                    </template>
+                                                    <span v-if="timeUntilMeeting" class="px-2.5 py-1.5 bg-white bg-opacity-25 rounded-lg min-w-[50px] text-center">
+                                                        <span class="text-2xl font-bold text-white tabular-nums block leading-tight">{{ String(timeUntilMeeting.minutes).padStart(2, '0') }}</span>
+                                                        <span class="text-[10px] text-white text-opacity-90 font-medium">m</span>
+                                                    </span>
+                                                    <span v-if="timeUntilMeeting" class="text-white text-opacity-70 text-xl font-bold">:</span>
+                                                    <span v-if="timeUntilMeeting" class="px-2.5 py-1.5 bg-white bg-opacity-25 rounded-lg min-w-[50px] text-center">
+                                                        <span class="text-2xl font-bold text-white tabular-nums block leading-tight">{{ String(timeUntilMeeting.seconds).padStart(2, '0') }}</span>
+                                                        <span class="text-[10px] text-white text-opacity-90 font-medium">s</span>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div v-if="lesson.live_meeting_link || lesson.live_meeting_link_instructor" class="mt-4">
-                                        <!-- Use instructor link if available (for instructors), otherwise use student link -->
-                                        <a
-                                            :href="lesson.live_meeting_link_instructor || lesson.live_meeting_link"
-                                            target="_blank"
-                                            @click="handleLiveMeetingClick"
-                                            class="inline-flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 font-semibold transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
-                                        >
-                                            <i class="bi bi-camera-video me-2"></i>
-                                            {{ t('lessons.live.join_meeting') || 'Join Live Meeting' }}
-                                            <i class="bi bi-box-arrow-up-right ms-2"></i>
-                                        </a>
-                                        <p v-if="lesson.live_meeting_link_instructor && isInstructor" class="text-xs text-green-600 mt-2 font-semibold">
-                                            <i class="bi bi-shield-check me-1"></i>
-                                            {{ t('lessons.live.instructor_link') || 'Instructor Link (Moderator Access)' }}
-                                        </p>
-                                        <!-- Warning for students: Do not click Log-in -->
-                                        <div v-if="!isInstructor" class="mt-3 p-4 bg-red-50 border-2 border-red-300 rounded-lg">
-                                            <p class="text-sm text-red-800 flex items-start gap-2 font-semibold mb-2">
-                                                <i class="bi bi-exclamation-triangle-fill text-red-600 mt-0.5 text-lg"></i>
-                                                <span>
-                                                    <strong>{{ t('lessons.live.student_warning_title') || 'Important:' }}</strong>
-                                                </span>
+                                        <!-- Join Button for Instructor/Admin (always enabled) -->
+                                        <div v-if="isInstructor">
+                                            <a
+                                                :href="lesson.live_meeting_link_instructor || lesson.live_meeting_link"
+                                                target="_blank"
+                                                @click="handleInstructorJoinLive"
+                                                class="inline-flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 font-semibold transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
+                                            >
+                                                <i class="bi bi-camera-video me-2"></i>
+                                                {{ t('lessons.live.join_meeting') || 'Join Live Meeting' }}
+                                                <i class="bi bi-box-arrow-up-right ms-2"></i>
+                                            </a>
+                                            <p v-if="lesson.live_meeting_link_instructor" class="text-xs text-green-600 mt-2 font-semibold">
+                                                <i class="bi bi-shield-check me-1"></i>
+                                                {{ t('lessons.live.instructor_link') || 'Instructor Link (Moderator Access)' }}
                                             </p>
-                                            <p class="text-xs text-red-700 ml-7 leading-relaxed">
-                                                {{ t('lessons.live.student_warning') || 'Please wait in the waiting room. Do NOT click "Log-in" button. Wait for the instructor to join first.' }}
-                                            </p>
-                                            <p class="text-xs text-red-600 mt-2 ml-7 font-medium">
-                                                {{ t('lessons.live.student_warning_detail') || 'If you click "Log-in", you will become a moderator which is not allowed. Please wait for the instructor.' }}
-                                            </p>
+                                            
+                                            <!-- Copy Link Button for Instructor -->
+                                            <div class="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                                                <div class="flex items-center justify-between gap-2">
+                                                    <p class="text-xs text-gray-600 font-medium flex-1 truncate">
+                                                        {{ getMeetingLinkDisplay(lesson.live_meeting_link_instructor || lesson.live_meeting_link) }}
+                                                    </p>
+                                                    <button
+                                                        @click="copyMeetingLink(lesson.live_meeting_link_instructor || lesson.live_meeting_link)"
+                                                        class="flex-shrink-0 px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md transition-all text-xs font-medium flex items-center gap-1.5"
+                                                        :title="t('common.copy') || 'Copy Link'"
+                                                    >
+                                                        <i :class="copiedLink ? 'bi bi-check-circle-fill text-green-600' : 'bi bi-clipboard'"></i>
+                                                        <span v-if="copiedLink">{{ t('common.copied') || 'Copied!' }}</span>
+                                                        <span v-else>{{ t('common.copy') || 'Copy' }}</span>
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <!-- Meeting Link with Copy Button -->
-                                        <div class="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                                            <div class="flex items-center justify-between gap-2">
-                                                <p class="text-xs text-gray-600 font-medium flex-1 truncate">
-                                                    {{ getMeetingLinkDisplay(lesson.live_meeting_link_instructor || lesson.live_meeting_link) }}
+                                        
+                                        <!-- Join Button for Students (with conditions) -->
+                                        <div v-else>
+                                            <button
+                                                :disabled="!canStudentJoinLive"
+                                                @click="handleLiveMeetingClick"
+                                                :class="[
+                                                    'inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all shadow-lg',
+                                                    canStudentJoinLive 
+                                                        ? 'bg-red-600 text-white hover:bg-red-700 transform hover:scale-105 cursor-pointer' 
+                                                        : 'bg-gray-400 text-gray-200 cursor-not-allowed opacity-60'
+                                                ]"
+                                            >
+                                                <i class="bi bi-camera-video me-2"></i>
+                                                {{ t('lessons.live.join_meeting') || 'Join Live Meeting' }}
+                                                <i class="bi bi-box-arrow-up-right ms-2"></i>
+                                            </button>
+                                            
+                                            <!-- Disabled reasons for students -->
+                                            <div v-if="!canStudentJoinLive" class="mt-3 p-4 bg-yellow-50 border-2 border-yellow-300 rounded-lg">
+                                                <p class="text-sm text-yellow-800 flex items-start gap-2 font-semibold mb-2">
+                                                    <i class="bi bi-info-circle-fill text-yellow-600 mt-0.5 text-lg"></i>
+                                                    <span>{{ studentJoinDisabledReason }}</span>
                                                 </p>
-                                                <button
-                                                    @click="copyMeetingLink(lesson.live_meeting_link_instructor || lesson.live_meeting_link)"
-                                                    class="flex-shrink-0 px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md transition-all text-xs font-medium flex items-center gap-1.5"
-                                                    :title="t('common.copy') || 'Copy Link'"
-                                                >
-                                                    <i :class="copiedLink ? 'bi bi-check-circle-fill text-green-600' : 'bi bi-clipboard'"></i>
-                                                    <span v-if="copiedLink">{{ t('common.copied') || 'Copied!' }}</span>
-                                                    <span v-else>{{ t('common.copy') || 'Copy' }}</span>
-                                                </button>
+                                            </div>
+                                            
+                                            <!-- Warning for students when enabled -->
+                                            <div v-if="canStudentJoinLive" class="mt-3 p-4 bg-red-50 border-2 border-red-300 rounded-lg">
+                                                <p class="text-sm text-red-800 flex items-start gap-2 font-semibold mb-2">
+                                                    <i class="bi bi-exclamation-triangle-fill text-red-600 mt-0.5 text-lg"></i>
+                                                    <span>
+                                                        <strong>{{ t('lessons.live.student_warning_title') || 'Important:' }}</strong>
+                                                    </span>
+                                                </p>
+                                                <p class="text-xs text-red-700 ml-7 leading-relaxed">
+                                                    {{ t('lessons.live.student_warning') || 'Please wait in the waiting room. Do NOT click "Log-in" button. Wait for the instructor to join first.' }}
+                                                </p>
+                                                <p class="text-xs text-red-600 mt-2 ml-7 font-medium">
+                                                    {{ t('lessons.live.student_warning_detail') || 'If you click "Log-in", you will become a moderator which is not allowed. Please wait for the instructor.' }}
+                                                </p>
                                             </div>
                                         </div>
                                     </div>
@@ -1181,6 +1246,179 @@ const videoCheckInterval = ref(null);
 const videoDuration = ref(0);
 const videoError = ref(null);
 
+// Live meeting state
+const startingLive = ref(false);
+
+// Current time for countdown
+const currentTime = ref(new Date());
+
+// Update current time every second for countdown
+let countdownInterval = null;
+
+onMounted(() => {
+    if (props.lesson?.type === 'live' && props.lesson?.live_meeting_date) {
+        countdownInterval = setInterval(() => {
+            currentTime.value = new Date();
+        }, 1000);
+    }
+});
+
+onUnmounted(() => {
+    if (countdownInterval) {
+        clearInterval(countdownInterval);
+    }
+});
+
+// Parse meeting date correctly (handle all datetime formats)
+const parseMeetingDate = (dateString) => {
+    if (!dateString) return null;
+    
+    const dateStr = String(dateString).trim();
+    let date;
+    
+    // Check if the date string has timezone info (Z, +, or -)
+    const hasTimezone = dateStr.includes('Z') || 
+                       dateStr.match(/[+-]\d{2}:\d{2}$/) ||
+                       (dateStr.includes('T') && dateStr.length > 16);
+    
+    if (hasTimezone) {
+        // Laravel returns dates in UTC format (e.g., "2025-12-29T18:34:00.000000Z")
+        // Parse as UTC and convert to local time
+        const utcDate = new Date(dateStr);
+        
+        // Get UTC components
+        const year = utcDate.getUTCFullYear();
+        const month = utcDate.getUTCMonth();
+        const day = utcDate.getUTCDate();
+        const hours = utcDate.getUTCHours();
+        const minutes = utcDate.getUTCMinutes();
+        const seconds = utcDate.getUTCSeconds();
+        
+        // Create date in local timezone using UTC values
+        // This ensures the time matches what was stored in database
+        date = new Date(year, month, day, hours, minutes, seconds || 0);
+    } else if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(dateStr)) {
+        // MySQL format: "YYYY-MM-DD HH:mm:ss" (no timezone)
+        // Parse as local time
+        const [datePart, timePart] = dateStr.split(' ');
+        const [year, month, day] = datePart.split('-').map(Number);
+        const [hours, minutes, seconds] = timePart.split(':').map(Number);
+        
+        date = new Date(year, month - 1, day, hours, minutes, seconds || 0);
+    } else {
+        // Try standard Date parsing
+        date = new Date(dateStr);
+    }
+    
+    if (isNaN(date.getTime())) {
+        return null;
+    }
+    
+    return date;
+};
+
+// Calculate time remaining until meeting starts
+const timeUntilMeeting = computed(() => {
+    if (!props.lesson || props.lesson.type !== 'live' || !props.lesson.live_meeting_date) {
+        return null;
+    }
+    
+    const now = currentTime.value;
+    const meetingDate = parseMeetingDate(props.lesson.live_meeting_date);
+    
+    if (!meetingDate) {
+        return null;
+    }
+    
+    const diff = meetingDate.getTime() - now.getTime();
+    
+    if (diff <= 0) {
+        return null; // Meeting time has arrived or passed
+    }
+    
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+    
+    return { days, hours, minutes, seconds, total: diff };
+});
+
+// Format countdown display
+const countdownDisplay = computed(() => {
+    if (!timeUntilMeeting.value) {
+        return null;
+    }
+    
+    const { days, hours, minutes, seconds } = timeUntilMeeting.value;
+    
+    if (days > 0) {
+        return `${days} ${t('lessons.live.days') || 'days'}, ${hours} ${t('lessons.live.hours') || 'hours'}, ${minutes} ${t('lessons.live.minutes') || 'minutes'}`;
+    } else if (hours > 0) {
+        return `${hours} ${t('lessons.live.hours') || 'hours'}, ${minutes} ${t('lessons.live.minutes') || 'minutes'}, ${seconds} ${t('lessons.live.seconds') || 'seconds'}`;
+    } else if (minutes > 0) {
+        return `${minutes} ${t('lessons.live.minutes') || 'minutes'}, ${seconds} ${t('lessons.live.seconds') || 'seconds'}`;
+    } else {
+        return `${seconds} ${t('lessons.live.seconds') || 'seconds'}`;
+    }
+});
+
+// Check if student can join live meeting
+const canStudentJoinLive = computed(() => {
+    if (!props.lesson || props.lesson.type !== 'live' || !props.lesson.live_meeting_date) {
+        return false;
+    }
+    
+    // First check: Instructor must have started the live
+    if (!props.lesson.is_live_started) {
+        return false;
+    }
+    
+    // If instructor has started, check if meeting has ended (after duration_minutes)
+    const now = currentTime.value;
+    const meetingDate = parseMeetingDate(props.lesson.live_meeting_date);
+    if (!meetingDate) return false;
+    
+    const durationMinutes = props.lesson.duration_minutes || 60;
+    const meetingEndTime = new Date(meetingDate.getTime() + durationMinutes * 60 * 1000);
+    
+    // Check if meeting has ended (after duration_minutes)
+    if (now > meetingEndTime) {
+        return false;
+    }
+    
+    // If instructor has started and meeting hasn't ended, allow join (even if time hasn't arrived yet)
+    return true;
+});
+
+// Reason why student can't join
+const studentJoinDisabledReason = computed(() => {
+    if (!props.lesson || props.lesson.type !== 'live' || !props.lesson.live_meeting_date) {
+        return t('lessons.live.meeting_not_available') || 'Meeting not available';
+    }
+    
+    // First priority: Check if instructor has started
+    if (!props.lesson.is_live_started) {
+        return t('lessons.live.waiting_for_instructor') || 'Waiting for the instructor to start the meeting.';
+    }
+    
+    // If instructor has started, check if meeting has ended
+    const now = currentTime.value;
+    const meetingDate = parseMeetingDate(props.lesson.live_meeting_date);
+    if (!meetingDate) {
+        return t('lessons.live.meeting_not_available') || 'Meeting not available';
+    }
+    
+    const durationMinutes = props.lesson.duration_minutes || 60;
+    const meetingEndTime = new Date(meetingDate.getTime() + durationMinutes * 60 * 1000);
+    
+    if (now > meetingEndTime) {
+        return t('lessons.live.meeting_ended') || 'The meeting has ended.';
+    }
+    
+    return t('lessons.live.meeting_not_available') || 'Meeting not available';
+});
+
 // Copy meeting link functionality
 const copiedLink = ref(false);
 
@@ -1205,6 +1443,72 @@ const getMeetingLinkDisplay = (link) => {
         return `https://meet.jit.si/${match[1]}`;
     }
     return link;
+};
+
+// Handle instructor joining live meeting - auto-start the meeting
+const handleInstructorJoinLive = async (event) => {
+    if (!props.lesson || props.lesson.type !== 'live') {
+        return; // Let the link open normally
+    }
+    
+    // Prevent default to handle the click first
+    if (event) {
+        event.preventDefault();
+    }
+    
+    const meetingLink = props.lesson.live_meeting_link_instructor || props.lesson.live_meeting_link;
+    
+    // If already started, just open the link
+    if (props.lesson.is_live_started) {
+        window.open(meetingLink, '_blank');
+        return;
+    }
+    
+    try {
+        // Get CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
+                         document.querySelector('input[name="_token"]')?.value || '';
+        
+        const routeUrl = `/courses/${props.course.slug || props.course.id}/lessons/${props.lesson.id}/start-live`;
+        
+        // Make request
+        const response = await fetch(routeUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            credentials: 'same-origin',
+        });
+        
+        // Check if response is ok
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        // Open the meeting link
+        window.open(meetingLink, '_blank');
+        
+        if (data.success) {
+            // Force reload immediately
+            window.location.reload();
+        } else {
+            showError(
+                data.message || t('lessons.live.start_failed') || 'Failed to start live meeting',
+                t('common.error') || 'Error'
+            );
+        }
+    } catch (error) {
+        window.open(meetingLink, '_blank');
+        showError(
+            t('lessons.live.start_failed') || 'Failed to start live meeting',
+            t('common.error') || 'Error'
+        );
+    }
 };
 
 // Initialize forms for questions that don't have answers yet
@@ -1833,12 +2137,24 @@ const getVideoMimeType = (url) => {
 
 // Handle live meeting link click - mark attendance
 const handleLiveMeetingClick = async (event) => {
-    if (!isStudent.value || !props.lesson || props.lesson.type !== 'live') {
-        return; // Let the link open normally
+    // For instructors, use handleInstructorJoinLive to auto-start
+    if (isInstructor.value) {
+        handleInstructorJoinLive(event);
+        return;
+    }
+    
+    // For students, check if they can join
+    if (!isStudent.value || !props.lesson || props.lesson.type !== 'live' || !canStudentJoinLive.value) {
+        if (event) {
+            event.preventDefault();
+        }
+        return;
     }
     
     // Prevent default to handle the click first
-    event.preventDefault();
+    if (event) {
+        event.preventDefault();
+    }
     
     try {
         const response = await fetch(route('lessons.complete', {

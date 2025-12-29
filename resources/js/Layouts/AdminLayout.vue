@@ -39,6 +39,9 @@
                 </div>
             </header>
 
+            <!-- System Loader -->
+            <SystemLoader />
+
             <!-- Page Content -->
             <main class="admin-main">
                 <slot />
@@ -55,6 +58,7 @@ import { provideModal } from '@/composables/useModal';
 import AdminSidebar from '@/Components/AdminSidebar.vue';
 import LanguageSwitcher from '@/Components/LanguageSwitcher.vue';
 import UserDropdown from '@/Components/UserDropdown.vue';
+import SystemLoader from '@/Components/SystemLoader.vue';
 import { usePage } from '@inertiajs/vue3';
 
 const props = defineProps({

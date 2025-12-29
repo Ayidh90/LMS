@@ -104,6 +104,7 @@ class LessonService
             'video_url' => $this->formatVideoUrl($lesson->video_url),
             'live_meeting_date' => $lesson->live_meeting_date,
             'live_meeting_link' => $lesson->live_meeting_link,
+            'is_live_started' => $lesson->is_live_started ?? false,
             'order' => $lesson->order ?? 0,
             'duration_minutes' => $lesson->duration_minutes ?? 0,
             'is_free' => $lesson->is_free ?? false,
@@ -116,10 +117,14 @@ class LessonService
             $course = $lesson->course ?? \Modules\Courses\Models\Course::find($lesson->course_id);
             if ($course) {
                 if ($isInstructor) {
-                    // Instructor gets moderator link
+                    // Get current user to use their email in the link
+                    $currentUser = \Illuminate\Support\Facades\Auth::user();
+                    
+                    // Instructor gets moderator link with current user's email
                     $instructorLink = $this->liveMeetingService->getInstructorLink(
                         $lesson->live_meeting_link,
-                        $course
+                        $course,
+                        $currentUser instanceof \App\Models\User ? $currentUser : null
                     );
                     $formatted['live_meeting_link_instructor'] = $instructorLink;
                     // Also set as main link for instructor

@@ -41,6 +41,10 @@ import Dialog from 'primevue/dialog';
 // ApexCharts
 import VueApexCharts from 'vue3-apexcharts';
 
+// Loader Components
+import SystemLoader from './Components/SystemLoader.vue';
+import ContentLoader from './Components/ContentLoader.vue';
+
 const appName = import.meta.env.VITE_APP_NAME || 'LMS';
 
 // Make route function available globally
@@ -82,7 +86,9 @@ createInertiaApp({
             .component('Toast', Toast)
             .component('ConfirmDialog', ConfirmDialog)
             .component('Dialog', Dialog)
-            .use(VueApexCharts);
+            .use(VueApexCharts)
+            .component('SystemLoader', SystemLoader)
+            .component('ContentLoader', ContentLoader);
         
         // Make route available in template context
         app.config.globalProperties.route = window.route;

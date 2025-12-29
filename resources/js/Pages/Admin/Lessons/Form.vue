@@ -200,9 +200,12 @@
                                         ref="liveMeetingDateInput"
                                         v-model="formData.live_meeting_date"
                                         type="datetime-local"
+                                        step="60"
+                                        :min="new Date().toISOString().slice(0, 16)"
                                         class="form-input"
                                         :class="{ 'border-red-500': errors.live_meeting_date }"
                                         required
+                                        :placeholder="t('lessons.placeholders.meeting_date') || 'YYYY-MM-DD HH:MM'"
                                         @focus="hasInteractedWithDate = true"
                                         @blur="hasInteractedWithDate = true"
                                         @input="hasInteractedWithDate = true"
@@ -611,7 +614,22 @@ const submit = () => {
     
     // Handle live meeting fields
     if (props.formData.type === 'live') {
-        submitData.live_meeting_date = props.formData.live_meeting_date || null;
+        // Convert datetime-local format (YYYY-MM-DDTHH:mm) to MySQL format (YYYY-MM-DD HH:mm:ss)
+        if (props.formData.live_meeting_date && props.formData.live_meeting_date.trim() !== '') {
+            const dateValue = props.formData.live_meeting_date.trim();
+            
+            // Check if it's already in datetime-local format (YYYY-MM-DDTHH:mm)
+            if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(dateValue)) {
+                // Convert from datetime-local format to MySQL format
+                const [datePart, timePart] = dateValue.split('T');
+                submitData.live_meeting_date = `${datePart} ${timePart}:00`;
+            } else {
+                // If already in MySQL format or other format, use as-is
+                submitData.live_meeting_date = dateValue;
+            }
+        } else {
+            submitData.live_meeting_date = null;
+        }
         submitData.live_meeting_link = props.formData.live_meeting_link || null;
     } else {
         submitData.live_meeting_date = null;

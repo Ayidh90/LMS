@@ -159,6 +159,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/courses/{course}/play', [CoursePlayerController::class, 'show'])->name('courses.play');
     Route::get('/courses/{course}/play/{lesson}', [CoursePlayerController::class, 'show'])->name('courses.play.lesson');
     Route::post('/courses/{course}/lessons/{lesson}/complete', [CoursePlayerController::class, 'markLessonCompleted'])->name('lessons.complete');
+    Route::post('/courses/{course}/lessons/{lesson}/start-live', [CoursePlayerController::class, 'startLiveMeeting'])->name('lessons.start-live');
     
     // Course CRUD (general - redirects admins)
     Route::get('/courses/create', [CourseController::class, 'create'])->middleware('permission:courses.create')->name('courses.create');

@@ -96,19 +96,32 @@ class LiveMeetingService
      * 
      * @param string $roomName The meeting room name
      * @param Course $course Course to get instructor info
+     * @param \App\Models\User|null $currentUser Optional current user (instructor) to use their email
      * @return string Instructor meeting link
      */
-    public function generateInstructorLink(string $roomName, Course $course): string
+    public function generateInstructorLink(string $roomName, Course $course, ?\App\Models\User $currentUser = null): string
     {
         $baseUrl = 'https://meet.jit.si/' . $roomName;
         
-        // Get instructor
-        $batch = $course->batches()
-            ->where('is_active', true)
-            ->with('instructor')
-            ->first();
+        // Get instructor info - prefer current user if provided, otherwise get from batch
+        $instructorName = 'Instructor';
+        $instructorEmail = '';
         
-        $instructor = $batch?->instructor;
+        if ($currentUser && $currentUser->isInstructor()) {
+            // Use current user's info (the instructor who is joining)
+            $instructorName = $currentUser->name ?? 'Instructor';
+            $instructorEmail = $currentUser->email ?? '';
+        } else {
+            // Fallback to batch instructor
+            $batch = $course->batches()
+                ->where('is_active', true)
+                ->with('instructor')
+                ->first();
+            
+            $instructor = $batch?->instructor;
+            $instructorName = $instructor?->name ?? 'Instructor';
+            $instructorEmail = $instructor?->email ?? '';
+        }
         
         // Configure for instructor (moderator)
         $config = [
@@ -116,8 +129,8 @@ class LiveMeetingService
             'config.startWithAudioMuted' => 'false', // Instructor can speak immediately
             'config.startWithVideoMuted' => 'false', // Instructor can show video immediately
             'config.requireDisplayName' => 'true',
-            'userInfo.displayName' => $instructor?->name ?? 'Instructor',
-            'userInfo.email' => $instructor?->email ?? '',
+            'userInfo.displayName' => $instructorName,
+            'userInfo.email' => $instructorEmail,
             'config.enableWelcomePage' => 'false',
             'config.enablePrejoinPage' => 'true',
             'config.enableLobbyMode' => 'false', // Instructor bypasses lobby
@@ -174,9 +187,10 @@ class LiveMeetingService
      * 
      * @param string $roomNameOrLink Room name or full link
      * @param Course $course Course to get instructor info
+     * @param \App\Models\User|null $currentUser Optional current user (instructor) to use their email
      * @return string|null Instructor link or null if no instructor
      */
-    public function getInstructorLink(string $roomNameOrLink, Course $course): ?string
+    public function getInstructorLink(string $roomNameOrLink, Course $course, ?\App\Models\User $currentUser = null): ?string
     {
         // Extract room name if full link provided
         if (preg_match('/https:\/\/meet\.jit\.si\/([a-z0-9]+)/', $roomNameOrLink, $matches)) {
@@ -185,7 +199,7 @@ class LiveMeetingService
             $roomName = $roomNameOrLink;
         }
         
-        return $this->generateInstructorLink($roomName, $course);
+        return $this->generateInstructorLink($roomName, $course, $currentUser);
     }
 
     /**

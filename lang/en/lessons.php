@@ -97,6 +97,17 @@ return [
         'student_warning_title' => 'Important:',
         'student_warning' => 'Please wait in the waiting room. Do NOT click "Log-in" button. Wait for the instructor to join first.',
         'student_warning_detail' => 'If you click "Log-in", you will become a moderator which is not allowed. Please wait for the instructor.',
+        'start_meeting' => 'Start Live Meeting',
+        'starting' => 'Starting...',
+        'start_instruction' => 'Click to start the live meeting and allow students to join.',
+        'started_successfully' => 'Live meeting started successfully!',
+        'start_failed' => 'Failed to start live meeting',
+        'meeting_not_available' => 'Meeting not available',
+        'meeting_not_started' => 'The meeting has not started yet. Please wait until the scheduled time.',
+        'meeting_ended' => 'The meeting has ended.',
+        'waiting_for_instructor' => 'Waiting for the instructor to start the meeting.',
+        'date_not_set' => 'Live meeting date is not set. Please set a meeting date first.',
+        'meeting_already_ended' => 'The meeting has already ended. Cannot start a meeting that has passed.',
     ],
     
     'validation' => [

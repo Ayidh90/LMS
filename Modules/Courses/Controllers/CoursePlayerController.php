@@ -17,6 +17,7 @@ use App\Models\Batch;
 use App\Models\UserQuestionAnswer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class CoursePlayerController extends Controller
@@ -36,11 +37,9 @@ class CoursePlayerController extends Controller
         $user = Auth::user();
         
         if ($user) {
-            // Refresh user to get latest selected_role from database
             $user->refresh();
             $effectiveRole = $user->getEffectiveRole();
             
-            // If user's effective role is instructor, redirect to instructor page
             if ($effectiveRole === 'instructor' && $user->isInstructor()) {
                 $hasAccess = Batch::where('course_id', $course->id)
                     ->where('instructor_id', $user->id)
@@ -54,7 +53,6 @@ class CoursePlayerController extends Controller
                 }
             }
             
-            // Ensure effective role is student for student lesson access
             $availableRoles = $user->getAvailableRolesForSelection();
             if (count($availableRoles) > 1 && $effectiveRole !== 'student' && !$user->isAdmin()) {
                 abort(403, __('You must switch to student role to access this page.'));
@@ -72,18 +70,13 @@ class CoursePlayerController extends Controller
         $sections = $course->sections()->with(['lessons' => fn($q) => $q->with('questions.answers')->orderBy('order')])->orderBy('order')->get();
         $currentLesson = $this->getCurrentLesson($lesson, $lessons);
 
-        // Get effective role for user (selected_role if multiple roles, otherwise default role)
-        // Refresh user to ensure we have the latest selected_role
         if ($user) {
             $user->refresh();
         }
         $effectiveRole = $user ? $user->getEffectiveRole() : null;
         
-        // Auto-mark attendance for students when they open the lesson
         $studentAttendance = null;
         $studentProgress = null;
-        
-        // Get student's enrollment first (needed for both attendance and progress)
         $enrollment = null;
         if ($user instanceof User && $effectiveRole === 'student' && $user->isStudent()) {
             $enrollment = Enrollment::where('student_id', $user->id)
@@ -91,29 +84,17 @@ class CoursePlayerController extends Controller
                 ->first();
         }
         
-        // If user is student and has enrollment, get progress (even without current lesson)
         if ($user instanceof User && $effectiveRole === 'student' && $user->isStudent() && $enrollment) {
-            // Get and calculate progress (this will sync completions and update progress)
-            // This method ensures progress is calculated from the latest data
             $studentProgress = $this->attendanceService->getStudentCourseProgress($user, $course, $enrollment->batch_id);
             
-            // Auto-mark attendance for students when they open a specific lesson
             if ($currentLesson) {
-                // Mark attendance first (this will also mark lesson as completed if applicable)
                 $this->attendanceService->autoMarkAttendance($user, $course, $currentLesson);
-                
-                // Refresh progress after auto-marking attendance
                 $studentProgress = $this->attendanceService->getStudentCourseProgress($user, $course, $enrollment->batch_id);
-                
-                // Get student's attendance for current lesson
                 $studentAttendance = $this->attendanceService->getStudentLessonAttendance($user, $currentLesson, $enrollment->batch_id);
             }
         }
 
-        // Get user answers
         $userAnswers = $this->getUserAnswers($user, $currentLesson);
-
-        // Instructor data
         $instructorData = $this->getInstructorData($user, $course, $currentLesson);
 
         return Inertia::render('Courses/Player', [
@@ -127,7 +108,6 @@ class CoursePlayerController extends Controller
             'instructorBatches' => $instructorData['batches'],
             'instructorStudents' => $instructorData['students'],
             'instructorAttendances' => $instructorData['attendances'],
-            // Student attendance data
             'studentAttendance' => $studentAttendance,
             'studentProgress' => $studentProgress,
         ]);
@@ -142,10 +122,7 @@ class CoursePlayerController extends Controller
             abort(403, __('You must be logged in to mark lessons as completed.'));
         }
         
-        // Refresh user to get latest selected_role from database
         $student->refresh();
-        
-        // Get effective role for user (selected_role if multiple roles, otherwise default role)
         $effectiveRole = $student->getEffectiveRole();
 
         if ($effectiveRole !== 'student' || !$student->isStudent()) {
@@ -162,7 +139,6 @@ class CoursePlayerController extends Controller
 
         $lesson->load('questions');
         
-        // Handle live lessons separately - mark attendance when link is clicked
         if ($lesson->type === 'live') {
             $this->attendanceService->markAttendanceForLiveLesson($student, $course, $lesson);
             return response()->json([
@@ -185,6 +161,79 @@ class CoursePlayerController extends Controller
         ]);
     }
 
+    public function startLiveMeeting(Course $course, Lesson $lesson)
+    {
+        /** @var User|null $user */
+        $user = Auth::user();
+        
+        if (!$user instanceof User) {
+            return response()->json([
+                'success' => false,
+                'message' => __('You must be logged in to start live meetings.'),
+            ], 403);
+        }
+        
+        if ($lesson->course_id !== $course->id) {
+            return response()->json([
+                'success' => false,
+                'message' => __('Lesson does not belong to this course.'),
+            ], 400);
+        }
+        
+        if ($lesson->type !== 'live') {
+            return response()->json([
+                'success' => false,
+                'message' => __('This lesson is not a live meeting.'),
+            ], 400);
+        }
+        
+        if (!$lesson->live_meeting_date) {
+            return response()->json([
+                'success' => false,
+                'message' => __('lessons.live.date_not_set'),
+            ], 400);
+        }
+        
+        $now = now();
+        $meetingDate = \Illuminate\Support\Carbon::parse($lesson->live_meeting_date);
+        $durationMinutes = $lesson->duration_minutes ?? 60;
+        $meetingEndTime = $meetingDate->copy()->addMinutes($durationMinutes);
+        
+        if ($now->isAfter($meetingEndTime)) {
+            return response()->json([
+                'success' => false,
+                'message' => __('lessons.live.meeting_already_ended'),
+            ], 400);
+        }
+        
+        $user->refresh();
+        $effectiveRole = $user->getEffectiveRole();
+        
+        $isInstructor = $effectiveRole === 'instructor' && $user->isInstructor() && 
+            Batch::where('course_id', $course->id)
+                ->where('instructor_id', $user->id)
+                ->exists();
+        
+        $isAdmin = $user->isAdmin();
+        
+        if (!$isInstructor && !$isAdmin) {
+            return response()->json([
+                'success' => false,
+                'message' => __('Only instructors or admins can start live meetings.'),
+            ], 403);
+        }
+        
+        DB::table('lessons')
+            ->where('id', $lesson->id)
+            ->update(['is_live_started' => 1]);
+        
+        return response()->json([
+            'message' => __('Live meeting started successfully.'),
+            'success' => true,
+            'is_live_started' => true,
+        ]);
+    }
+
     private function validateAccess(?User $user, Course $course): void
     {
         if (!$user && !$course->is_published) {
@@ -193,19 +242,16 @@ class CoursePlayerController extends Controller
 
         if (!$user) return;
 
-        // Get effective role for user (selected_role if multiple roles, otherwise default role)
         $effectiveRole = $user->getEffectiveRole();
 
         if ($user->isAdmin()) return;
 
-        // Check instructor access only if selected role is instructor
         if ($effectiveRole === 'instructor' && $user->isInstructor()) {
             if (Batch::where('course_id', $course->id)->where('instructor_id', $user->id)->exists()) {
                 return;
             }
         }
 
-        // Check student access only if selected role is student
         if ($effectiveRole === 'student' && $user->isStudent() && $user->canAccessCourse($course)) {
             return;
         }
@@ -219,16 +265,12 @@ class CoursePlayerController extends Controller
 
     private function getCurrentLesson(?Lesson $lesson, $lessons): ?Lesson
     {
-        // Only return a lesson if explicitly provided in the URL
-        // This allows students to manually select a lesson and mark attendance
         if ($lesson) {
             $fullLesson = $this->lessonService->getLessonById($lesson->id);
             $fullLesson?->makeVisible(['video_url']);
             return $fullLesson;
         }
 
-        // Return null when no lesson is specified
-        // Student must manually select a lesson to open it
         return null;
     }
 
@@ -247,7 +289,6 @@ class CoursePlayerController extends Controller
     {
         $data = ['isInstructor' => false, 'batches' => collect(), 'students' => collect(), 'attendances' => collect()];
 
-        // Get effective role for user (selected_role if multiple roles, otherwise default role)
         $effectiveRole = $user->getEffectiveRole();
         
         if (!$user || $effectiveRole !== 'instructor' || !$user->isInstructor()) return $data;
@@ -396,7 +437,6 @@ class CoursePlayerController extends Controller
                         'order' => $lesson->order ?? 0,
                     ];
 
-                    // Check effective role instead of user->role directly (supports multiple roles)
                     if ($user && $effectiveRole === 'student' && $user->isStudent() && $enrollment) {
                         $data['completed'] = $this->isLessonCompleted($lesson, $user);
                         $data['attendance'] = $this->getLessonAttendanceStatus($lesson, $user, $enrollment->batch_id);

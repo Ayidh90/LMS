@@ -32,6 +32,9 @@
             </div>
         </nav>
 
+        <!-- System Loader -->
+        <SystemLoader />
+
         <main>
             <slot />
         </main>
@@ -45,6 +48,7 @@ import { useTranslation } from '@/composables/useTranslation';
 import { useRoute } from '@/composables/useRoute';
 import LanguageSwitcher from '@/Components/LanguageSwitcher.vue';
 import UserDropdown from '@/Components/UserDropdown.vue';
+import SystemLoader from '@/Components/SystemLoader.vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 
 const { direction } = useDirection();
