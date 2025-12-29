@@ -120,7 +120,38 @@
                                             {{ t('lessons.live.join_meeting') || 'Join Live Meeting' }}
                                             <i class="bi bi-box-arrow-up-right ms-2"></i>
                                         </a>
-                                        <p class="text-xs text-gray-500 mt-2 break-all">{{ lesson.live_meeting_link }}</p>
+                                        <!-- Warning for students: Do not click Log-in -->
+                                        <div class="mt-3 p-4 bg-red-50 border-2 border-red-300 rounded-lg">
+                                            <p class="text-sm text-red-800 flex items-start gap-2 font-semibold mb-2">
+                                                <i class="bi bi-exclamation-triangle-fill text-red-600 mt-0.5 text-lg"></i>
+                                                <span>
+                                                    <strong>{{ t('lessons.live.student_warning_title') || 'Important:' }}</strong>
+                                                </span>
+                                            </p>
+                                            <p class="text-xs text-red-700 ml-7 leading-relaxed">
+                                                {{ t('lessons.live.student_warning') || 'Please wait in the waiting room. Do NOT click "Log-in" button. Wait for the instructor to join first.' }}
+                                            </p>
+                                            <p class="text-xs text-red-600 mt-2 ml-7 font-medium">
+                                                {{ t('lessons.live.student_warning_detail') || 'If you click "Log-in", you will become a moderator which is not allowed. Please wait for the instructor.' }}
+                                            </p>
+                                        </div>
+                                        <!-- Meeting Link with Copy Button -->
+                                        <div class="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                                            <div class="flex items-center justify-between gap-2">
+                                                <p class="text-xs text-gray-600 font-medium flex-1 truncate">
+                                                    {{ getMeetingLinkDisplay(lesson.live_meeting_link) }}
+                                                </p>
+                                                <button
+                                                    @click="copyMeetingLink(lesson.live_meeting_link)"
+                                                    class="flex-shrink-0 px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md transition-all text-xs font-medium flex items-center gap-1.5"
+                                                    :title="t('common.copy') || 'Copy Link'"
+                                                >
+                                                    <i :class="copiedLink ? 'bi bi-check-circle-fill text-green-600' : 'bi bi-clipboard'"></i>
+                                                    <span v-if="copiedLink">{{ t('common.copied') || 'Copied!' }}</span>
+                                                    <span v-else>{{ t('common.copy') || 'Copy' }}</span>
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div v-else class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                                         <p class="text-sm text-yellow-800 flex items-center gap-2">
@@ -424,6 +455,32 @@ const videoWatchPercentage = ref(0);
 const videoPlayer = ref(null);
 const videoDuration = ref(0);
 const videoError = ref(null);
+
+// Copy meeting link functionality
+const copiedLink = ref(false);
+
+const copyMeetingLink = async (link) => {
+    try {
+        await navigator.clipboard.writeText(link);
+        copiedLink.value = true;
+        showSuccess(t('common.link_copied') || 'Link copied to clipboard!', t('common.success') || 'Success');
+        setTimeout(() => {
+            copiedLink.value = false;
+        }, 2000);
+    } catch (err) {
+        showError(t('common.copy_failed') || 'Failed to copy link', t('common.error') || 'Error');
+    }
+};
+
+const getMeetingLinkDisplay = (link) => {
+    if (!link) return '';
+    // Extract base URL and room name, hide long config parameters
+    const match = link.match(/https:\/\/meet\.jit\.si\/([a-z0-9]+)/);
+    if (match) {
+        return `https://meet.jit.si/${match[1]}`;
+    }
+    return link;
+};
 
 // Initialize answer forms for each question
 const answerForms = reactive({});

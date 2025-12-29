@@ -118,7 +118,7 @@ class CoursePlayerController extends Controller
 
         return Inertia::render('Courses/Player', [
             'course' => $this->formatCourse($courseData),
-            'lesson' => $currentLesson ? $this->lessonService->formatForFrontend($currentLesson, $userAnswers) : null,
+            'lesson' => $currentLesson ? $this->lessonService->formatForFrontend($currentLesson, $userAnswers, $instructorData['isInstructor']) : null,
             'lessons' => $this->formatLessonsList($lessons, $user, $course),
             'sections' => $this->formatSectionsList($sections, $user, $course),
             'isFavorited' => $user ? $this->favoriteService->isFavorited($courseData) : false,

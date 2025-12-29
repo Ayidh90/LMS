@@ -119,7 +119,7 @@ class LessonController extends Controller
         
         return Inertia::render('Instructor/Lessons/Show', [
             'course' => $this->formatCourse($course),
-            'lesson' => $this->formatLesson($lesson),
+            'lesson' => $this->formatLesson($lesson, true), // Pass true for isInstructor
             'batches' => $batches->map(fn($b) => [
                 'id' => $b->id, 
                 'name' => $b->translated_name ?? $b->name,
@@ -390,8 +390,8 @@ class LessonController extends Controller
         ];
     }
 
-    private function formatLesson(Lesson $lesson): array
+    private function formatLesson(Lesson $lesson, bool $isInstructor = false): array
     {
-        return $this->lessonService->formatForFrontend($lesson);
+        return $this->lessonService->formatForFrontend($lesson, null, $isInstructor);
     }
 }

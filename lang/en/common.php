@@ -66,5 +66,9 @@ return [
     'preview' => 'Preview',
     'no_image' => 'No image selected',
     'choose_thumbnail' => 'Choose Thumbnail',
+    'copy' => 'Copy',
+    'copied' => 'Copied!',
+    'link_copied' => 'Link copied to clipboard!',
+    'copy_failed' => 'Failed to copy link',
 ];
 

@@ -93,6 +93,10 @@ return [
         'info_title' => 'Live Lesson Requirements',
         'info_message' => 'Please provide the meeting date and time. A meeting link will be auto-generated if not provided.',
         'date_required_warning' => 'Live lecture date and time is required for live lessons.',
+        'instructor_link' => 'Instructor Link (Moderator Access)',
+        'student_warning_title' => 'Important:',
+        'student_warning' => 'Please wait in the waiting room. Do NOT click "Log-in" button. Wait for the instructor to join first.',
+        'student_warning_detail' => 'If you click "Log-in", you will become a moderator which is not allowed. Please wait for the instructor.',
     ],
     
     'validation' => [

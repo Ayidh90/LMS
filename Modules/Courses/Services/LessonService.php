@@ -50,8 +50,9 @@ class LessonService
         $data['order'] = $data['order'] ?? $this->repository->getNextOrder($course->id, $data['section_id'] ?? null);
         
         // Generate live meeting link if type is 'live' and link is not provided
+        // Pass course to enable waiting room and instructor moderation
         if (isset($data['type']) && $data['type'] === 'live' && empty($data['live_meeting_link'])) {
-            $data['live_meeting_link'] = $this->liveMeetingService->generateMeetingLink('jitsi');
+            $data['live_meeting_link'] = $this->liveMeetingService->generateMeetingLink('jitsi', $course);
         }
         
         return $this->repository->create($data);
@@ -60,8 +61,10 @@ class LessonService
     public function update(Lesson $lesson, array $data): bool
     {
         // Generate live meeting link if type is 'live' and link is not provided
+        // Pass course to enable waiting room and instructor moderation
         if (isset($data['type']) && $data['type'] === 'live' && empty($data['live_meeting_link']) && empty($lesson->live_meeting_link)) {
-            $data['live_meeting_link'] = $this->liveMeetingService->generateMeetingLink('jitsi');
+            $course = $lesson->course ?? \Modules\Courses\Models\Course::find($lesson->course_id);
+            $data['live_meeting_link'] = $this->liveMeetingService->generateMeetingLink('jitsi', $course);
         }
         
         return $this->repository->update($lesson, $data);
@@ -87,9 +90,9 @@ class LessonService
         return $lesson->course_id === $course->id;
     }
 
-    public function formatForFrontend(Lesson $lesson, $userAnswers = null): array
+    public function formatForFrontend(Lesson $lesson, $userAnswers = null, $isInstructor = false): array
     {
-        return [
+        $formatted = [
             'id' => $lesson->id,
             'title' => $lesson->translated_title ?? $lesson->title,
             'title_ar' => $lesson->title_ar,
@@ -107,6 +110,29 @@ class LessonService
             'section_id' => $lesson->section_id,
             'questions' => $lesson->questions ? $lesson->questions->map(fn($q) => $this->formatQuestion($q, $userAnswers)) : [],
         ];
+        
+        // Automatically generate appropriate link based on user role
+        if ($lesson->type === 'live' && $lesson->live_meeting_link) {
+            $course = $lesson->course ?? \Modules\Courses\Models\Course::find($lesson->course_id);
+            if ($course) {
+                if ($isInstructor) {
+                    // Instructor gets moderator link
+                    $instructorLink = $this->liveMeetingService->getInstructorLink(
+                        $lesson->live_meeting_link,
+                        $course
+                    );
+                    $formatted['live_meeting_link_instructor'] = $instructorLink;
+                    // Also set as main link for instructor
+                    $formatted['live_meeting_link'] = $instructorLink;
+                } else {
+                    // Students get student link (without login option)
+                    $studentLink = $this->liveMeetingService->getStudentLink($lesson->live_meeting_link);
+                    $formatted['live_meeting_link'] = $studentLink;
+                }
+            }
+        }
+        
+        return $formatted;
     }
 
     /**

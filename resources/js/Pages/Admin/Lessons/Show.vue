@@ -102,7 +102,23 @@
                                 {{ t('lessons.live.join_meeting') || 'Join Live Meeting' }}
                                 <i class="bi bi-box-arrow-up-right ms-2"></i>
                             </a>
-                            <p class="text-xs text-gray-500 mt-2 break-all">{{ lesson.live_meeting_link }}</p>
+                            <!-- Meeting Link with Copy Button -->
+                            <div class="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                                <div class="flex items-center justify-between gap-2">
+                                    <p class="text-xs text-gray-600 font-medium flex-1 truncate">
+                                        {{ getMeetingLinkDisplay(lesson.live_meeting_link) }}
+                                    </p>
+                                    <button
+                                        @click="copyMeetingLink(lesson.live_meeting_link)"
+                                        class="flex-shrink-0 px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md transition-all text-xs font-medium flex items-center gap-1.5"
+                                        :title="t('common.copy') || 'Copy Link'"
+                                    >
+                                        <i :class="copiedLink ? 'bi bi-check-circle-fill text-green-600' : 'bi bi-clipboard'"></i>
+                                        <span v-if="copiedLink">{{ t('common.copied') || 'Copied!' }}</span>
+                                        <span v-else>{{ t('common.copy') || 'Copy' }}</span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                         <p v-else class="text-sm text-gray-500 mt-2">
                             {{ t('lessons.live.meeting_link_generated') || 'Meeting link will be generated automatically' }}
@@ -259,7 +275,23 @@
                                 {{ t('lessons.live.join_meeting') || 'Join Live Meeting' }}
                                 <i class="bi bi-box-arrow-up-right"></i>
                             </a>
-                            <p class="text-xs text-gray-500 mt-2 break-all">{{ lesson.live_meeting_link }}</p>
+                            <!-- Meeting Link with Copy Button -->
+                            <div class="mt-3 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                                <div class="flex items-center justify-between gap-2">
+                                    <p class="text-xs text-gray-600 font-medium flex-1 truncate">
+                                        {{ getMeetingLinkDisplay(lesson.live_meeting_link) }}
+                                    </p>
+                                    <button
+                                        @click="copyMeetingLink(lesson.live_meeting_link)"
+                                        class="flex-shrink-0 px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md transition-all text-xs font-medium flex items-center gap-1.5"
+                                        :title="t('common.copy') || 'Copy Link'"
+                                    >
+                                        <i :class="copiedLink ? 'bi bi-check-circle-fill text-green-600' : 'bi bi-clipboard'"></i>
+                                        <span v-if="copiedLink">{{ t('common.copied') || 'Copied!' }}</span>
+                                        <span v-else>{{ t('common.copy') || 'Copy' }}</span>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                         <p v-else class="text-sm text-gray-500">{{ t('lessons.live.meeting_link_generated') || 'Meeting link will be generated automatically' }}</p>
                     </div>
@@ -543,6 +575,32 @@ const { isAdmin } = usePermissions();
 
 const activeTab = ref('details');
 const selectedBatch = ref('');
+
+// Copy meeting link functionality
+const copiedLink = ref(false);
+
+const copyMeetingLink = async (link) => {
+    try {
+        await navigator.clipboard.writeText(link);
+        copiedLink.value = true;
+        showSuccess(t('common.link_copied') || 'Link copied to clipboard!', t('common.success') || 'Success');
+        setTimeout(() => {
+            copiedLink.value = false;
+        }, 2000);
+    } catch (err) {
+        showError(t('common.copy_failed') || 'Failed to copy link', t('common.error') || 'Error');
+    }
+};
+
+const getMeetingLinkDisplay = (link) => {
+    if (!link) return '';
+    // Extract base URL and room name, hide long config parameters
+    const match = link.match(/https:\/\/meet\.jit\.si\/([a-z0-9]+)/);
+    if (match) {
+        return `https://meet.jit.si/${match[1]}`;
+    }
+    return link;
+};
 const saving = ref(false);
 const attendanceChanges = ref({});
 const changedStudents = ref(new Set());
