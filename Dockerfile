@@ -9,9 +9,11 @@ RUN apt-get update && apt-get install -y --fix-missing \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
+    libicu-dev \
     zip \
     unzip \
-    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd \
+    && docker-php-ext-configure intl \
+    && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd intl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install Composer
