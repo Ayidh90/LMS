@@ -21,6 +21,7 @@ export default defineConfig({
     resolve: {
         alias: {
             '@': path.resolve(__dirname, 'resources/js'),
+            'ziggy-js': path.resolve(__dirname, 'vendor/tightenco/ziggy/dist/index.esm.js'),
         },
     },
     build: {
@@ -28,7 +29,7 @@ export default defineConfig({
             output: {
                 manualChunks: (id) => {
                     // Check specific libraries first (before more general patterns)
-                    
+
                     // Split ApexCharts into its own chunk (check before vue)
                     if (id.includes('apexcharts') || id.includes('vue3-apexcharts')) {
                         return 'apexcharts';

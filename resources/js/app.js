@@ -9,7 +9,7 @@ import { createApp, h } from 'vue';
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { Ziggy } from './ziggy';
-import { route as ziggyRoute } from '../../vendor/tightenco/ziggy/dist/index.esm.js';
+import { route as ziggyRoute } from 'ziggy-js';
 
 // PrimeVue
 import PrimeVue from 'primevue/config';
@@ -89,10 +89,10 @@ createInertiaApp({
             .use(VueApexCharts)
             .component('SystemLoader', SystemLoader)
             .component('ContentLoader', ContentLoader);
-        
+
         // Make route available in template context
         app.config.globalProperties.route = window.route;
-        
+
         return app.mount(el);
     },
     progress: {
