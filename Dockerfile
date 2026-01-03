@@ -33,6 +33,7 @@ RUN apt-get update && apt-get install -y \
     libicu-dev \
     zip \
     unzip \
+    git \
     && docker-php-ext-configure intl \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd intl zip \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -42,6 +43,9 @@ WORKDIR /var/www/html
 
 # Update configuration
 COPY ./docker/php/local.ini /usr/local/etc/php/conf.d/local.ini
+
+# Copy composer binary from vendor stage
+COPY --from=vendor /usr/bin/composer /usr/bin/composer
 
 # Copy from vendor stage
 COPY --from=vendor /app/vendor/ /var/www/html/vendor/

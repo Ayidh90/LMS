@@ -18,6 +18,10 @@ if [ "$(id -u)" = "0" ]; then
     exec runuser -u www-data -- "$@"
 else
     # We are not root (Local Dev scenario where user is set in docker-compose)
+    if [ ! -f "vendor/autoload.php" ]; then
+        echo "Vendor autoload not found. Running composer install..."
+        composer install --ignore-platform-reqs
+    fi
     # Just execute the command directly
     exec "$@"
 fi
