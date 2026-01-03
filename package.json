@@ -23,6 +23,7 @@
         "vue3-apexcharts": "^1.10.0"
     },
     "devDependencies": {
+        "@rollup/rollup-linux-x64-musl": "^4.54.0",
         "autoprefixer": "^10.4.20",
         "laravel-vite-plugin": "^1.0",
         "postcss": "^8.4.47",
