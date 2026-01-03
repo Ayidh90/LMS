@@ -18,8 +18,7 @@ services:
       - DB_DATABASE=${DB_DATABASE:-lms_db}
       - DB_USERNAME=${DB_USERNAME:-lms_user}
       - DB_PASSWORD=${DB_PASSWORD:-root}
-    user: "${UID:-1000}:${GID:-1000}"
-
+      
   nginx:
     image: nginx:alpine
     container_name: ${DOCKER_PREFIX:-lms}-nginx
