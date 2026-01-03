@@ -1,0 +1,78 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${DOCKER_PREFIX:-lms}-app-prod
+    container_name: ${DOCKER_PREFIX:-lms}-app-prod
+    restart: unless-stopped
+    volumes:
+      # Sync public assets from the container to a shared volume for Nginx
+      - public_assets:/var/www/html/public_shared
+      # Persist storage and logs
+      - storage_data:/var/www/html/storage
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-lms_db}
+      - DB_USERNAME=${DB_USERNAME:-lms_user}
+      - DB_PASSWORD=${DB_PASSWORD:-root}
+      # Make sure to set these in your production .env or CI/CD secrets
+      - APP_KEY=${APP_KEY}
+    networks:
+      - lms-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: ${DOCKER_PREFIX:-lms}-nginx-prod
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-80}:80"
+    volumes:
+      # Mount the production config
+      - ./docker/nginx/prod.conf:/etc/nginx/conf.d/default.conf
+      # Read assets from the shared volume populated by the app container
+      - public_assets:/var/www/html/public
+    networks:
+      - lms-network
+    depends_on:
+      - app
+
+  db:
+    image: mysql:8.0
+    container_name: ${DOCKER_PREFIX:-lms}-db-prod
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-lms_db}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-root}
+      MYSQL_USER: ${DB_USERNAME:-lms_user}
+    volumes:
+      - dbdata_prod:/var/lib/mysql
+    networks:
+      - lms-network
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      timeout: 20s
+      retries: 10
+  # Optional: Supervisor/Worker for Queues (if needed)
+  # worker:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   command: php artisan queue:work --tries=3
+  #   ...
+
+networks:
+  lms-network:
+    driver: bridge
+
+volumes:
+  dbdata_prod:
+    driver: local
+  storage_data:
+    driver: local
+  public_assets:
+    driver: local
