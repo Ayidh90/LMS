@@ -257,6 +257,85 @@ class LessonAttendanceService
     /**
      * Get attendance records for a lesson
      */
+    /**
+     * Get students with attendance for a lesson
+     */
+    public function getStudentsWithAttendance($batches, Lesson $lesson, $attendances): \Illuminate\Support\Collection
+    {
+        $students = collect();
+        $attendanceMap = $attendances->keyBy(fn($a) => $a['student_id'] . '-' . $a['batch_id']);
+
+        foreach ($batches as $batch) {
+            foreach ($batch->enrollments as $enrollment) {
+                $key = $enrollment->student_id . '-' . $batch->id;
+                $attendance = $attendanceMap->get($key);
+
+                $completion = LessonCompletion::where('lesson_id', $lesson->id)
+                    ->where('student_id', $enrollment->student_id)
+                    ->where('batch_id', $batch->id)
+                    ->first();
+
+                $students->push([
+                    'id' => $enrollment->student->id,
+                    'name' => $enrollment->student->name,
+                    'email' => $enrollment->student->email,
+                    'batch_id' => $batch->id,
+                    'batch_name' => $batch->translated_name ?? $batch->name,
+                    'enrollment_progress' => $enrollment->progress ?? 0,
+                    'attendance' => $attendance ? [
+                        'status' => $attendance['status'],
+                        'notes' => $attendance['notes'],
+                        'attended_at' => $attendance['attended_at'],
+                        'marked_by' => $attendance['student_id'] === ($attendance['marked_by'] ?? null) ? 'student' : 'instructor',
+                    ] : null,
+                    'completed' => $completion ? true : false,
+                    'completed_at' => $completion?->completed_at,
+                ]);
+            }
+        }
+
+        return $students;
+    }
+
+    /**
+     * Calculate attendance statistics
+     */
+    public function calculateAttendanceStats($attendances, $students): array
+    {
+        $total = $students->count();
+        $present = $attendances->where('status', 'present')->count();
+        $absent = $attendances->where('status', 'absent')->count();
+        $late = $attendances->where('status', 'late')->count();
+        $excused = $attendances->where('status', 'excused')->count();
+        $notMarked = $total - $attendances->count();
+
+        return [
+            'total' => $total,
+            'present' => $present,
+            'absent' => $absent,
+            'late' => $late,
+            'excused' => $excused,
+            'not_marked' => $notMarked,
+            'attendance_rate' => $total > 0 ? round((($present + $late + $excused) / $total) * 100) : 0,
+        ];
+    }
+
+    /**
+     * Filter valid attendances for instructor
+     */
+    public function filterValidAttendances(array $attendances, \App\Models\User $instructor): array
+    {
+        return array_filter($attendances, function ($data) use ($instructor) {
+            $batch = \App\Models\Batch::find($data['batch_id']);
+            if (!$batch || ($batch->instructor_id !== $instructor->id && !$instructor->isAdmin())) {
+                return false;
+            }
+            return \App\Models\Enrollment::where('batch_id', $data['batch_id'])
+                ->where('student_id', $data['student_id'])
+                ->exists();
+        });
+    }
+
     public function getLessonAttendances(Lesson $lesson, $batchIds): \Illuminate\Support\Collection
     {
         return LessonAttendance::where('lesson_id', $lesson->id)

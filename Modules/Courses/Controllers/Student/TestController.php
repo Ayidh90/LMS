@@ -5,8 +5,8 @@ namespace Modules\Courses\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Services\EnrollmentService;
 use Modules\Courses\Services\LessonService;
+use Modules\Courses\Services\LessonPresentationService;
 use Modules\Courses\Models\Lesson;
-use App\Models\Batch;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
@@ -14,7 +14,8 @@ class TestController extends Controller
 {
     public function __construct(
         private EnrollmentService $enrollmentService,
-        private LessonService $lessonService
+        private LessonService $lessonService,
+        private LessonPresentationService $presentationService
     ) {}
 
     public function index()
@@ -23,12 +24,8 @@ class TestController extends Controller
         $courseIds = $this->enrollmentService->getEnrolledCourseIds($student);
         $batchIds = $this->enrollmentService->getEnrolledBatchIds($student);
         
-        $tests = Lesson::whereIn('course_id', $courseIds)
-            ->where('type', 'test')
-            ->with(['course', 'questions'])
-            ->orderBy('order')
-            ->get()
-            ->map(fn($lesson) => $this->formatTest($lesson, $batchIds));
+        $tests = $this->lessonService->getTestsForStudent($courseIds)
+            ->map(fn($lesson) => $this->presentationService->formatTest($lesson, $batchIds));
 
         return Inertia::render('Student/Tests/Index', [
             'tests' => $tests,
@@ -39,13 +36,9 @@ class TestController extends Controller
     {
         $student = Auth::user();
         
-        if ($lesson->type !== 'test') {
-            abort(404);
-        }
+        $this->lessonService->validateTestType($lesson);
         
-        $batchIds = $this->enrollmentService->getEnrolledBatchIds($student);
-        
-        if (!$this->hasAccess($lesson, $batchIds)) {
+        if (!$this->enrollmentService->hasAccessToLesson($student, $lesson)) {
             abort(403, __('You do not have access to this test.'));
         }
 
@@ -53,44 +46,7 @@ class TestController extends Controller
 
         return Inertia::render('Student/Tests/Show', [
             'test' => $this->lessonService->formatForFrontend($lesson),
-            'course' => [
-                'id' => $lesson->course->id,
-                'title' => $lesson->course->translated_title,
-                'slug' => $lesson->course->slug,
-            ],
+            'course' => $this->presentationService->formatCourse($lesson->course),
         ]);
     }
-
-    private function hasAccess(Lesson $lesson, $batchIds): bool
-    {
-        return Batch::where('course_id', $lesson->course_id)
-            ->whereIn('id', $batchIds)
-            ->exists();
-    }
-
-    private function formatTest(Lesson $lesson, $batchIds): array
-    {
-        $batch = Batch::where('course_id', $lesson->course_id)
-            ->whereIn('id', $batchIds)
-            ->first();
-        
-        return [
-            'id' => $lesson->id,
-            'title' => $lesson->translated_title,
-            'description' => $lesson->translated_description,
-            'order' => $lesson->order,
-            'questions_count' => $lesson->questions->count(),
-            'course' => [
-                'id' => $lesson->course->id,
-                'title' => $lesson->course->translated_title,
-                'slug' => $lesson->course->slug,
-            ],
-            'batch' => $batch ? [
-                'id' => $batch->id,
-                'name' => $batch->translated_name,
-            ] : null,
-            'created_at' => $lesson->created_at,
-        ];
-    }
 }
-

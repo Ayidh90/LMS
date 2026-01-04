@@ -68,86 +68,44 @@
                     </div>
                 </div>
 
-                <!-- Progress Statistics -->
-                <div v-if="progressStats" class="col-12">
+                <!-- Track Completion Statistics -->
+                <div v-if="progressStats && progressStats.track_completion_stats && progressStats.track_completion_stats.length > 0" class="col-12">
                     <div class="card shadow-sm border-0 mb-4">
                         <div class="card-header bg-light">
                             <h5 class="mb-0">
                                 <i class="bi bi-graph-up-arrow me-2"></i>
-                                {{ t('programs.progress_statistics') || 'Progress Statistics' }}
+                                {{ t('programs.track_completion') || 'Track Completion' }}
                             </h5>
                         </div>
                         <div class="card-body">
-                            <!-- Track Completion Stats -->
-                            <div v-if="progressStats.track_completion_stats && progressStats.track_completion_stats.length > 0" class="mb-4">
-                                <div class="d-flex justify-content-between align-items-center mb-3 cursor-pointer" @click="toggleTrackCompletion" style="cursor: pointer;">
-                                    <h6 class="fw-bold mb-0">{{ t('programs.track_completion') || 'Track Completion' }}</h6>
-                                    <i class="bi" :class="isTrackCompletionCollapsed ? 'bi-chevron-down' : 'bi-chevron-up'" style="transition: transform 0.3s ease"></i>
-                                </div>
-                                <div v-show="!isTrackCompletionCollapsed" class="table-responsive">
-                                    <table class="table table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th>{{ t('programs.track') || 'Track' }}</th>
-                                                <th>{{ t('programs.total_students') || 'Total Students' }}</th>
-                                                <th>{{ t('programs.completed_students') || 'Completed Students' }}</th>
-                                                <th>{{ t('programs.completion_percentage') || 'Completion %' }}</th>
-                                                <th>{{ t('programs.progress') || 'Progress' }}</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr v-for="stat in progressStats.track_completion_stats" :key="stat.track_id">
-                                                <td><strong>{{ stat.track_name }}</strong></td>
-                                                <td>{{ stat.total_students }}</td>
-                                                <td>{{ stat.completed_students }}</td>
-                                                <td>{{ stat.completion_percentage }}%</td>
-                                                <td>
-                                                    <div class="progress" style="height: 20px;">
-                                                        <div class="progress-bar" :class="stat.completion_percentage >= 100 ? 'bg-success' : 'bg-info'" 
-                                                             :style="{ width: stat.completion_percentage + '%' }">
-                                                            {{ stat.completion_percentage }}%
-                                                        </div>
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>{{ t('programs.track') || 'Track' }}</th>
+                                            <th>{{ t('programs.total_students') || 'Total Students' }}</th>
+                                            <th>{{ t('programs.completed_students') || 'Completed Students' }}</th>
+                                            <th>{{ t('programs.completion_percentage') || 'Completion %' }}</th>
+                                            <th>{{ t('programs.progress') || 'Progress' }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="stat in progressStats.track_completion_stats" :key="stat.track_id">
+                                            <td><strong>{{ stat.track_name }}</strong></td>
+                                            <td>{{ stat.total_students }}</td>
+                                            <td>{{ stat.completed_students }}</td>
+                                            <td>{{ stat.completion_percentage }}%</td>
+                                            <td>
+                                                <div class="progress" style="height: 20px;">
+                                                    <div class="progress-bar" :class="stat.completion_percentage >= 100 ? 'bg-success' : 'bg-info'" 
+                                                         :style="{ width: Math.min(stat.completion_percentage, 100) + '%' }">
+                                                        {{ stat.completion_percentage }}%
                                                     </div>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                            
-                            <!-- Student Progress -->
-                            <div v-if="progressStats.student_progress && progressStats.student_progress.length > 0">
-                                <div class="d-flex justify-content-between align-items-center mb-3 cursor-pointer" @click="toggleStudentProgress" style="cursor: pointer;">
-                                    <h6 class="fw-bold mb-0">{{ t('programs.student_progress') || 'Student Progress in Program' }}</h6>
-                                    <i class="bi" :class="isStudentProgressCollapsed ? 'bi-chevron-down' : 'bi-chevron-up'" style="transition: transform 0.3s ease"></i>
-                                </div>
-                                <div v-show="!isStudentProgressCollapsed" class="table-responsive">
-                                    <table class="table table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th>{{ t('programs.student') || 'Student' }}</th>
-                                                <th>{{ t('programs.completed_tracks') || 'Completed Tracks' }}</th>
-                                                <th>{{ t('programs.total_tracks') || 'Total Tracks' }}</th>
-                                                <th>{{ t('programs.progress') || 'Progress' }}</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr v-for="student in progressStats.student_progress" :key="student.student_id">
-                                                <td><strong>{{ student.student_name }}</strong></td>
-                                                <td>{{ student.completed_tracks }}</td>
-                                                <td>{{ student.total_tracks }}</td>
-                                                <td>
-                                                    <div class="progress" style="height: 20px;">
-                                                        <div class="progress-bar" :class="student.progress_percentage >= 100 ? 'bg-success' : 'bg-primary'" 
-                                                             :style="{ width: student.progress_percentage + '%' }">
-                                                            {{ student.progress_percentage }}%
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
@@ -209,6 +167,44 @@
                                     {{ t('tracks.create') || 'Create Track' }}
                                 </Link>
                             </div>
+                            
+                            <!-- Student Progress in Program -->
+                            <div v-if="progressStats && progressStats.student_progress && progressStats.student_progress.length > 0" class="mt-4 pt-4 border-top">
+                                <div class="d-flex justify-content-between align-items-center mb-3 cursor-pointer" @click="toggleStudentProgress" style="cursor: pointer;">
+                                    <h6 class="fw-bold mb-0">
+                                        <i class="bi bi-people me-2"></i>
+                                        {{ t('programs.student_progress') || 'Student Progress in Program' }}
+                                    </h6>
+                                    <i class="bi" :class="isStudentProgressCollapsed ? 'bi-chevron-down' : 'bi-chevron-up'" style="transition: transform 0.3s ease"></i>
+                                </div>
+                                <div v-show="!isStudentProgressCollapsed" class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>{{ t('programs.student') || 'Student' }}</th>
+                                                <th>{{ t('programs.completed_tracks') || 'Completed Tracks' }}</th>
+                                                <th>{{ t('programs.total_tracks') || 'Total Tracks' }}</th>
+                                                <th>{{ t('programs.progress') || 'Progress' }}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="student in progressStats.student_progress" :key="student.student_id">
+                                                <td><strong>{{ student.student_name }}</strong></td>
+                                                <td>{{ student.completed_tracks }}</td>
+                                                <td>{{ student.total_tracks }}</td>
+                                                <td>
+                                                    <div class="progress" style="height: 20px;">
+                                                        <div class="progress-bar" :class="student.progress_percentage >= 100 ? 'bg-success' : 'bg-primary'" 
+                                                             :style="{ width: Math.min(student.progress_percentage, 100) + '%' }">
+                                                            {{ student.progress_percentage }}%
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -255,13 +251,8 @@ const getTrackCompletion = (trackId) => {
     return stat ? stat.completion_percentage : null;
 };
 
-// Toggle states for sections
-const isTrackCompletionCollapsed = ref(false);
+// Toggle state for student progress section
 const isStudentProgressCollapsed = ref(false);
-
-const toggleTrackCompletion = () => {
-    isTrackCompletionCollapsed.value = !isTrackCompletionCollapsed.value;
-};
 
 const toggleStudentProgress = () => {
     isStudentProgressCollapsed.value = !isStudentProgressCollapsed.value;

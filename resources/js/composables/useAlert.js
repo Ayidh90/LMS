@@ -41,30 +41,53 @@ export function useAlert() {
         });
     };
 
-    const showError = (message, title = null) => {
+    const showError = (message, title = null, options = {}) => {
         const isRTL = getDirection() === 'rtl';
-        return Swal.fire({
-            icon: 'error',
-            title: title || 'Error!',
-            text: message,
-            toast: true,
-            position: isRTL ? 'top-start' : 'top-end',
-            showConfirmButton: false,
-            timer: 2000,
-            timerProgressBar: true,
-            width: 'auto',
-            maxWidth: '16rem',
-            padding: '0.75rem 1rem',
-            didOpen: (toast) => {
-                toast.addEventListener('mouseenter', Swal.stopTimer);
-                toast.addEventListener('mouseleave', Swal.resumeTimer);
-            },
-            customClass: {
-                popup: 'sweet-alert-popup sweet-alert-error',
-                title: 'sweet-alert-title',
-                htmlContainer: 'sweet-alert-content',
-            },
-        });
+        const isModal = options.modal === true; // Only show modal when explicitly requested
+        
+        if (isModal) {
+            // Modal style (centered, with close button, no timer)
+            return Swal.fire({
+                icon: 'error',
+                title: title || 'Error!',
+                text: message,
+                showConfirmButton: true,
+                confirmButtonText: options.confirmButtonText || 'OK',
+                confirmButtonColor: '#ef4444',
+                allowOutsideClick: true,
+                allowEscapeKey: true,
+                customClass: {
+                    popup: 'sweet-alert-popup sweet-alert-error-modal',
+                    title: 'sweet-alert-title',
+                    htmlContainer: 'sweet-alert-content',
+                    confirmButton: 'sweet-alert-confirm-button',
+                },
+            });
+        } else {
+            // Toast style (original behavior - default)
+            return Swal.fire({
+                icon: 'error',
+                title: title || 'Error!',
+                text: message,
+                toast: true,
+                position: isRTL ? 'top-start' : 'top-end',
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true,
+                width: 'auto',
+                maxWidth: '16rem',
+                padding: '0.75rem 1rem',
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer);
+                    toast.addEventListener('mouseleave', Swal.resumeTimer);
+                },
+                customClass: {
+                    popup: 'sweet-alert-popup sweet-alert-error',
+                    title: 'sweet-alert-title',
+                    htmlContainer: 'sweet-alert-content',
+                },
+            });
+        }
     };
 
     const showWarning = (message, title = null) => {

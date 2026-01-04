@@ -121,41 +121,6 @@
                                     </table>
                                 </div>
                             </div>
-                            
-                            <!-- Student Progress -->
-                            <div v-if="progressStats.student_progress && progressStats.student_progress.length > 0">
-                                <div class="d-flex justify-content-between align-items-center mb-3 cursor-pointer" @click="toggleStudentProgress" style="cursor: pointer;">
-                                    <h6 class="fw-bold mb-0">{{ t('tracks.student_progress') || 'Student Progress in Track' }}</h6>
-                                    <i class="bi" :class="isStudentProgressCollapsed ? 'bi-chevron-down' : 'bi-chevron-up'" style="transition: transform 0.3s ease"></i>
-                                </div>
-                                <div v-show="!isStudentProgressCollapsed" class="table-responsive">
-                                    <table class="table table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th>{{ t('tracks.student') || 'Student' }}</th>
-                                                <th>{{ t('tracks.completed_courses') || 'Completed Courses' }}</th>
-                                                <th>{{ t('tracks.total_courses') || 'Total Courses' }}</th>
-                                                <th>{{ t('tracks.progress') || 'Progress' }}</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr v-for="student in progressStats.student_progress" :key="student.student_id">
-                                                <td><strong>{{ student.student_name }}</strong></td>
-                                                <td>{{ student.completed_courses }}</td>
-                                                <td>{{ student.total_courses }}</td>
-                                                <td>
-                                                    <div class="progress" style="height: 20px;">
-                                                        <div class="progress-bar" :class="student.progress_percentage >= 100 ? 'bg-success' : 'bg-primary'" 
-                                                             :style="{ width: student.progress_percentage + '%' }">
-                                                            {{ student.progress_percentage }}%
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -222,6 +187,44 @@
                                     <i class="bi bi-plus-circle me-2"></i>
                                     {{ t('tracks.add_course') || 'Add Course' }}
                                 </button>
+                            </div>
+                            
+                            <!-- Student Progress in Track -->
+                            <div v-if="progressStats && progressStats.student_progress && progressStats.student_progress.length > 0" class="mt-4 pt-4 border-top">
+                                <div class="d-flex justify-content-between align-items-center mb-3 cursor-pointer" @click="toggleStudentProgress" style="cursor: pointer;">
+                                    <h6 class="fw-bold mb-0">
+                                        <i class="bi bi-people me-2"></i>
+                                        {{ t('tracks.student_progress') || 'Student Progress in Track' }}
+                                    </h6>
+                                    <i class="bi" :class="isStudentProgressCollapsed ? 'bi-chevron-down' : 'bi-chevron-up'" style="transition: transform 0.3s ease"></i>
+                                </div>
+                                <div v-show="!isStudentProgressCollapsed" class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>{{ t('tracks.student') || 'Student' }}</th>
+                                                <th>{{ t('tracks.completed_courses') || 'Completed Courses' }}</th>
+                                                <th>{{ t('tracks.total_courses') || 'Total Courses' }}</th>
+                                                <th>{{ t('tracks.progress') || 'Progress' }}</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="student in progressStats.student_progress" :key="student.student_id">
+                                                <td><strong>{{ student.student_name }}</strong></td>
+                                                <td>{{ student.completed_courses }}</td>
+                                                <td>{{ student.total_courses }}</td>
+                                                <td>
+                                                    <div class="progress" style="height: 20px;">
+                                                        <div class="progress-bar" :class="student.progress_percentage >= 100 ? 'bg-success' : 'bg-primary'" 
+                                                             :style="{ width: Math.min(student.progress_percentage, 100) + '%' }">
+                                                            {{ student.progress_percentage }}%
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>

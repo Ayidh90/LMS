@@ -196,38 +196,40 @@
                                 {{ t('admin.add_students') || 'Add Students' }}
                             </button>
                             </div>
-                        <div class="card-body">
-                            <div v-if="batch?.students && batch.students.length > 0" class="list-group list-group-flush">
-                                <div 
-                                    v-for="student in batch.students" 
-                                    :key="student.id"
-                                    class="list-group-item d-flex align-items-center justify-content-between p-3 border rounded mb-2 student-item"
-                                >
-                                    <div class="d-flex align-items-center gap-3 flex-grow-1 min-w-0">
-                                        <div class="bg-primary bg-gradient rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm" style="width: 48px; height: 48px; font-size: 1.2rem;">
-                                            {{ student.name?.[0]?.toUpperCase() || 'S' }}
-                                        </div>
-                                        <div class="flex-grow-1 min-w-0">
-                                            <h6 class="fw-bold mb-1 text-truncate">{{ student.name }}</h6>
-                                            <p class="text-muted small mb-1 text-truncate">{{ student.email }}</p>
-                                            <small class="text-muted d-flex align-items-center gap-1">
-                                                <i class="bi bi-calendar3"></i>
-                                                {{ t('admin.enrolled_at') || 'Enrolled' }}: {{ formatDate(student.enrolled_at) }}
-                                            </small>
-                                        </div>
-                                    </div>
-                                    <button 
-                                        v-if="can('batches.remove-students')"
-                                        type="button"
-                                        @click="removeStudent(student)"
-                                        :title="t('admin.remove_student') || 'Remove Student'"
-                                        class="btn btn-outline-danger btn-sm remove-student-btn"
+                        <div class="card-body p-0">
+                            <div v-if="batch?.students && batch.students.length > 0" class="students-list-container">
+                                <div class="list-group list-group-flush">
+                                    <div 
+                                        v-for="student in batch.students" 
+                                        :key="student.id"
+                                        class="list-group-item d-flex align-items-center justify-content-between p-3 border rounded mb-2 student-item"
                                     >
-                                        <i class="bi bi-x-lg"></i>
-                                    </button>
+                                        <div class="d-flex align-items-center gap-3 flex-grow-1 min-w-0">
+                                            <div class="bg-primary bg-gradient rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm flex-shrink-0" style="width: 48px; height: 48px; font-size: 1.2rem;">
+                                                {{ student.name?.[0]?.toUpperCase() || 'S' }}
+                                            </div>
+                                            <div class="flex-grow-1 min-w-0">
+                                                <h6 class="fw-bold mb-1 text-truncate">{{ student.name }}</h6>
+                                                <p class="text-muted small mb-1 text-truncate">{{ student.email }}</p>
+                                                <small class="text-muted d-flex align-items-center gap-1">
+                                                    <i class="bi bi-calendar3"></i>
+                                                    {{ t('admin.enrolled_at') || 'Enrolled' }}: {{ formatDate(student.enrolled_at) }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <button 
+                                            v-if="can('batches.remove-students')"
+                                            type="button"
+                                            @click="removeStudent(student)"
+                                            :title="t('admin.remove_student') || 'Remove Student'"
+                                            class="btn btn-outline-danger btn-sm remove-student-btn flex-shrink-0"
+                                        >
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                            <div v-else class="text-center py-5">
+                            <div v-else class="text-center py-5 px-3">
                                 <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
                                     <i class="bi bi-people text-muted" style="font-size: 2.5rem;"></i>
                             </div>
@@ -288,9 +290,12 @@
             :show="showAddStudentsModal"
             :available-students="availableStudents"
             :processing="addingStudents"
+            :course="props.course"
+            :batch="props.batch"
             @close="closeAddStudentsModal"
             @submit="handleAddStudents"
-                        />
+            @imported="handleStudentsImported"
+        />
 
         <!-- Batch Form Modal -->
         <BatchForm
@@ -481,12 +486,22 @@ const handleAddStudents = (studentIds) => {
             },
             onError: (errors) => {
                 addingStudents.value = false;
+                let errorMessage = t('admin.import_failed') || 'Failed to add students. Please try again.';
+                
                 if (errors.message) {
-                    showError(errors.message, t('common.error') || 'Error');
+                    errorMessage = errors.message;
+                } else if (errors.student_ids) {
+                    errorMessage = Array.isArray(errors.student_ids) ? errors.student_ids[0] : errors.student_ids;
                 }
+                
+                showError(errorMessage, t('common.error') || 'Error', { modal: true });
             },
         }
     );
+};
+
+const handleStudentsImported = () => {
+    showSuccess(t('admin.students_imported_successfully') || 'Students imported successfully!', t('common.success') || 'Success');
 };
 
 const removeStudent = async (student) => {
@@ -789,6 +804,57 @@ const removeStudent = async (student) => {
 
 .text-center.py-12:hover .w-16.h-16 {
     transform: scale(1.1);
+}
+
+/* Students List Container with Overflow */
+.students-list-container {
+    max-height: 600px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 1rem;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+    scroll-behavior: smooth;
+}
+
+/* Responsive height adjustments */
+@media (max-height: 900px) {
+    .students-list-container {
+        max-height: 500px;
+    }
+}
+
+@media (max-height: 700px) {
+    .students-list-container {
+        max-height: 400px;
+    }
+}
+
+@media (max-width: 768px) {
+    .students-list-container {
+        max-height: 400px;
+        padding: 0.75rem;
+    }
+}
+
+.students-list-container::-webkit-scrollbar {
+    width: 10px;
+}
+
+.students-list-container::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 5px;
+    margin: 0.5rem 0;
+}
+
+.students-list-container::-webkit-scrollbar-thumb {
+    background: linear-gradient(to bottom, #cbd5e1, #94a3b8);
+    border-radius: 5px;
+    border: 2px solid #f1f5f9;
+}
+
+.students-list-container::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(to bottom, #94a3b8, #64748b);
 }
 
 /* Student list container scrollbar */

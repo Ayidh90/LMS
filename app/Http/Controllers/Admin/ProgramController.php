@@ -79,47 +79,75 @@ class ProgramController extends Controller
         // Track completion stats: how many students completed each track
         $trackCompletionStats = [];
         foreach ($tracks as $track) {
-            $trackProgress = $trackProgresses->where('track_id', $track->id);
-            $completedProgress = $trackProgress->where('status', 'completed');
+            // Get all course IDs in this track
+            $courseIds = $track->courses()->pluck('id')->toArray();
+            
+            // Get all batch IDs for courses in this track
+            $batchIds = \App\Models\Batch::whereIn('course_id', $courseIds)->pluck('id')->toArray();
+            
+            // Get all unique students enrolled in batches of courses in this track
+            $enrolledStudentIds = \App\Models\Enrollment::whereIn('batch_id', $batchIds)
+                ->distinct()
+                ->pluck('student_id')
+                ->toArray();
+            
+            $totalStudents = count($enrolledStudentIds);
+            
+            // Get unique students who completed this track (from TrackProgress)
+            $completedProgress = $trackProgresses->where('track_id', $track->id)->where('status', 'completed');
+            $completedStudentIds = $completedProgress->pluck('student_id')->unique()->toArray();
+            $completedStudents = count($completedStudentIds);
             
             $trackCompletionStats[] = [
                 'track_id' => $track->id,
                 'track_name' => $track->translated_name ?? $track->name,
-                'total_students' => $trackProgress->unique('student_id')->count(),
-                'completed_students' => $completedProgress->unique('student_id')->count(),
-                'completion_percentage' => $trackProgress->unique('student_id')->count() > 0 
-                    ? round(($completedProgress->unique('student_id')->count() / $trackProgress->unique('student_id')->count()) * 100, 1)
+                'total_students' => $totalStudents,
+                'completed_students' => $completedStudents,
+                'completion_percentage' => $totalStudents > 0 
+                    ? round(($completedStudents / $totalStudents) * 100, 1)
                     : 0,
             ];
         }
         
         // Student progress: how many tracks each student completed in this program
-        $studentProgress = [];
-        $uniqueStudentIds = $trackProgresses->pluck('student_id')->unique();
+        // Get all students enrolled in any course in any track of this program
+        $allCourseIds = \Modules\Courses\Models\Course::whereIn('track_id', $trackIds)->pluck('id')->toArray();
+        $allBatchIds = \App\Models\Batch::whereIn('course_id', $allCourseIds)->pluck('id')->toArray();
+        $allEnrolledStudentIds = \App\Models\Enrollment::whereIn('batch_id', $allBatchIds)
+            ->distinct()
+            ->pluck('student_id')
+            ->toArray();
         
-        foreach ($uniqueStudentIds as $studentId) {
-            $studentTrackProgresses = $trackProgresses->where('student_id', $studentId);
-            $completedTracks = $studentTrackProgresses->where('status', 'completed')->count();
-            $totalTracks = $studentTrackProgresses->count();
-            
-            if ($totalTracks > 0) {
-                $student = User::find($studentId);
-                if ($student) {
-                    $studentProgress[] = [
-                        'student_id' => $studentId,
-                        'student_name' => $student->name,
-                        'completed_tracks' => $completedTracks,
-                        'total_tracks' => $totalTracks,
-                        'progress_percentage' => round(($completedTracks / $totalTracks) * 100, 1),
-                    ];
-                }
+        $studentProgress = [];
+        $totalTracksInProgram = $tracks->count();
+        
+        foreach ($allEnrolledStudentIds as $studentId) {
+            $student = User::find($studentId);
+            if (!$student) {
+                continue;
             }
+            
+            // Get all track progress records for this student in this program
+            $studentTrackProgresses = $trackProgresses->where('student_id', $studentId);
+            
+            // Count completed tracks (status = 'completed')
+            $completedTracks = $studentTrackProgresses->where('status', 'completed')->count();
+            
+            $studentProgress[] = [
+                'student_id' => $studentId,
+                'student_name' => $student->name,
+                'completed_tracks' => $completedTracks,
+                'total_tracks' => $totalTracksInProgram, // Total tracks in program
+                'progress_percentage' => $totalTracksInProgram > 0 
+                    ? round(($completedTracks / $totalTracksInProgram) * 100, 1)
+                    : 0,
+            ];
         }
         
         // Overall program completion
-        $totalStudents = $uniqueStudentIds->count();
+        $totalStudents = count($allEnrolledStudentIds);
         $studentsCompletedAllTracks = collect($studentProgress)
-            ->where('completed_tracks', '>=', $tracks->count())
+            ->where('completed_tracks', '>=', $totalTracksInProgram)
             ->count();
         
         return [

@@ -92,6 +92,28 @@ class UserRepository
     }
 
     /**
+     * Get user by national ID
+     */
+    public function findByNationalId(string $nationalId): ?User
+    {
+        return User::where('national_id', $nationalId)->first();
+    }
+
+    /**
+     * Find user by email or national ID
+     */
+    public function findByEmailOrNationalId(string $email, ?string $nationalId = null): ?User
+    {
+        $user = $this->findByEmail($email);
+        
+        if (!$user && $nationalId) {
+            $user = $this->findByNationalId($nationalId);
+        }
+        
+        return $user;
+    }
+
+    /**
      * Create a new user
      */
     public function create(array $data): User

@@ -199,5 +199,95 @@ class UserService
             default => 'admin.dashboard',
         };
     }
+
+    /**
+     * Find user by email or national ID
+     */
+    public function findUserByEmailOrNationalId(string $email, ?string $nationalId = null): ?User
+    {
+        return $this->repository->findByEmailOrNationalId($email, $nationalId);
+    }
+
+    /**
+     * Create a student user with proper role assignment
+     */
+    public function createStudentUser(array $data, ?Role $studentRole = null): User
+    {
+        // Set defaults for student
+        $data['role'] = $data['role'] ?? 'student';
+        $data['is_admin'] = $data['is_admin'] ?? false;
+        $data['is_active'] = $data['is_active'] ?? true;
+
+        // Generate random password if not provided
+        if (empty($data['password'])) {
+            $data['password'] = \Illuminate\Support\Str::random(16);
+        }
+
+        // Create user
+        $user = $this->createUser($data);
+
+        // Ensure student role is assigned
+        if ($studentRole) {
+            if (!$user->hasRole($studentRole)) {
+                $user->assignRole($studentRole);
+            }
+        } elseif (method_exists($user, 'assignRole')) {
+            // Fallback: try to assign by name/slug if role model not found
+            if (!$user->hasRole('student')) {
+                $user->assignRole('student');
+            }
+        }
+
+        return $user->fresh(['roles']);
+    }
+
+    /**
+     * Ensure user has student role assigned
+     */
+    public function ensureStudentRole(User $user, ?Role $studentRole = null): void
+    {
+        if ($user->isStudent()) {
+            return;
+        }
+
+        // Update legacy role field
+        if ($user->role !== 'student') {
+            $this->repository->update($user, ['role' => 'student']);
+        }
+
+        // Assign role using Spatie Permission
+        if ($studentRole) {
+            if (!$user->hasRole($studentRole)) {
+                $user->assignRole($studentRole);
+            }
+        } elseif (method_exists($user, 'assignRole')) {
+            // Fallback: try to assign by name/slug
+            if (!$user->hasRole('student')) {
+                $user->assignRole('student');
+            }
+        }
+    }
+
+    /**
+     * Update user basic information (name, national_id)
+     */
+    public function updateUserInfo(User $user, string $name, ?string $nationalId = null): bool
+    {
+        $data = [];
+        
+        if ($user->name !== $name) {
+            $data['name'] = $name;
+        }
+        
+        if ($nationalId && $user->national_id !== $nationalId) {
+            $data['national_id'] = $nationalId;
+        }
+
+        if (empty($data)) {
+            return false;
+        }
+
+        return $this->repository->update($user, $data);
+    }
 }
 

@@ -5,6 +5,7 @@ namespace Modules\Courses\Services;
 use Modules\Courses\Repositories\QuestionRepository;
 use Modules\Courses\Models\Question;
 use Modules\Courses\Models\Lesson;
+use App\Models\UserQuestionAnswer;
 use Illuminate\Database\Eloquent\Collection;
 
 class QuestionService
@@ -88,5 +89,24 @@ class QuestionService
                 'points_earned' => $userAnswer->points_earned,
             ] : null,
         ];
+    }
+
+    /**
+     * Get user answers grouped by question
+     */
+    public function getUserAnswersGrouped(Lesson $lesson): \Illuminate\Support\Collection
+    {
+        return UserQuestionAnswer::whereIn('question_id', $lesson->questions->pluck('id'))
+            ->with(['user:id,name,email', 'answer:id,answer,answer_ar'])
+            ->get()
+            ->groupBy('question_id')
+            ->map(fn($answers) => $answers->map(fn($a) => [
+                'id' => $a->id,
+                'user' => ['id' => $a->user->id, 'name' => $a->user->name],
+                'answer_id' => $a->answer_id,
+                'answer_text' => $a->answer_text,
+                'is_correct' => $a->is_correct,
+                'points_earned' => $a->points_earned,
+            ]));
     }
 }
