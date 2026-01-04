@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('course_id')->constrained('courses')->onDelete('cascade');
             $table->foreignId('instructor_id')->constrained('users')->onDelete('cascade');
-            $table->string('name'); // اسم الدفعة مثل "دفعة 2024" أو "دفعة الخريف"
+            $table->string('name'); // اسم الشعبة مثل "شعبة 2024" أو "شعبة الخريف"
             $table->string('name_ar')->nullable();
             $table->text('description')->nullable();
             $table->text('description_ar')->nullable();

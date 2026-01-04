@@ -56,9 +56,9 @@ class CourseBatchLessonSeeder extends Seeder
                 'batches' => [
                     [
                         'name' => 'Batch 2024 - Spring',
-                        'name_ar' => 'دفعة 2024 - الربيع',
+                        'name_ar' => 'شعبة 2024 - الربيع',
                         'description' => 'Spring 2024 batch for web development course',
-                        'description_ar' => 'دفعة ربيع 2024 لدورة تطوير الويب',
+                        'description_ar' => 'شعبة ربيع 2024 لدورة تطوير الويب',
                         'instructor_id' => $instructor1->id,
                         'start_date' => '2024-03-01',
                         'end_date' => '2024-06-30',
@@ -67,9 +67,9 @@ class CourseBatchLessonSeeder extends Seeder
                     ],
                     [
                         'name' => 'Batch 2024 - Fall',
-                        'name_ar' => 'دفعة 2024 - الخريف',
+                        'name_ar' => 'شعبة 2024 - الخريف',
                         'description' => 'Fall 2024 batch for web development course',
-                        'description_ar' => 'دفعة خريف 2024 لدورة تطوير الويب',
+                        'description_ar' => 'شعبة خريف 2024 لدورة تطوير الويب',
                         'instructor_id' => $instructor2->id,
                         'start_date' => '2024-09-01',
                         'end_date' => '2024-12-31',
@@ -253,9 +253,9 @@ class CourseBatchLessonSeeder extends Seeder
                 'batches' => [
                     [
                         'name' => 'Batch 2024 - Summer',
-                        'name_ar' => 'دفعة 2024 - الصيف',
+                        'name_ar' => 'شعبة 2024 - الصيف',
                         'description' => 'Summer 2024 batch for Flutter course',
-                        'description_ar' => 'دفعة صيف 2024 لدورة Flutter',
+                        'description_ar' => 'شعبة صيف 2024 لدورة Flutter',
                         'instructor_id' => $instructor1->id,
                         'start_date' => '2024-07-01',
                         'end_date' => '2024-09-30',
@@ -301,9 +301,9 @@ class CourseBatchLessonSeeder extends Seeder
                 'batches' => [
                     [
                         'name' => 'Batch 2024 - Winter',
-                        'name_ar' => 'دفعة 2024 - الشتاء',
+                        'name_ar' => 'شعبة 2024 - الشتاء',
                         'description' => 'Winter 2024 batch for Data Science course',
-                        'description_ar' => 'دفعة شتاء 2024 لدورة علوم البيانات',
+                        'description_ar' => 'شعبة شتاء 2024 لدورة علوم البيانات',
                         'instructor_id' => $instructor2->id,
                         'start_date' => '2024-01-01',
                         'end_date' => '2024-03-31',

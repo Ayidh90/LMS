@@ -24,7 +24,6 @@ class UpdateLessonRequest extends FormRequest
         // So we check request()->all() to get all form fields
         $allData = $this->request->all();
         
-        dd($allData);
         // Match StoreLessonRequest behavior - keep data format consistent
         // Convert empty strings to null for nullable fields (same as StoreLessonRequest)
         

@@ -172,7 +172,7 @@
                                     type="text"
                                     dir="rtl"
                                     class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                                    :placeholder="'أدخل عنوان القسم'"
+                                    :placeholder="'أدخل عنوان الوحدة التعليمية'"
                                 />
                             </div>
                             
@@ -197,7 +197,7 @@
                                     rows="3"
                                     dir="rtl"
                                     class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none"
-                                    :placeholder="'أدخل وصف القسم'"
+                                    :placeholder="'أدخل وصف الوحدة التعليمية'"
                                 ></textarea>
                             </div>
                             

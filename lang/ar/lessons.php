@@ -22,13 +22,13 @@ return [
         'order' => 'الترتيب',
         'duration_minutes' => 'المدة (دقائق)',
         'is_free' => 'درس مجاني',
-        'section' => 'الفصل',
+        'section' => 'الوحدة التعليمية',
         'type' => 'النوع',
         'question_type' => 'نوع السؤال',
     ],
     
     'no_lessons' => 'لا توجد دروس بعد.',
-    'no_section' => 'بدون فصل',
+    'no_section' => 'بدون وحدة تعليمية',
     'total' => 'دروس',
     'add' => 'إضافة درس',
     
@@ -102,7 +102,7 @@ return [
         'live_meeting_date_required' => 'تاريخ ووقت المحاضرة المباشرة مطلوب للدروس المباشرة.',
         'live_meeting_date_invalid' => 'تاريخ ووقت المحاضرة المباشرة يجب أن يكون تاريخاً صحيحاً.',
         'live_meeting_link_invalid' => 'رابط المحاضرة المباشرة يجب أن يكون رابطاً صحيحاً.',
-        'section_required' => 'الفصل مطلوب للمديرين. يرجى اختيار فصل.',
+        'section_required' => 'الوحدة التعليمية مطلوبة للمديرين. يرجى اختيار وحدة تعليمية.',
     ],
     'placeholders' => [
         'meeting_link' => 'https://meet.jit.si/... أو أدخل رابطك الخاص',
@@ -128,7 +128,7 @@ return [
     'attendance_marked_successfully' => 'تم تسجيل الحضور بنجاح!',
     'failed_to_mark_attendance' => 'فشل تسجيل الحضور',
     'attendance_history' => 'سجل الحضور',
-    'batch' => 'الدفعة',
+    'batch' => 'الشعبة',
     'status' => 'الحالة',
     'notes' => 'ملاحظات',
     'notes_placeholder' => 'ملاحظات اختيارية...',
