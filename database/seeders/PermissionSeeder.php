@@ -25,10 +25,10 @@ class PermissionSeeder extends Seeder
             ['name' => 'delete lessons', 'name_ar' => 'حذف الدروس', 'slug' => 'lessons.delete', 'description' => 'Can delete lessons', 'description_ar' => 'يمكن حذف الدروس'],
             
             // Section Permissions
-            ['name' => 'view sections', 'name_ar' => 'عرض الأقسام', 'slug' => 'sections.view', 'description' => 'Can view sections', 'description_ar' => 'يمكن عرض الأقسام'],
-            ['name' => 'create sections', 'name_ar' => 'إنشاء الأقسام', 'slug' => 'sections.create', 'description' => 'Can create sections', 'description_ar' => 'يمكن إنشاء الأقسام'],
-            ['name' => 'edit sections', 'name_ar' => 'تعديل الأقسام', 'slug' => 'sections.edit', 'description' => 'Can edit sections', 'description_ar' => 'يمكن تعديل الأقسام'],
-            ['name' => 'delete sections', 'name_ar' => 'حذف الأقسام', 'slug' => 'sections.delete', 'description' => 'Can delete sections', 'description_ar' => 'يمكن حذف الأقسام'],
+            ['name' => 'view sections', 'name_ar' => 'عرض الوحدات التعليمية', 'slug' => 'sections.view', 'description' => 'Can view sections', 'description_ar' => 'يمكن عرض الوحدات التعليمية'],
+            ['name' => 'create sections', 'name_ar' => 'إنشاء الوحدات التعليمية', 'slug' => 'sections.create', 'description' => 'Can create sections', 'description_ar' => 'يمكن إنشاء الوحدات التعليمية'],
+            ['name' => 'edit sections', 'name_ar' => 'تعديل الوحدات التعليمية', 'slug' => 'sections.edit', 'description' => 'Can edit sections', 'description_ar' => 'يمكن تعديل الوحدات التعليمية'],
+            ['name' => 'delete sections', 'name_ar' => 'حذف الوحدات التعليمية', 'slug' => 'sections.delete', 'description' => 'Can delete sections', 'description_ar' => 'يمكن حذف الوحدات التعليمية'],
             
             // Question Permissions
             ['name' => 'view questions', 'name_ar' => 'عرض الأسئلة', 'slug' => 'questions.view', 'description' => 'Can view questions', 'description_ar' => 'يمكن عرض الأسئلة'],
@@ -37,13 +37,13 @@ class PermissionSeeder extends Seeder
             ['name' => 'delete questions', 'name_ar' => 'حذف الأسئلة', 'slug' => 'questions.delete', 'description' => 'Can delete questions', 'description_ar' => 'يمكن حذف الأسئلة'],
             
             // Batch Permissions
-            ['name' => 'view batches', 'name_ar' => 'عرض الدفعات', 'slug' => 'batches.view', 'description' => 'Can view batches', 'description_ar' => 'يمكن عرض الدفعات'],
-            ['name' => 'create batches', 'name_ar' => 'إنشاء الدفعات', 'slug' => 'batches.create', 'description' => 'Can create batches', 'description_ar' => 'يمكن إنشاء الدفعات'],
-            ['name' => 'edit batches', 'name_ar' => 'تعديل الدفعات', 'slug' => 'batches.edit', 'description' => 'Can edit batches', 'description_ar' => 'يمكن تعديل الدفعات'],
-            ['name' => 'delete batches', 'name_ar' => 'حذف الدفعات', 'slug' => 'batches.delete', 'description' => 'Can delete batches', 'description_ar' => 'يمكن حذف الدفعات'],
-            ['name' => 'add students to batches', 'name_ar' => 'إضافة طلاب للدفعات', 'slug' => 'batches.add-students', 'description' => 'Can add students to batches', 'description_ar' => 'يمكن إضافة طلاب للدفعات'],
-            ['name' => 'remove students from batches', 'name_ar' => 'إزالة طلاب من الدفعات', 'slug' => 'batches.remove-students', 'description' => 'Can remove students from batches', 'description_ar' => 'يمكن إزالة طلاب من الدفعات'],
-            ['name' => 'manage batches', 'name_ar' => 'إدارة الدفعات', 'slug' => 'batches.manage', 'description' => 'Can manage batches', 'description_ar' => 'يمكن إدارة الدفعات'],
+            ['name' => 'view batches', 'name_ar' => 'عرض الشعب', 'slug' => 'batches.view', 'description' => 'Can view batches', 'description_ar' => 'يمكن عرض الشعب'],
+            ['name' => 'create batches', 'name_ar' => 'إنشاء الشعب', 'slug' => 'batches.create', 'description' => 'Can create batches', 'description_ar' => 'يمكن إنشاء الشعب'],
+            ['name' => 'edit batches', 'name_ar' => 'تعديل الشعب', 'slug' => 'batches.edit', 'description' => 'Can edit batches', 'description_ar' => 'يمكن تعديل الشعب'],
+            ['name' => 'delete batches', 'name_ar' => 'حذف الشعب', 'slug' => 'batches.delete', 'description' => 'Can delete batches', 'description_ar' => 'يمكن حذف الشعب'],
+            ['name' => 'add students to batches', 'name_ar' => 'إضافة طلاب للشعب', 'slug' => 'batches.add-students', 'description' => 'Can add students to batches', 'description_ar' => 'يمكن إضافة طلاب للشعب'],
+            ['name' => 'remove students from batches', 'name_ar' => 'إزالة طلاب من الشعب', 'slug' => 'batches.remove-students', 'description' => 'Can remove students from batches', 'description_ar' => 'يمكن إزالة طلاب من الشعب'],
+            ['name' => 'manage batches', 'name_ar' => 'إدارة الشعب', 'slug' => 'batches.manage', 'description' => 'Can manage batches', 'description_ar' => 'يمكن إدارة الشعب'],
             
             // Enrollment Permissions
             ['name' => 'view enrollments', 'name_ar' => 'عرض التسجيلات', 'slug' => 'enrollments.view', 'description' => 'Can view enrollments', 'description_ar' => 'يمكن عرض التسجيلات'],

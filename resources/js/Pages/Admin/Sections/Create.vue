@@ -60,7 +60,7 @@
                                     dir="rtl"
                                     class="w-full"
                                         :class="{ 'p-invalid': form.errors.title_ar }"
-                                    :placeholder="'أدخل عنوان القسم'"
+                                    :placeholder="'أدخل عنوان الوحدة التعليمية'"
                                 />
                                     <small v-if="form.errors.title_ar" class="p-error block mt-1">{{ form.errors.title_ar }}</small>
                             </div>
@@ -92,7 +92,7 @@
                                     dir="rtl"
                                     class="w-full"
                                         :class="{ 'p-invalid': form.errors.description_ar }"
-                                    :placeholder="'أدخل وصف القسم'"
+                                    :placeholder="'أدخل وصف الوحدة التعليمية'"
                                         autoResize
                                 />
                                     <small v-if="form.errors.description_ar" class="p-error block mt-1">{{ form.errors.description_ar }}</small>

@@ -81,7 +81,7 @@ class SettingsService
                 'value' => '1',
                 'type' => 'boolean',
                 'description' => 'Allow instructors to create sections/chapters',
-                'description_ar' => 'السماح للمدربين بإنشاء الفصول',
+                'description_ar' => 'السماح للمدربين بإنشاء الوحدات التعليمية',
             ],
             [
                 'key' => 'instructor_can_create_lessons',

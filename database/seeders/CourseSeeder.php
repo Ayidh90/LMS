@@ -375,7 +375,7 @@ class CourseSeeder extends Seeder
     private function createBatchForCourse(Course $course, User $instructor, User $student): void
     {
         $batchName = 'Batch ' . date('Y') . ' - ' . $course->title;
-        $batchNameAr = 'دفعة ' . date('Y') . ' - ' . ($course->title_ar ?? $course->title);
+        $batchNameAr = 'شعبة ' . date('Y') . ' - ' . ($course->title_ar ?? $course->title);
         
         $batch = Batch::updateOrCreate(
             [
@@ -388,7 +388,7 @@ class CourseSeeder extends Seeder
                 'name' => $batchName,
                 'name_ar' => $batchNameAr,
                 'description' => 'Batch for ' . $course->title,
-                'description_ar' => 'دفعة لـ ' . ($course->title_ar ?? $course->title),
+                'description_ar' => 'شعبة لـ ' . ($course->title_ar ?? $course->title),
                 'start_date' => now()->addDays(7),
                 'end_date' => now()->addMonths(3),
                 'max_students' => 50,
@@ -437,7 +437,7 @@ class CourseSeeder extends Seeder
             // Create a new section every $lessonsPerSection lessons
             if ($index % $lessonsPerSection === 0) {
                 $sectionTitle = 'Section ' . $sectionOrder;
-                $sectionTitleAr = 'القسم ' . $sectionOrder;
+                $sectionTitleAr = 'الوحدة التعليمية ' . $sectionOrder;
                 
                 // Check if section already exists with this title
                 $existingSection = Section::where('course_id', $course->id)
@@ -450,7 +450,7 @@ class CourseSeeder extends Seeder
                         'title' => $sectionTitle,
                         'title_ar' => $sectionTitleAr,
                         'description' => 'This section covers important topics in ' . $courseData['title'],
-                        'description_ar' => 'يتناول هذا القسم مواضيع مهمة في ' . ($courseData['title_ar'] ?? $courseData['title']),
+                        'description_ar' => 'تتناول هذه الوحدة التعليمية مواضيع مهمة في ' . ($courseData['title_ar'] ?? $courseData['title']),
                         'order' => $sectionOrder,
                     ]);
                     $this->command->info("  Created section: {$sectionTitle}");

@@ -53,7 +53,7 @@
                                     v-model="form.name_ar"
                                     dir="rtl"
                                     class="w-full"
-                                    :placeholder="'أدخل اسم الدفعة'"
+                                    :placeholder="'أدخل اسم الشعبة'"
                                 />
                             </div>
 
@@ -80,7 +80,7 @@
                                     rows="4"
                                     dir="rtl"
                                     class="w-full"
-                                    :placeholder="'أدخل وصف الدفعة'"
+                                    :placeholder="'أدخل وصف الشعبة'"
                                 />
                             </div>
 

@@ -35,7 +35,7 @@
                                 type="text"
                                 dir="rtl"
                                 class="form-input"
-                                :placeholder="'أدخل اسم الدفعة'"
+                                :placeholder="'أدخل اسم الشعبة'"
                             />
                         </div>
                         <div>
@@ -58,7 +58,7 @@
                                 rows="3"
                                 dir="rtl"
                                 class="form-textarea"
-                                :placeholder="'أدخل وصف الدفعة'"
+                                :placeholder="'أدخل وصف الشعبة'"
                             ></textarea>
                         </div>
                         <div>

@@ -40,7 +40,7 @@
                                     dir="rtl"
                                     class="form-control"
                                     :class="{ 'is-invalid': errors.title_ar }"
-                                    placeholder="أدخل عنوان القسم"
+                                    placeholder="أدخل عنوان الوحدة التعليمية"
                                 />
                                 <div v-if="errors.title_ar" class="invalid-feedback d-block">{{ errors.title_ar }}</div>
                             </div>
@@ -69,7 +69,7 @@
                                     dir="rtl"
                                     class="form-control"
                                     :class="{ 'is-invalid': errors.description_ar }"
-                                    placeholder="أدخل وصف القسم"
+                                    placeholder="أدخل وصف الوحدة التعليمية"
                                 ></textarea>
                                 <div v-if="errors.description_ar" class="invalid-feedback d-block">{{ errors.description_ar }}</div>
                             </div>

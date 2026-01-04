@@ -26,6 +26,18 @@ return Application::configure(basePath: dirname(__DIR__))
         \App\Providers\AuthServiceProvider::class,
     ])
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        // Ensure validation exceptions return Inertia-compatible responses
+        $exceptions->render(function (\Illuminate\Validation\ValidationException $e, \Illuminate\Http\Request $request) {
+            if ($request->header('X-Inertia') && !$request->expectsJson()) {
+                return back()->withErrors($e->errors())->withInput();
+            }
+        });
+        
+        // Handle authentication exceptions for Inertia requests
+        $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, \Illuminate\Http\Request $request) {
+            if ($request->header('X-Inertia')) {
+                return redirect()->route('login');
+            }
+        });
     })->create();
 
