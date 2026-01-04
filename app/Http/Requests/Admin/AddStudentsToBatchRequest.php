@@ -15,7 +15,30 @@ class AddStudentsToBatchRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'student_ids' => ['required', 'array', 'min:1'],
+            'student_ids' => [
+                'required',
+                'array',
+                'min:1',
+                function ($attribute, $value, $fail) {
+                    // Get batch from route
+                    $batch = $this->route('batch');
+                    
+                    if ($batch && $batch->max_students !== null) {
+                        $currentStudents = \App\Models\Enrollment::where('batch_id', $batch->id)->count();
+                        $newStudentsCount = count($value);
+                        $wouldBeTotal = $currentStudents + $newStudentsCount;
+                        
+                        if ($wouldBeTotal > $batch->max_students) {
+                            $fail(__('admin.max_students_would_exceed', [
+                                'count' => $newStudentsCount,
+                                'max' => $batch->max_students,
+                                'current' => $currentStudents,
+                                'would_be' => $wouldBeTotal,
+                            ]));
+                        }
+                    }
+                },
+            ],
             'student_ids.*' => [
                 'required',
                 'exists:users,id',

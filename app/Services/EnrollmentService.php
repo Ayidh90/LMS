@@ -6,6 +6,7 @@ use App\Models\Enrollment;
 use App\Models\Batch;
 use App\Models\User;
 use Modules\Courses\Models\Course;
+use Modules\Courses\Models\Lesson;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -16,6 +17,24 @@ class EnrollmentService
      */
     public function addStudentsToBatch(Batch $batch, Course $course, array $studentIds): int
     {
+        // Check max_students limit if set
+        if ($batch->max_students !== null) {
+            $currentStudents = Enrollment::where('batch_id', $batch->id)->count();
+            $newStudentsCount = count($studentIds);
+            $wouldBeTotal = $currentStudents + $newStudentsCount;
+            
+            if ($wouldBeTotal > $batch->max_students) {
+                $validator = validator([], []);
+                $validator->errors()->add('student_ids', __('admin.max_students_would_exceed', [
+                    'count' => $newStudentsCount,
+                    'max' => $batch->max_students,
+                    'current' => $currentStudents,
+                    'would_be' => $wouldBeTotal,
+                ]));
+                throw new \Illuminate\Validation\ValidationException($validator);
+            }
+        }
+
         $added = 0;
 
         // Get students in one query - check both legacy role field and Spatie roles
@@ -135,6 +154,18 @@ class EnrollmentService
         return Enrollment::where('student_id', $student->id)
             ->pluck('batch_id')
             ->toArray();
+    }
+
+    /**
+     * Check if student has access to a lesson through their enrolled batches
+     */
+    public function hasAccessToLesson(User $student, Lesson $lesson): bool
+    {
+        $batchIds = $this->getEnrolledBatchIds($student);
+        
+        return Batch::where('course_id', $lesson->course_id)
+            ->whereIn('id', $batchIds)
+            ->exists();
     }
 }
 

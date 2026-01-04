@@ -50,6 +50,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
         Route::put('/batches/{batch}', [AdminBatchController::class, 'update'])->middleware('permission:batches.edit')->name('batches.update');
         Route::delete('/batches/{batch}', [AdminBatchController::class, 'destroy'])->middleware('permission:batches.delete')->name('batches.destroy');
         Route::post('/batches/{batch}/students', [AdminBatchController::class, 'addStudents'])->middleware('permission:batches.manage')->name('batches.add-students');
+        Route::post('/batches/{batch}/students/import', [AdminBatchController::class, 'importStudents'])->middleware('permission:batches.manage')->name('batches.import-students');
+        Route::get('/batches/{batch}/students/template', [AdminBatchController::class, 'downloadTemplate'])->middleware('permission:batches.manage')->name('batches.download-template');
         Route::delete('/batches/{batch}/students/{student}', [AdminBatchController::class, 'removeStudent'])->middleware('permission:batches.manage')->name('batches.remove-student');
         
         // Sections Management

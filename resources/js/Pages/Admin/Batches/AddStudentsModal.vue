@@ -19,6 +19,66 @@
                     
                     <!-- Content -->
                     <div class="flex-1 overflow-y-auto p-6 bg-gradient-to-b from-white to-gray-50">
+                        <!-- Import Excel Section -->
+                        <div class="mb-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border border-green-200">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-2">
+                                    <i class="pi pi-file-excel text-green-600 text-xl"></i>
+                                    <p class="text-sm font-semibold text-green-900">
+                                        {{ t('admin.import_from_excel') || 'Import from Excel' }}
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
+                                    @click="downloadTemplate"
+                                    class="px-3 py-1.5 text-xs font-medium text-green-700 bg-white border border-green-300 rounded-lg hover:bg-green-50 transition-colors flex items-center gap-1.5"
+                                >
+                                    <i class="pi pi-download text-xs"></i>
+                                    {{ t('admin.download_template') || 'Download Template' }}
+                                </button>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <label class="flex-1 cursor-pointer">
+                                    <input
+                                        type="file"
+                                        ref="fileInput"
+                                        @change="handleFileSelect"
+                                        accept=".xlsx,.xls,.csv"
+                                        class="hidden"
+                                    />
+                                    <div class="px-4 py-2.5 bg-white border-2 border-dashed border-green-300 rounded-lg hover:border-green-400 hover:bg-green-50 transition-all text-center">
+                                        <i class="pi pi-upload text-green-600 text-lg mb-1 block"></i>
+                                        <span class="text-xs font-medium text-green-700">
+                                            {{ t('admin.choose_excel_file') || 'Choose Excel file' }}
+                                        </span>
+                                    </div>
+                                </label>
+                                <button
+                                    v-if="selectedFile"
+                                    type="button"
+                                    @click="handleImport"
+                                    :disabled="importing"
+                                    class="px-4 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                >
+                                    <i v-if="importing" class="pi pi-spin pi-spinner text-sm"></i>
+                                    <i v-else class="pi pi-upload text-sm"></i>
+                                    {{ importing ? (t('admin.importing') || 'Importing...') : (t('admin.import') || 'Import') }}
+                                </button>
+                            </div>
+                            <p v-if="selectedFile" class="mt-2 text-xs text-green-700">
+                                {{ t('admin.selected_file') || 'Selected file' }}: {{ selectedFile.name }}
+                            </p>
+                        </div>
+
+                        <!-- Divider -->
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="flex-1 border-t border-gray-300"></div>
+                            <span class="text-xs font-medium text-gray-500 px-2">
+                                {{ t('admin.or') || 'OR' }}
+                            </span>
+                            <div class="flex-1 border-t border-gray-300"></div>
+                        </div>
+
                         <!-- Info Header -->
                         <div class="flex items-center justify-between mb-4 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-xl border border-indigo-200">
                             <p class="text-sm font-medium text-indigo-900">
@@ -141,6 +201,9 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useTranslation } from '@/composables/useTranslation';
 import { useModal } from '@/composables/useModal';
+import { useRoute } from '@/composables/useRoute';
+import { useAlert } from '@/composables/useAlert';
+import { router } from '@inertiajs/vue3';
 
 const props = defineProps({
     show: {
@@ -154,15 +217,28 @@ const props = defineProps({
     processing: {
         type: Boolean,
         default: false
+    },
+    course: {
+        type: Object,
+        required: true
+    },
+    batch: {
+        type: Object,
+        required: true
     }
 });
 
-const emit = defineEmits(['close', 'submit']);
+const emit = defineEmits(['close', 'submit', 'imported']);
 
 const { t } = useTranslation();
 const { setModalOpen } = useModal();
+const { route } = useRoute();
+const { showError, showSuccess } = useAlert();
 const selectedStudents = ref([]);
 const searchQuery = ref('');
+const fileInput = ref(null);
+const selectedFile = ref(null);
+const importing = ref(false);
 
 // Update modal state when show prop changes
 watch(() => props.show, (isOpen) => {
@@ -177,6 +253,10 @@ watch(() => props.show, (isOpen) => {
         // Reset state when modal closes
         selectedStudents.value = [];
         searchQuery.value = '';
+        selectedFile.value = null;
+        if (fileInput.value) {
+            fileInput.value.value = '';
+        }
     }
 }, { immediate: true });
 
@@ -251,6 +331,107 @@ const handleSubmit = () => {
         emit('submit', selectedStudents.value);
     }
 };
+
+// Handle file select
+const handleFileSelect = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+        // Validate file type
+        const validTypes = ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 
+                           'application/vnd.ms-excel', 
+                           'text/csv'];
+        const validExtensions = ['.xlsx', '.xls', '.csv'];
+        const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+        
+        if (!validTypes.includes(file.type) && !validExtensions.includes(fileExtension)) {
+            showError(t('admin.invalid_file_type') || 'Please select a valid Excel file (.xlsx, .xls, or .csv)', t('common.error') || 'Error');
+            event.target.value = '';
+            return;
+        }
+        
+        selectedFile.value = file;
+    }
+};
+
+// Download template
+const downloadTemplate = () => {
+    let url;
+    try {
+        url = route('admin.courses.batches.download-template', [
+            props.course.slug || props.course.id,
+            props.batch.id
+        ]);
+    } catch (error) {
+        // Fallback: construct URL manually if route not found in Ziggy
+        const courseId = props.course.slug || props.course.id;
+        const batchId = props.batch.id;
+        url = `/admin/courses/${courseId}/batches/${batchId}/students/template`;
+    }
+    
+    // Use a hidden iframe to download the file without navigating away
+    // This bypasses Inertia and ensures the browser handles the download directly
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.src = url;
+    document.body.appendChild(iframe);
+    
+    // Clean up after download starts (browser will handle the download)
+    setTimeout(() => {
+        if (iframe.parentNode) {
+            document.body.removeChild(iframe);
+        }
+    }, 10000);
+};
+
+// Handle import
+const handleImport = () => {
+    if (!selectedFile.value) {
+        return;
+    }
+    
+    importing.value = true;
+    
+    const formData = new FormData();
+    formData.append('file', selectedFile.value);
+    
+    router.post(
+        route('admin.courses.batches.import-students', [
+            props.course.slug || props.course.id,
+            props.batch.id
+        ]),
+        formData,
+        {
+            preserveScroll: true,
+            forceFormData: true,
+            onSuccess: (page) => {
+                importing.value = false;
+                selectedFile.value = null;
+                if (fileInput.value) {
+                    fileInput.value.value = '';
+                }
+                showSuccess(t('admin.students_imported_successfully') || 'Students imported successfully!', t('common.success') || 'Success');
+                emit('imported');
+                emit('close');
+            },
+            onError: (errors) => {
+                importing.value = false;
+                let errorMessage = t('admin.import_failed') || 'Import failed. Please check your file and try again.';
+                
+                if (errors.message) {
+                    errorMessage = errors.message;
+                } else if (errors.file) {
+                    errorMessage = Array.isArray(errors.file) ? errors.file[0] : errors.file;
+                } else if (errors.student_ids) {
+                    errorMessage = Array.isArray(errors.student_ids) ? errors.student_ids[0] : errors.student_ids;
+                }
+                
+                showError(errorMessage, t('common.error') || 'Error', { modal: true });
+            },
+        }
+    );
+};
 </script>
 
 <style scoped>
@@ -272,6 +453,10 @@ const handleSubmit = () => {
 [dir="rtl"] .border-l-4 {
     border-left: none;
     border-right: 4px solid;
+}
+
+[dir="rtl"] .flex.items-center.justify-between {
+    flex-direction: row-reverse;
 }
 
 /* Custom scrollbar */

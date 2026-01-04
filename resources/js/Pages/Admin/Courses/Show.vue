@@ -1077,8 +1077,8 @@ if (props.course?.sections && props.course.sections.length > 0) {
   expandedSections.value.add(props.course.sections[0].id);
 }
 
-// Lesson Completion Statistics collapse state
-const isLessonStatsCollapsed = ref(false);
+// Lesson Completion Statistics collapse state (closed by default)
+const isLessonStatsCollapsed = ref(true);
 
 const toggleLessonStatsCollapse = () => {
   isLessonStatsCollapsed.value = !isLessonStatsCollapsed.value;
